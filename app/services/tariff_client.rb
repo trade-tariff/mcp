@@ -12,7 +12,7 @@ class TariffClient
   def initialize(service:)
     raise ArgumentError, "Unknown service: #{service}" unless VALID_SERVICES.include?(service)
 
-    @base_url = ENV.fetch("TARIFF_#{service.upcase}_API_URL")
+    @base_url = ENV.fetch("TARIFF_API_URL")
   end
 
   def get(path)

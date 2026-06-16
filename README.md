@@ -27,8 +27,7 @@ Unrecognised values return an error rather than silently defaulting.
 ## Requirements
 
 - Ruby 4.0.5
-- `TARIFF_UK_API_URL` — base URL for the UK tariff API
-- `TARIFF_XI_API_URL` — base URL for the XI (Northern Ireland) tariff API
+- `TARIFF_API_URL` — base URL for the tariff API (both UK and XI services are served from the same host)
 
 ## Setup
 
@@ -76,7 +75,6 @@ bundle exec rspec
 
 | Variable | Description | Example |
 |----------|-------------|---------|
-| `TARIFF_UK_API_URL` | Base URL for the UK tariff backend | `https://www.trade-tariff.service.gov.uk` |
-| `TARIFF_XI_API_URL` | Base URL for the XI (NI) tariff backend | `https://www.trade-tariff.service.gov.uk` |
+| `TARIFF_API_URL` | Base URL for the tariff backend | `https://www.trade-tariff.service.gov.uk` |
 
-Both variables are required at startup in non-test environments.
+Required at startup in non-test environments.

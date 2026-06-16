@@ -3,25 +3,21 @@
 require "rails_helper"
 
 RSpec.describe TariffClient do
-  let(:uk_base_url) { "https://uk.example.com" }
-  let(:xi_base_url) { "https://xi.example.com" }
+  let(:base_url) { "https://example.com" }
 
   before do
-    @original_uk = ENV["TARIFF_UK_API_URL"]
-    @original_xi = ENV["TARIFF_XI_API_URL"]
-    ENV["TARIFF_UK_API_URL"] = uk_base_url
-    ENV["TARIFF_XI_API_URL"] = xi_base_url
+    @original = ENV["TARIFF_API_URL"]
+    ENV["TARIFF_API_URL"] = base_url
   end
 
   after do
-    ENV["TARIFF_UK_API_URL"] = @original_uk
-    ENV["TARIFF_XI_API_URL"] = @original_xi
+    ENV["TARIFF_API_URL"] = @original
   end
 
   describe "#get" do
     context "with service: uk" do
-      it "calls the UK base URL and returns parsed JSON" do
-        stub_request(:get, "#{uk_base_url}/uk/api/v2/sections")
+      it "calls the base URL and returns parsed JSON" do
+        stub_request(:get, "#{base_url}/uk/api/v2/sections")
           .to_return(
             status: 200,
             body: File.read("spec/fixtures/api/sections.json"),
@@ -35,8 +31,8 @@ RSpec.describe TariffClient do
     end
 
     context "with service: xi" do
-      it "calls the XI base URL" do
-        stub_request(:get, "#{xi_base_url}/xi/api/v2/sections")
+      it "calls the base URL with xi path" do
+        stub_request(:get, "#{base_url}/xi/api/v2/sections")
           .to_return(
             status: 200,
             body: File.read("spec/fixtures/api/sections.json"),
@@ -51,7 +47,7 @@ RSpec.describe TariffClient do
 
     context "when the resource is not found" do
       it "raises TariffClient::NotFound" do
-        stub_request(:get, "#{uk_base_url}/uk/api/v2/commodities/9999999999")
+        stub_request(:get, "#{base_url}/uk/api/v2/commodities/9999999999")
           .to_return(status: 404, body: "{}")
 
         expect {
@@ -62,7 +58,7 @@ RSpec.describe TariffClient do
 
     context "when the API returns a server error" do
       it "raises TariffClient::ApiError" do
-        stub_request(:get, "#{uk_base_url}/uk/api/v2/sections")
+        stub_request(:get, "#{base_url}/uk/api/v2/sections")
           .to_return(status: 503, body: "{}")
 
         expect {
