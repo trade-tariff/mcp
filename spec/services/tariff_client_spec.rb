@@ -7,8 +7,15 @@ RSpec.describe TariffClient do
   let(:xi_base_url) { "https://xi.example.com" }
 
   before do
-    allow(ENV).to receive(:fetch).with("TARIFF_UK_API_URL").and_return(uk_base_url)
-    allow(ENV).to receive(:fetch).with("TARIFF_XI_API_URL").and_return(xi_base_url)
+    @original_uk = ENV["TARIFF_UK_API_URL"]
+    @original_xi = ENV["TARIFF_XI_API_URL"]
+    ENV["TARIFF_UK_API_URL"] = uk_base_url
+    ENV["TARIFF_XI_API_URL"] = xi_base_url
+  end
+
+  after do
+    ENV["TARIFF_UK_API_URL"] = @original_uk
+    ENV["TARIFF_XI_API_URL"] = @original_xi
   end
 
   describe "#get" do
