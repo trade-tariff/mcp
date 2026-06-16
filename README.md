@@ -77,6 +77,6 @@ bundle exec rspec
 | Variable | Description | Example |
 |----------|-------------|---------|
 | `TARIFF_UK_API_URL` | Base URL for the UK tariff backend | `https://www.trade-tariff.service.gov.uk` |
-| `TARIFF_XI_API_URL` | Base URL for the XI (NI) tariff backend | `https://xi.trade-tariff.service.gov.uk` |
+| `TARIFF_XI_API_URL` | Base URL for the XI (NI) tariff backend | `https://www.trade-tariff.service.gov.uk` |
 
 Both variables are required at startup in non-test environments.
