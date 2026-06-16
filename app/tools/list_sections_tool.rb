@@ -9,12 +9,16 @@ class ListSectionsTool < ApplicationTool
       service: {
         type: "string",
         description: "The tariff service to query. Accepts 'uk' (default), 'xi', 'ni', or 'northern ireland'."
-      }
-    },
+      },
+      validity_date: VALIDITY_DATE_SCHEMA
+    }
   )
 
-  def self.call(service: nil, server_context: nil)
+  def self.call(service: nil, validity_date: nil, server_context: nil)
+    error = validate_date(validity_date)
+    return error if error
+
     resolved = ServiceNormaliser.call(service)
-    with_error_handling { text_response(client_for(service: resolved).get("/#{resolved}/api/v2/sections")) }
+    with_error_handling { text_response(client_for(service: resolved).get("/#{resolved}/api/v2/sections", as_of: validity_date)) }
   end
 end

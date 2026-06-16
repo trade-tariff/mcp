@@ -14,12 +14,13 @@ class NavigateHierarchyTool < ApplicationTool
       service: {
         type: "string",
         description: "The tariff service to query. Accepts 'uk' (default), 'xi', 'ni', or 'northern ireland'."
-      }
+      },
+      validity_date: VALIDITY_DATE_SCHEMA
     },
     required: [ "code" ]
   )
 
-  def self.call(code:, service: nil, server_context: nil)
+  def self.call(code:, service: nil, validity_date: nil, server_context: nil)
     unless code.match?(/\A\d{4,10}\z/)
       return MCP::Tool::Response.new(
         [ { type: "text", text: "Invalid code: must be 4 to 10 digits, got '#{code}'" } ],
@@ -27,7 +28,10 @@ class NavigateHierarchyTool < ApplicationTool
       )
     end
 
+    error = validate_date(validity_date)
+    return error if error
+
     resolved = ServiceNormaliser.call(service)
-    with_error_handling { text_response(client_for(service: resolved).get("/#{resolved}/api/v2/goods_nomenclatures/#{code}")) }
+    with_error_handling { text_response(client_for(service: resolved).get("/#{resolved}/api/v2/goods_nomenclatures/#{code}", as_of: validity_date)) }
   end
 end

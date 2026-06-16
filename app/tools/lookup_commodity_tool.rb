@@ -14,12 +14,13 @@ class LookupCommodityTool < ApplicationTool
       service: {
         type: "string",
         description: "The tariff service to query. Accepts 'uk' (default), 'xi', 'ni', or 'northern ireland'."
-      }
+      },
+      validity_date: VALIDITY_DATE_SCHEMA
     },
     required: [ "commodity_code" ]
   )
 
-  def self.call(commodity_code:, service: nil, server_context: nil)
+  def self.call(commodity_code:, service: nil, validity_date: nil, server_context: nil)
     unless commodity_code.match?(/\A\d{10}\z/)
       return MCP::Tool::Response.new(
         [ { type: "text", text: "Invalid commodity_code: must be exactly 10 digits, got '#{commodity_code}'" } ],
@@ -27,7 +28,10 @@ class LookupCommodityTool < ApplicationTool
       )
     end
 
+    error = validate_date(validity_date)
+    return error if error
+
     resolved = ServiceNormaliser.call(service)
-    with_error_handling { text_response(client_for(service: resolved).get("/#{resolved}/api/v2/commodities/#{commodity_code}")) }
+    with_error_handling { text_response(client_for(service: resolved).get("/#{resolved}/api/v2/commodities/#{commodity_code}", as_of: validity_date)) }
   end
 end

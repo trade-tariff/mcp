@@ -14,12 +14,13 @@ class ShowChapterTool < ApplicationTool
       service: {
         type: "string",
         description: "The tariff service to query. Accepts 'uk' (default), 'xi', 'ni', or 'northern ireland'."
-      }
+      },
+      validity_date: VALIDITY_DATE_SCHEMA
     },
     required: [ "chapter_id" ]
   )
 
-  def self.call(chapter_id:, service: nil, server_context: nil)
+  def self.call(chapter_id:, service: nil, validity_date: nil, server_context: nil)
     unless chapter_id.match?(/\A\d{2}\z/)
       return MCP::Tool::Response.new(
         [ { type: "text", text: "Invalid chapter_id: must be exactly 2 digits, got '#{chapter_id}'" } ],
@@ -27,7 +28,10 @@ class ShowChapterTool < ApplicationTool
       )
     end
 
+    error = validate_date(validity_date)
+    return error if error
+
     resolved = ServiceNormaliser.call(service)
-    with_error_handling { text_response(client_for(service: resolved).get("/#{resolved}/api/v2/chapters/#{chapter_id}")) }
+    with_error_handling { text_response(client_for(service: resolved).get("/#{resolved}/api/v2/chapters/#{chapter_id}", as_of: validity_date)) }
   end
 end

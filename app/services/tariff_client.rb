@@ -15,8 +15,10 @@ class TariffClient
     @base_url = ENV.fetch("TARIFF_API_URL")
   end
 
-  def get(path)
-    response = connection.get(path)
+  def get(path, as_of: nil)
+    response = connection.get(path) do |req|
+      req.params["as_of"] = as_of if as_of
+    end
 
     case response.status
     when 200..299
