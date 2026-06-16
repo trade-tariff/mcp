@@ -16,7 +16,7 @@ Rails.application.routes.draw do
           NavigateHierarchyTool
         ]
       ),
-      stateless: true
+      stateless: false
     )
     mcp_transport.call(env)
   end
