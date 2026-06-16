@@ -1,0 +1,11 @@
+{
+  "data": {
+    "id": "0101210000",
+    "type": "commodity",
+    "attributes": {
+      "goods_nomenclature_item_id": "0101210000",
+      "description": "Horses",
+      "formatted_description": "Horses"
+    }
+  }
+}
