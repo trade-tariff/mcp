@@ -12,4 +12,7 @@ gem "dotenv-rails", groups: %i[development test]
 group :development, :test do
   gem "rspec-rails"
   gem "webmock"
+  gem "rubocop-rails-omakase", require: false
+  gem "brakeman", require: false
+  gem "bundler-audit", require: false
 end
