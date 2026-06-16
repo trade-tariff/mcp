@@ -36,11 +36,13 @@ RSpec.describe ShowHeadingTool do
     expect(JSON.parse(result.content.first[:text])).to include("data")
   end
 
-  it "raises StandardError when heading is not found" do
+  it "returns an error response when heading is not found" do
     stub_request(:get, "#{uk_base_url}/uk/api/v2/headings/9999")
       .to_return(status: 404, body: "{}")
 
-    expect { described_class.call(heading_id: "9999", service: nil) }.to raise_error(StandardError, /Not found/)
+    result = described_class.call(heading_id: "9999", service: nil)
+    expect(result.error?).to be true
+    expect(result.content.first[:text]).to include("not found")
   end
 
   it "returns an error response for a non-numeric heading_id" do

@@ -36,11 +36,13 @@ RSpec.describe LookupCommodityTool do
     expect(JSON.parse(result.content.first[:text])).to include("data")
   end
 
-  it "raises StandardError when commodity is not found" do
+  it "returns an error response when commodity is not found" do
     stub_request(:get, "#{uk_base_url}/uk/api/v2/commodities/9999999999")
       .to_return(status: 404, body: "{}")
 
-    expect { described_class.call(commodity_code: "9999999999", service: nil) }.to raise_error(StandardError, /Not found/)
+    result = described_class.call(commodity_code: "9999999999", service: nil)
+    expect(result.error?).to be true
+    expect(result.content.first[:text]).to include("not found")
   end
 
   it "returns an error response for a non-numeric commodity_code" do

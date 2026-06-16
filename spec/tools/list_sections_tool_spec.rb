@@ -45,10 +45,12 @@ RSpec.describe ListSectionsTool do
     expect(JSON.parse(result.content.first[:text])).to include("data")
   end
 
-  it "raises StandardError when the backend returns 404" do
+  it "returns an error response when the backend returns 404" do
     stub_request(:get, "#{uk_base_url}/uk/api/v2/sections")
       .to_return(status: 404, body: "{}")
 
-    expect { described_class.call(service: "uk") }.to raise_error(StandardError, /Not found/)
+    result = described_class.call(service: "uk")
+    expect(result.error?).to be true
+    expect(result.content.first[:text]).to include("not found")
   end
 end

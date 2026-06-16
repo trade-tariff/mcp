@@ -45,11 +45,13 @@ RSpec.describe NavigateHierarchyTool do
     expect(JSON.parse(result.content.first[:text])).to include("data")
   end
 
-  it "raises StandardError when code is not found" do
+  it "returns an error response when code is not found" do
     stub_request(:get, "#{uk_base_url}/uk/api/v2/goods_nomenclatures/9999")
       .to_return(status: 404, body: "{}")
 
-    expect { described_class.call(code: "9999", service: nil) }.to raise_error(StandardError, /Not found/)
+    result = described_class.call(code: "9999", service: nil)
+    expect(result.error?).to be true
+    expect(result.content.first[:text]).to include("not found")
   end
 
   it "returns an error response for a non-numeric code" do

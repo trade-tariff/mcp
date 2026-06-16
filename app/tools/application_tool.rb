@@ -11,7 +11,7 @@ class ApplicationTool < MCP::Tool
     def with_error_handling
       yield
     rescue TariffClient::NotFound => e
-      raise StandardError, "Not found: #{e.message}"
+      MCP::Tool::Response.new([{ type: "text", text: e.message }], error: true)
     rescue TariffClient::ApiError => e
       raise StandardError, "Backend API error: #{e.message}"
     rescue ArgumentError => e
