@@ -11,24 +11,14 @@ class ShowHeadingTool < ApplicationTool
         description: "Four-digit heading code, e.g. '0101'.",
         pattern: "\\A\\d{4}\\z"
       },
-      service: {
-        type: "string",
-        description: "The tariff service to query. Accepts 'uk' (default), 'xi', 'ni', or 'northern ireland'."
-      },
+      service: SERVICE_SCHEMA,
       validity_date: VALIDITY_DATE_SCHEMA
     },
     required: [ "heading_id" ]
   )
 
   def self.call(heading_id:, service: nil, validity_date: nil, server_context: nil)
-    unless heading_id.match?(/\A\d{4}\z/)
-      return MCP::Tool::Response.new(
-        [ { type: "text", text: "Invalid heading_id: must be exactly 4 digits, got '#{heading_id}'" } ],
-        error: true
-      )
-    end
-
-    error = validate_date(validity_date)
+    error = validate_format(heading_id, /\A\d{4}\z/, "heading_id") || validate_date(validity_date)
     return error if error
 
     resolved = ServiceNormaliser.call(service)

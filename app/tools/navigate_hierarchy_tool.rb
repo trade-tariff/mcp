@@ -11,24 +11,14 @@ class NavigateHierarchyTool < ApplicationTool
         description: "4 to 10-digit goods nomenclature code, e.g. '0101' or '0101210000'.",
         pattern: "\\A\\d{4,10}\\z"
       },
-      service: {
-        type: "string",
-        description: "The tariff service to query. Accepts 'uk' (default), 'xi', 'ni', or 'northern ireland'."
-      },
+      service: SERVICE_SCHEMA,
       validity_date: VALIDITY_DATE_SCHEMA
     },
     required: [ "code" ]
   )
 
   def self.call(code:, service: nil, validity_date: nil, server_context: nil)
-    unless code.match?(/\A\d{4,10}\z/)
-      return MCP::Tool::Response.new(
-        [ { type: "text", text: "Invalid code: must be 4 to 10 digits, got '#{code}'" } ],
-        error: true
-      )
-    end
-
-    error = validate_date(validity_date)
+    error = validate_format(code, /\A\d{4,10}\z/, "code") || validate_date(validity_date)
     return error if error
 
     resolved = ServiceNormaliser.call(service)

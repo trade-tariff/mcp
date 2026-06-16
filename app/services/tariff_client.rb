@@ -15,8 +15,9 @@ class TariffClient
     @base_url = ENV.fetch("TARIFF_API_URL")
   end
 
-  def get(path, as_of: nil)
+  def get(path, params: {}, as_of: nil)
     response = connection.get(path) do |req|
+      req.params.merge!(params)
       req.params["as_of"] = as_of if as_of
     end
 

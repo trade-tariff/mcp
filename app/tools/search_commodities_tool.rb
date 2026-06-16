@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require "cgi"
-
 class SearchCommoditiesTool < ApplicationTool
   tool_name "search_commodities"
   description "Search the Trade Tariff by keyword. Returns matching commodities, headings, and chapters."
@@ -12,10 +10,7 @@ class SearchCommoditiesTool < ApplicationTool
         type: "string",
         description: "Search term, e.g. 'horses' or 'bicycle parts'."
       },
-      service: {
-        type: "string",
-        description: "The tariff service to query. Accepts 'uk' (default), 'xi', 'ni', or 'northern ireland'."
-      },
+      service: SERVICE_SCHEMA,
       validity_date: VALIDITY_DATE_SCHEMA
     },
     required: [ "query" ]
@@ -26,6 +21,6 @@ class SearchCommoditiesTool < ApplicationTool
     return error if error
 
     resolved = ServiceNormaliser.call(service)
-    with_error_handling { text_response(client_for(service: resolved).get("/#{resolved}/api/v2/search?q=#{CGI.escape(query)}", as_of: validity_date)) }
+    with_error_handling { text_response(client_for(service: resolved).get("/#{resolved}/api/v2/search", params: { "q" => query }, as_of: validity_date)) }
   end
 end

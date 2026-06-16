@@ -6,10 +6,7 @@ class ListSectionsTool < ApplicationTool
 
   input_schema(
     properties: {
-      service: {
-        type: "string",
-        description: "The tariff service to query. Accepts 'uk' (default), 'xi', 'ni', or 'northern ireland'."
-      },
+      service: SERVICE_SCHEMA,
       validity_date: VALIDITY_DATE_SCHEMA
     }
   )

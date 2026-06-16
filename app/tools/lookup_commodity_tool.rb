@@ -11,24 +11,14 @@ class LookupCommodityTool < ApplicationTool
         description: "Ten-digit commodity code, e.g. '0101210000'.",
         pattern: "\\A\\d{10}\\z"
       },
-      service: {
-        type: "string",
-        description: "The tariff service to query. Accepts 'uk' (default), 'xi', 'ni', or 'northern ireland'."
-      },
+      service: SERVICE_SCHEMA,
       validity_date: VALIDITY_DATE_SCHEMA
     },
     required: [ "commodity_code" ]
   )
 
   def self.call(commodity_code:, service: nil, validity_date: nil, server_context: nil)
-    unless commodity_code.match?(/\A\d{10}\z/)
-      return MCP::Tool::Response.new(
-        [ { type: "text", text: "Invalid commodity_code: must be exactly 10 digits, got '#{commodity_code}'" } ],
-        error: true
-      )
-    end
-
-    error = validate_date(validity_date)
+    error = validate_format(commodity_code, /\A\d{10}\z/, "commodity_code") || validate_date(validity_date)
     return error if error
 
     resolved = ServiceNormaliser.call(service)
