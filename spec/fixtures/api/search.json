@@ -1,0 +1,11 @@
+{
+  "data": [
+    {
+      "type": "exact_search",
+      "attributes": {
+        "goods_nomenclature_item_id": "0101210000",
+        "description": "Horses"
+      }
+    }
+  ]
+}
