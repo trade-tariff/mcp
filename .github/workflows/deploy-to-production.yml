@@ -1,0 +1,22 @@
+name: Deploy to production
+
+# Disabled until production environment is provisioned.
+# To enable: restore the 'on' trigger below and remove the 'if: false' conditions.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  deploy:
+    if: false
+    uses: trade-tariff/trade-tariff-tools/.github/workflows/deploy-ecs.yml@main
+    with:
+      app-name: tariff-mcp
+      environment: production
+    secrets:
+      basic-password: ${{ secrets.BASIC_PASSWORD }}
+      slack-webhook: ${{ secrets.SLACK_WEBHOOK }}
+      ssh-key: ${{ secrets.PRIVATE_SSH_KEY }}

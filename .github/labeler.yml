@@ -1,0 +1,4 @@
+needs-deployment:
+  - changed-files:
+    - any-glob-to-any-file:
+      - "Dockerfile"
