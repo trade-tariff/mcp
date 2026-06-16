@@ -1,0 +1,15 @@
+{
+  "data": [
+    {
+      "id": "1",
+      "type": "section",
+      "attributes": {
+        "numeral": "I",
+        "title": "Live animals; animal products",
+        "position": 1,
+        "chapter_from": "01",
+        "chapter_to": "05"
+      }
+    }
+  ]
+}
