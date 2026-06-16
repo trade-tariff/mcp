@@ -16,13 +16,13 @@ class NavigateHierarchyTool < ApplicationTool
         description: "The tariff service to query. Accepts 'uk' (default), 'xi', 'ni', or 'northern ireland'."
       }
     },
-    required: ["code"]
+    required: [ "code" ]
   )
 
   def self.call(code:, service: nil, server_context: nil)
     unless code.match?(/\A\d{4,10}\z/)
       return MCP::Tool::Response.new(
-        [{ type: "text", text: "Invalid code: must be 4 to 10 digits, got '#{code}'" }],
+        [ { type: "text", text: "Invalid code: must be 4 to 10 digits, got '#{code}'" } ],
         error: true
       )
     end

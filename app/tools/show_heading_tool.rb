@@ -16,13 +16,13 @@ class ShowHeadingTool < ApplicationTool
         description: "The tariff service to query. Accepts 'uk' (default), 'xi', 'ni', or 'northern ireland'."
       }
     },
-    required: ["heading_id"]
+    required: [ "heading_id" ]
   )
 
   def self.call(heading_id:, service: nil, server_context: nil)
     unless heading_id.match?(/\A\d{4}\z/)
       return MCP::Tool::Response.new(
-        [{ type: "text", text: "Invalid heading_id: must be exactly 4 digits, got '#{heading_id}'" }],
+        [ { type: "text", text: "Invalid heading_id: must be exactly 4 digits, got '#{heading_id}'" } ],
         error: true
       )
     end

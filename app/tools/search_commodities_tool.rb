@@ -17,7 +17,7 @@ class SearchCommoditiesTool < ApplicationTool
         description: "The tariff service to query. Accepts 'uk' (default), 'xi', 'ni', or 'northern ireland'."
       }
     },
-    required: ["query"]
+    required: [ "query" ]
   )
 
   def self.call(query:, service: nil, server_context: nil)

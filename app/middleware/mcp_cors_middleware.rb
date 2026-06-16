@@ -21,7 +21,7 @@ class McpCorsMiddleware
     path = env["PATH_INFO"]
 
     if env["REQUEST_METHOD"] == "OPTIONS" && path.start_with?("/mcp")
-      return [200, CORS_HEADERS.dup, []]
+      return [ 200, CORS_HEADERS.dup, [] ]
     end
 
     status, headers, body = @app.call(env)
@@ -30,6 +30,6 @@ class McpCorsMiddleware
       headers = headers.merge(CORS_HEADERS)
     end
 
-    [status, headers, body]
+    [ status, headers, body ]
   end
 end

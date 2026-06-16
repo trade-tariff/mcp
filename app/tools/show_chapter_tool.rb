@@ -16,13 +16,13 @@ class ShowChapterTool < ApplicationTool
         description: "The tariff service to query. Accepts 'uk' (default), 'xi', 'ni', or 'northern ireland'."
       }
     },
-    required: ["chapter_id"]
+    required: [ "chapter_id" ]
   )
 
   def self.call(chapter_id:, service: nil, server_context: nil)
     unless chapter_id.match?(/\A\d{2}\z/)
       return MCP::Tool::Response.new(
-        [{ type: "text", text: "Invalid chapter_id: must be exactly 2 digits, got '#{chapter_id}'" }],
+        [ { type: "text", text: "Invalid chapter_id: must be exactly 2 digits, got '#{chapter_id}'" } ],
         error: true
       )
     end

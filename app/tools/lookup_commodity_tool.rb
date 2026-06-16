@@ -16,13 +16,13 @@ class LookupCommodityTool < ApplicationTool
         description: "The tariff service to query. Accepts 'uk' (default), 'xi', 'ni', or 'northern ireland'."
       }
     },
-    required: ["commodity_code"]
+    required: [ "commodity_code" ]
   )
 
   def self.call(commodity_code:, service: nil, server_context: nil)
     unless commodity_code.match?(/\A\d{10}\z/)
       return MCP::Tool::Response.new(
-        [{ type: "text", text: "Invalid commodity_code: must be exactly 10 digits, got '#{commodity_code}'" }],
+        [ { type: "text", text: "Invalid commodity_code: must be exactly 10 digits, got '#{commodity_code}'" } ],
         error: true
       )
     end

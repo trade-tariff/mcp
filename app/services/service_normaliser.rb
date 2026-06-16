@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 class ServiceNormaliser
-  UK_ALIASES = ["uk", "gb", "great britain", "united kingdom"].freeze
-  XI_ALIASES = ["xi", "ni", "northern ireland", "northern_ireland"].freeze
+  UK_ALIASES = [ "uk", "gb", "great britain", "united kingdom" ].freeze
+  XI_ALIASES = [ "xi", "ni", "northern ireland", "northern_ireland" ].freeze
 
   def self.call(input)
     return "uk" if input.nil? || input.strip.empty?
