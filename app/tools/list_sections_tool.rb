@@ -2,7 +2,7 @@
 
 class ListSectionsTool < ApplicationTool
   tool_name "list_sections"
-  description "List all sections of the UK Trade Tariff. Sections are the top-level groupings of goods."
+  description "List all sections of the Trade Tariff. Sections are the top-level groupings of goods."
 
   arguments do
     optional(:service).filled(:string).description("The tariff service to query. Accepts 'uk' (default), 'xi', 'ni', or 'northern ireland'.")
