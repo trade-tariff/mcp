@@ -6,7 +6,7 @@ ruby "4.0.5"
 
 gem "rails", require: false
 gem "puma"
-gem "fast-mcp"
+gem "mcp"
 gem "faraday"
 gem "dotenv-rails", groups: %i[development test]
 

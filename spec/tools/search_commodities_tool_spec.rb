@@ -22,19 +22,20 @@ RSpec.describe SearchCommoditiesTool do
       .with(query: { "q" => "horses" })
       .to_return(status: 200, body: search_response, headers: { "Content-Type" => "application/json" })
 
-    result = described_class.new.call(query: "horses", service: nil)
+    result = described_class.call(query: "horses", service: nil)
 
-    expect(result).to include("data")
+    expect(result).to be_a(MCP::Tool::Response)
+    expect(JSON.parse(result.content.first[:text])).to include("data")
   end
 
-  it "searches the XI service when service is northern_island" do
+  it "searches the XI service when service is northern_ireland" do
     stub_request(:get, "#{xi_base_url}/xi/api/v2/search")
       .with(query: { "q" => "horses" })
       .to_return(status: 200, body: search_response, headers: { "Content-Type" => "application/json" })
 
-    result = described_class.new.call(query: "horses", service: "northern_ireland")
+    result = described_class.call(query: "horses", service: "northern_ireland")
 
-    expect(result).to include("data")
+    expect(JSON.parse(result.content.first[:text])).to include("data")
   end
 
   it "raises StandardError on backend API error" do
@@ -42,8 +43,6 @@ RSpec.describe SearchCommoditiesTool do
       .with(query: { "q" => "horses" })
       .to_return(status: 503, body: "{}")
 
-    expect {
-      described_class.new.call(query: "horses", service: nil)
-    }.to raise_error(StandardError, /Backend API error/)
+    expect { described_class.call(query: "horses", service: nil) }.to raise_error(StandardError, /Backend API error/)
   end
 end

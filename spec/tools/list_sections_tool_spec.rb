@@ -21,33 +21,34 @@ RSpec.describe ListSectionsTool do
     stub_request(:get, "#{uk_base_url}/uk/api/v2/sections")
       .to_return(status: 200, body: sections_response, headers: { "Content-Type" => "application/json" })
 
-    result = described_class.new.call(service: nil)
+    result = described_class.call(service: nil)
 
-    expect(result).to include("data")
+    expect(result).to be_a(MCP::Tool::Response)
+    expect(JSON.parse(result.content.first[:text])).to include("data")
   end
 
   it "calls the UK sections endpoint when service is uk" do
     stub_request(:get, "#{uk_base_url}/uk/api/v2/sections")
       .to_return(status: 200, body: sections_response, headers: { "Content-Type" => "application/json" })
 
-    result = described_class.new.call(service: "uk")
+    result = described_class.call(service: "uk")
 
-    expect(result).to include("data")
+    expect(JSON.parse(result.content.first[:text])).to include("data")
   end
 
   it "calls the XI sections endpoint when service is ni" do
     stub_request(:get, "#{xi_base_url}/xi/api/v2/sections")
       .to_return(status: 200, body: sections_response, headers: { "Content-Type" => "application/json" })
 
-    result = described_class.new.call(service: "ni")
+    result = described_class.call(service: "ni")
 
-    expect(result).to include("data")
+    expect(JSON.parse(result.content.first[:text])).to include("data")
   end
 
   it "raises StandardError when the backend returns 404" do
     stub_request(:get, "#{uk_base_url}/uk/api/v2/sections")
       .to_return(status: 404, body: "{}")
 
-    expect { described_class.new.call(service: "uk") }.to raise_error(StandardError, /Not found/)
+    expect { described_class.call(service: "uk") }.to raise_error(StandardError, /Not found/)
   end
 end

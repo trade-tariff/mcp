@@ -21,38 +21,38 @@ RSpec.describe LookupCommodityTool do
     stub_request(:get, "#{uk_base_url}/uk/api/v2/commodities/0101210000")
       .to_return(status: 200, body: commodity_response, headers: { "Content-Type" => "application/json" })
 
-    result = described_class.new.call(commodity_code: "0101210000", service: nil)
+    result = described_class.call(commodity_code: "0101210000", service: nil)
 
-    expect(result).to include("data")
+    expect(result).to be_a(MCP::Tool::Response)
+    expect(JSON.parse(result.content.first[:text])).to include("data")
   end
 
   it "calls the XI endpoint when service is xi" do
     stub_request(:get, "#{xi_base_url}/xi/api/v2/commodities/0101210000")
       .to_return(status: 200, body: commodity_response, headers: { "Content-Type" => "application/json" })
 
-    result = described_class.new.call(commodity_code: "0101210000", service: "xi")
+    result = described_class.call(commodity_code: "0101210000", service: "xi")
 
-    expect(result).to include("data")
+    expect(JSON.parse(result.content.first[:text])).to include("data")
   end
 
   it "raises StandardError when commodity is not found" do
     stub_request(:get, "#{uk_base_url}/uk/api/v2/commodities/9999999999")
       .to_return(status: 404, body: "{}")
 
-    expect {
-      described_class.new.call(commodity_code: "9999999999", service: nil)
-    }.to raise_error(StandardError, /Not found/)
+    expect { described_class.call(commodity_code: "9999999999", service: nil) }.to raise_error(StandardError, /Not found/)
   end
 
-  it "raises FastMcp::Tool::InvalidArgumentsError for a non-numeric commodity_code" do
-    expect {
-      described_class.new.call_with_schema_validation!(commodity_code: "../../etc/passwd", service: nil)
-    }.to raise_error(FastMcp::Tool::InvalidArgumentsError)
+  it "returns an error response for a non-numeric commodity_code" do
+    result = described_class.call(commodity_code: "../../etc/passwd", service: nil)
+
+    expect(result.error?).to be true
+    expect(result.content.first[:text]).to include("Invalid commodity_code")
   end
 
   it "raises StandardError for an unrecognised service" do
     expect {
-      described_class.new.call(commodity_code: "0101210000", service: "germany")
+      described_class.call(commodity_code: "0101210000", service: "germany")
     }.to raise_error(StandardError, /Unknown service/)
   end
 end

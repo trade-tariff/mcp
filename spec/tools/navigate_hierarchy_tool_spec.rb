@@ -21,41 +21,41 @@ RSpec.describe NavigateHierarchyTool do
     stub_request(:get, "#{uk_base_url}/uk/api/v2/goods_nomenclatures/0101210000")
       .to_return(status: 200, body: gn_response, headers: { "Content-Type" => "application/json" })
 
-    result = described_class.new.call(code: "0101210000", service: nil)
+    result = described_class.call(code: "0101210000", service: nil)
 
-    expect(result).to include("data")
+    expect(result).to be_a(MCP::Tool::Response)
+    expect(JSON.parse(result.content.first[:text])).to include("data")
   end
 
   it "accepts a 4-digit heading code" do
     stub_request(:get, "#{uk_base_url}/uk/api/v2/goods_nomenclatures/0101")
       .to_return(status: 200, body: gn_response, headers: { "Content-Type" => "application/json" })
 
-    result = described_class.new.call(code: "0101", service: nil)
+    result = described_class.call(code: "0101", service: nil)
 
-    expect(result).to include("data")
+    expect(JSON.parse(result.content.first[:text])).to include("data")
   end
 
   it "calls the XI endpoint when service is XI" do
     stub_request(:get, "#{xi_base_url}/xi/api/v2/goods_nomenclatures/0101210000")
       .to_return(status: 200, body: gn_response, headers: { "Content-Type" => "application/json" })
 
-    result = described_class.new.call(code: "0101210000", service: "XI")
+    result = described_class.call(code: "0101210000", service: "XI")
 
-    expect(result).to include("data")
+    expect(JSON.parse(result.content.first[:text])).to include("data")
   end
 
   it "raises StandardError when code is not found" do
     stub_request(:get, "#{uk_base_url}/uk/api/v2/goods_nomenclatures/9999")
       .to_return(status: 404, body: "{}")
 
-    expect {
-      described_class.new.call(code: "9999", service: nil)
-    }.to raise_error(StandardError, /Not found/)
+    expect { described_class.call(code: "9999", service: nil) }.to raise_error(StandardError, /Not found/)
   end
 
-  it "raises FastMcp::Tool::InvalidArgumentsError for a non-numeric code" do
-    expect {
-      described_class.new.call_with_schema_validation!(code: "../../etc/passwd", service: nil)
-    }.to raise_error(FastMcp::Tool::InvalidArgumentsError)
+  it "returns an error response for a non-numeric code" do
+    result = described_class.call(code: "../../etc/passwd", service: nil)
+
+    expect(result.error?).to be true
+    expect(result.content.first[:text]).to include("Invalid code")
   end
 end

@@ -21,32 +21,32 @@ RSpec.describe ShowChapterTool do
     stub_request(:get, "#{uk_base_url}/uk/api/v2/chapters/01")
       .to_return(status: 200, body: chapter_response, headers: { "Content-Type" => "application/json" })
 
-    result = described_class.new.call(chapter_id: "01", service: nil)
+    result = described_class.call(chapter_id: "01", service: nil)
 
-    expect(result).to include("data")
+    expect(result).to be_a(MCP::Tool::Response)
+    expect(JSON.parse(result.content.first[:text])).to include("data")
   end
 
   it "calls the XI endpoint when service is northern ireland" do
     stub_request(:get, "#{xi_base_url}/xi/api/v2/chapters/01")
       .to_return(status: 200, body: chapter_response, headers: { "Content-Type" => "application/json" })
 
-    result = described_class.new.call(chapter_id: "01", service: "northern ireland")
+    result = described_class.call(chapter_id: "01", service: "northern ireland")
 
-    expect(result).to include("data")
+    expect(JSON.parse(result.content.first[:text])).to include("data")
   end
 
   it "raises StandardError when chapter is not found" do
     stub_request(:get, "#{uk_base_url}/uk/api/v2/chapters/99")
       .to_return(status: 404, body: "{}")
 
-    expect {
-      described_class.new.call(chapter_id: "99", service: nil)
-    }.to raise_error(StandardError, /Not found/)
+    expect { described_class.call(chapter_id: "99", service: nil) }.to raise_error(StandardError, /Not found/)
   end
 
-  it "raises FastMcp::Tool::InvalidArgumentsError for a non-numeric chapter_id" do
-    expect {
-      described_class.new.call_with_schema_validation!(chapter_id: "../../etc/passwd", service: nil)
-    }.to raise_error(FastMcp::Tool::InvalidArgumentsError)
+  it "returns an error response for a non-numeric chapter_id" do
+    result = described_class.call(chapter_id: "../../etc/passwd", service: nil)
+
+    expect(result.error?).to be true
+    expect(result.content.first[:text]).to include("Invalid chapter_id")
   end
 end
