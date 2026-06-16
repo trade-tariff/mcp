@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require "fast_mcp"
-
 class ApplicationTool < FastMcp::Tool
   protected
 
