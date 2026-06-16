@@ -15,14 +15,21 @@ Implements MCP 2025-11-25 (streamable HTTP transport).
 | `search_commodities` | Search by keyword (e.g. `"live horses"`) |
 | `navigate_hierarchy` | Look up any goods nomenclature entry by 4–10 digit code |
 
-All tools accept an optional `service` parameter:
+All tools accept these optional parameters:
+
+| Parameter | Description |
+|-----------|-------------|
+| `service` | Which tariff to query (see below). Defaults to `uk`. |
+| `validity_date` | Return data as it appeared on this date (`YYYY-MM-DD`). Defaults to today. |
+
+**Service values:**
 
 | Value | Tariff served |
 |-------|--------------|
 | `uk`, `gb`, `great britain`, `united kingdom` (default) | Great Britain |
 | `xi`, `ni`, `northern ireland`, `northern_ireland` | Northern Ireland |
 
-Unrecognised values return an error rather than silently defaulting.
+Unrecognised service values return an error rather than silently defaulting.
 
 ## Requirements
 
@@ -34,7 +41,7 @@ Unrecognised values return an error rather than silently defaulting.
 ```bash
 bundle install
 cp .env.example .env
-# Edit .env with the correct API URLs
+# Edit .env with the correct API URL
 ```
 
 ## Running
