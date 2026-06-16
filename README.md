@@ -72,6 +72,9 @@ Add to your `claude_desktop_config.json`:
 npx @modelcontextprotocol/inspector http://localhost:3000/mcp
 ```
 
+<img width="801" height="615" alt="Screenshot 2026-06-16 at 16 22 51" src="https://github.com/user-attachments/assets/91a770e6-ca18-4260-afd7-28112c27233b" />
+
+
 ## Tests
 
 ```bash
