@@ -4,8 +4,7 @@ class ApplicationTool < FastMcp::Tool
   protected
 
   def client_for(service:)
-    resolved = ServiceNormaliser.call(service)
-    TariffClient.new(service: resolved)
+    TariffClient.new(service: service)
   end
 
   def with_error_handling
