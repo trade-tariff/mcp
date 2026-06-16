@@ -31,7 +31,7 @@ Rails.application.routes.draw do
     )
 
     status, headers, body = mcp_transport.call(env)
-    [status, headers.merge(cors_headers), body]
+    [status, headers.merge(cors_headers.dup), body]
   end
 
   mount mcp_app, at: "/mcp"
