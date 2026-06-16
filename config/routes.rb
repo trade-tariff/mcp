@@ -16,7 +16,8 @@ Rails.application.routes.draw do
           NavigateHierarchyTool
         ]
       ),
-      stateless: false
+      stateless: false,
+      enable_json_response: true
     )
     mcp_transport.call(env)
   end
