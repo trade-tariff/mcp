@@ -2,6 +2,8 @@
 
 An [MCP (Model Context Protocol)](https://modelcontextprotocol.io) server that exposes UK Trade Tariff commodity lookup as tools for AI clients. It wraps the [GOV.UK Online Trade Tariff](https://www.trade-tariff.service.gov.uk) backend API.
 
+Implements MCP 2025-11-25 (streamable HTTP transport).
+
 ## Tools
 
 | Tool | Description |
@@ -56,6 +58,12 @@ Add to your `claude_desktop_config.json`:
     }
   }
 }
+```
+
+## Testing with MCP Inspector
+
+```bash
+npx @modelcontextprotocol/inspector http://localhost:3000/mcp
 ```
 
 ## Tests
