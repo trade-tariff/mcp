@@ -20,8 +20,16 @@ RSpec.describe ServiceNormaliser do
       expect(described_class.call("UK")).to eq("uk")
     end
 
-    it "returns uk for unknown input" do
-      expect(described_class.call("something_else")).to eq("uk")
+    it "returns uk for gb" do
+      expect(described_class.call("gb")).to eq("uk")
+    end
+
+    it "returns uk for great britain" do
+      expect(described_class.call("great britain")).to eq("uk")
+    end
+
+    it "returns uk for united kingdom" do
+      expect(described_class.call("united kingdom")).to eq("uk")
     end
 
     it "returns xi for xi" do
@@ -54,6 +62,15 @@ RSpec.describe ServiceNormaliser do
 
     it "returns xi for NORTHERN IRELAND all caps" do
       expect(described_class.call("NORTHERN IRELAND")).to eq("xi")
+    end
+
+    it "raises ArgumentError for unrecognised non-empty input" do
+      expect { described_class.call("germany") }.to raise_error(ArgumentError, /Unknown service/)
+    end
+
+    it "raises ArgumentError for whitespace-only input that resolves to an unknown value" do
+      # whitespace-only is treated as blank → uk (no error)
+      expect(described_class.call("   ")).to eq("uk")
     end
   end
 end

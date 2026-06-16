@@ -52,4 +52,10 @@ RSpec.describe NavigateHierarchyTool do
       described_class.new.call(code: "9999", service: nil)
     }.to raise_error(StandardError, /Not found/)
   end
+
+  it "raises FastMcp::Tool::InvalidArgumentsError for a non-numeric code" do
+    expect {
+      described_class.new.call_with_schema_validation!(code: "../../etc/passwd", service: nil)
+    }.to raise_error(FastMcp::Tool::InvalidArgumentsError)
+  end
 end

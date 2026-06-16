@@ -43,4 +43,16 @@ RSpec.describe LookupCommodityTool do
       described_class.new.call(commodity_code: "9999999999", service: nil)
     }.to raise_error(StandardError, /Not found/)
   end
+
+  it "raises FastMcp::Tool::InvalidArgumentsError for a non-numeric commodity_code" do
+    expect {
+      described_class.new.call_with_schema_validation!(commodity_code: "../../etc/passwd", service: nil)
+    }.to raise_error(FastMcp::Tool::InvalidArgumentsError)
+  end
+
+  it "raises StandardError for an unrecognised service" do
+    expect {
+      described_class.new.call(commodity_code: "0101210000", service: "germany")
+    }.to raise_error(StandardError, /Unknown service/)
+  end
 end

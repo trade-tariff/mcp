@@ -13,5 +13,7 @@ class ApplicationTool < FastMcp::Tool
     raise StandardError, "Not found: #{e.message}"
   rescue TariffClient::ApiError => e
     raise StandardError, "Backend API error: #{e.message}"
+  rescue ArgumentError => e
+    raise StandardError, e.message
   end
 end

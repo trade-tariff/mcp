@@ -5,7 +5,7 @@ class LookupCommodityTool < ApplicationTool
   description "Look up a commodity by its 10-digit commodity code. Returns description, measures, duties, and other tariff details."
 
   arguments do
-    required(:commodity_code).filled(:string).description("Ten-digit commodity code, e.g. '0101210000'.")
+    required(:commodity_code).value(:string, format?: /\A\d{10}\z/).description("Ten-digit commodity code, e.g. '0101210000'.")
     optional(:service).filled(:string).description("The tariff service to query. Accepts 'uk' (default), 'xi', 'ni', or 'northern ireland'.")
   end
 

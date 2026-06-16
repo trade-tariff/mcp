@@ -5,7 +5,7 @@ class ShowHeadingTool < ApplicationTool
   description "Show details of a tariff heading by its 4-digit code (e.g. '0101' for live horses)."
 
   arguments do
-    required(:heading_id).filled(:string).description("Four-digit heading code, e.g. '0101'.")
+    required(:heading_id).value(:string, format?: /\A\d{4}\z/).description("Four-digit heading code, e.g. '0101'.")
     optional(:service).filled(:string).description("The tariff service to query. Accepts 'uk' (default), 'xi', 'ni', or 'northern ireland'.")
   end
 

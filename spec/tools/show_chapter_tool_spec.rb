@@ -43,4 +43,10 @@ RSpec.describe ShowChapterTool do
       described_class.new.call(chapter_id: "99", service: nil)
     }.to raise_error(StandardError, /Not found/)
   end
+
+  it "raises FastMcp::Tool::InvalidArgumentsError for a non-numeric chapter_id" do
+    expect {
+      described_class.new.call_with_schema_validation!(chapter_id: "../../etc/passwd", service: nil)
+    }.to raise_error(FastMcp::Tool::InvalidArgumentsError)
+  end
 end

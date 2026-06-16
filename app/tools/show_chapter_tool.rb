@@ -5,7 +5,7 @@ class ShowChapterTool < ApplicationTool
   description "Show details of a tariff chapter by its 2-digit ID (e.g. '01' for Live Animals)."
 
   arguments do
-    required(:chapter_id).filled(:string).description("Two-digit chapter ID, e.g. '01'.")
+    required(:chapter_id).value(:string, format?: /\A\d{2}\z/).description("Two-digit chapter ID, e.g. '01'.")
     optional(:service).filled(:string).description("The tariff service to query. Accepts 'uk' (default), 'xi', 'ni', or 'northern ireland'.")
   end
 

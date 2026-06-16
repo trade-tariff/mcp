@@ -5,7 +5,7 @@ class NavigateHierarchyTool < ApplicationTool
   description "Look up a goods nomenclature entry by a 4-10 digit code. Returns the item and its position in the tariff hierarchy."
 
   arguments do
-    required(:code).filled(:string).description("4 to 10-digit goods nomenclature code, e.g. '0101' or '0101210000'.")
+    required(:code).value(:string, format?: /\A\d{4,10}\z/).description("4 to 10-digit goods nomenclature code, e.g. '0101' or '0101210000'.")
     optional(:service).filled(:string).description("The tariff service to query. Accepts 'uk' (default), 'xi', 'ni', or 'northern ireland'.")
   end
 
