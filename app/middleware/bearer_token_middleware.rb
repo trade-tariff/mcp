@@ -27,8 +27,11 @@ class BearerTokenMiddleware
   def extract_token(header)
     return nil if header.nil?
 
-    match = header.match(/\ABearer (.+)\z/i)
-    match&.[](1)&.strip.presence
+    if (match = header.match(/\ABearer (.+)\z/i))
+      match[1].strip.presence
+    else
+      header.strip.presence
+    end
   end
 
   def unauthorized
