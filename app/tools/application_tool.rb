@@ -1,6 +1,13 @@
 # frozen_string_literal: true
 
 class ApplicationTool < MCP::Tool
+  annotations(
+    read_only_hint: true,
+    destructive_hint: false,
+    idempotent_hint: true,
+    open_world_hint: true
+  )
+
   SERVICE_SCHEMA = {
     type: "string",
     description: "The tariff service to query. Accepts 'uk' (default), 'xi', 'ni', or 'northern ireland'."
