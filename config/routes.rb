@@ -13,7 +13,13 @@ Rails.application.routes.draw do
           ShowHeadingTool,
           LookupCommodityTool,
           SearchCommoditiesTool,
-          NavigateHierarchyTool
+          NavigateHierarchyTool,
+          ListExchangeRatesTool,
+          ListGeographicalAreasTool,
+          SearchQuotasTool,
+          SearchAdditionalCodesTool,
+          ListCertificateTypesTool,
+          RulesOfOriginTool
         ]
       ),
       stateless: false,

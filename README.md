@@ -14,6 +14,12 @@ Implements MCP 2025-11-25 (streamable HTTP transport).
 | `lookup_commodity` | Look up a commodity by 10-digit code (e.g. `0101210000`) |
 | `search_commodities` | Search by keyword (e.g. `"live horses"`) |
 | `navigate_hierarchy` | Look up any goods nomenclature entry by 4–10 digit code |
+| `list_exchange_rates` | List GBP monetary exchange rates used in duty calculations |
+| `list_geographical_areas` | List all countries and country groups (use to find country codes) |
+| `search_quotas` | Search quota definitions to check quota relief eligibility and balances |
+| `search_additional_codes` | Search additional codes (e.g. Meursing codes for agricultural goods) |
+| `list_certificate_types` | List all certificate and licence types required by measures |
+| `rules_of_origin` | Get rules of origin schemes for a heading and country combination |
 
 All tools accept these optional parameters:
 
