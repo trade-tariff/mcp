@@ -30,7 +30,7 @@ RSpec.describe BearerTokenMiddleware do
   end
 
   it "passes through unauthenticated paths without a token" do
-    status, = middleware.call(env_for(path: "/up"))
+    status, = middleware.call(env_for(path: "/healthcheckz"))
     expect(status).to eq(200)
   end
 

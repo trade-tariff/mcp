@@ -12,7 +12,7 @@ class McpCorsMiddleware
     "Access-Control-Max-Age" => "86400"
   }.freeze
 
-  HEALTH_PATH = "/up"
+  HEALTH_PATH = "/healthcheckz"
 
   def initialize(app)
     @app = app
