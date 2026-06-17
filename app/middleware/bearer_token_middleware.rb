@@ -1,14 +1,18 @@
 # frozen_string_literal: true
 
 class BearerTokenMiddleware
-  HEALTH_PATH = "/up"
+  UNAUTHENTICATED_PATHS = [
+    "/up",
+    "/.well-known/oauth-authorization-server",
+    "/oauth/token"
+  ].freeze
 
   def initialize(app)
     @app = app
   end
 
   def call(env)
-    if env["PATH_INFO"] != HEALTH_PATH
+    if UNAUTHENTICATED_PATHS.exclude?(env["PATH_INFO"])
       token = extract_token(env["HTTP_AUTHORIZATION"])
       return unauthorized unless token || Rails.env.development?
 

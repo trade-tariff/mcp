@@ -1,6 +1,9 @@
 Rails.application.routes.draw do
   get "up" => "rails/health#show", as: :rails_health_check
 
+  get ".well-known/oauth-authorization-server" => "oauth#metadata"
+  post "oauth/token" => "oauth#token"
+
   mcp_transport = nil
   mcp_app = lambda do |env|
     mcp_transport ||= MCP::Server::Transports::StreamableHTTPTransport.new(

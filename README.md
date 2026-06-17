@@ -68,6 +68,14 @@ The token is forwarded as-is to the tariff backend API. Requests without a token
 
 In the development environment the bearer token requirement is skipped — no `Authorization` header is needed when running locally.
 
+### Adding as a custom connector in Claude.ai
+
+Claude.ai's connector UI uses OAuth 2.0 client credentials. The server implements a thin OAuth wrapper so it works without a separate auth system:
+
+1. In Claude.ai, choose **Add connector → Custom** and enter `https://mcp.trade-tariff.service.gov.uk` as the server URL.
+2. When prompted for credentials, leave **Client ID** blank and paste your API token into **Client Secret**.
+3. Claude will call `/oauth/token` with your secret and receive it back as a bearer token for all subsequent requests.
+
 ## Development
 
 ### Requirements
