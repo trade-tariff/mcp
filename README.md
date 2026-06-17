@@ -66,6 +66,8 @@ Authorization: Bearer <your-api-token>
 
 The token is forwarded as-is to the tariff backend API. Requests without a token receive a `401 Unauthorized` response.
 
+In the development environment the bearer token requirement is skipped — no `Authorization` header is needed when running locally.
+
 ## Development
 
 ### Requirements
