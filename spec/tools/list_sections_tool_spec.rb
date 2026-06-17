@@ -50,4 +50,13 @@ RSpec.describe ListSectionsTool do
     expect(result.error?).to be true
     expect(result.content.first[:text]).to include("not found")
   end
+
+  it "returns an error response when the backend returns 429" do
+    stub_request(:get, "#{base_url}/uk/api/v2/sections")
+      .to_return(status: 429, body: "{}")
+
+    result = described_class.call(service: "uk")
+    expect(result.error?).to be true
+    expect(result.content.first[:text]).to include("Rate limit exceeded")
+  end
 end
