@@ -28,7 +28,8 @@ class RulesOfOriginTool < ApplicationTool
             validate_date(validity_date)
     return error if error
 
+    subheading_code = "#{heading_code}00"
     resolved = ServiceNormaliser.call(service)
-    with_error_handling { text_response(client_for(service: resolved).get("/#{resolved}/api/v2/rules_of_origin_schemes/#{heading_code}/#{country_code}", as_of: validity_date)) }
+    with_error_handling { text_response(client_for(service: resolved).get("/#{resolved}/api/v2/rules_of_origin_schemes/#{subheading_code}/#{country_code}", as_of: validity_date)) }
   end
 end
