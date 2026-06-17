@@ -30,6 +30,8 @@ class ApplicationTool < MCP::Tool
       yield
     rescue TariffClient::NotFound => e
       MCP::Tool::Response.new([ { type: "text", text: e.message } ], error: true)
+    rescue TariffClient::RateLimited => e
+      MCP::Tool::Response.new([ { type: "text", text: e.message } ], error: true)
     rescue TariffClient::ApiError => e
       raise StandardError, "Backend API error: #{e.message}"
     rescue ArgumentError => e

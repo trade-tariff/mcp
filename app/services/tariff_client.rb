@@ -5,6 +5,7 @@ require "json"
 
 class TariffClient
   class NotFound < StandardError; end
+  class RateLimited < StandardError; end
   class ApiError < StandardError; end
 
   VALID_SERVICES = %w[uk xi].freeze
@@ -26,6 +27,8 @@ class TariffClient
       JSON.parse(response.body)
     when 404
       raise NotFound, "Resource not found: #{path}"
+    when 429
+      raise RateLimited, "Rate limit exceeded — too many requests to the tariff API"
     else
       raise ApiError, "API error #{response.status}: #{path}"
     end
