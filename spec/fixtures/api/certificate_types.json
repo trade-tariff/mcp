@@ -1,0 +1,12 @@
+{
+  "data": [
+    {
+      "id": "C",
+      "type": "certificate_type",
+      "attributes": {
+        "certificate_type_code": "C",
+        "description": "Catch certificate"
+      }
+    }
+  ]
+}

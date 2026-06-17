@@ -1,0 +1,13 @@
+{
+  "data": [
+    {
+      "id": "uk-turkey",
+      "type": "rules_of_origin_scheme",
+      "attributes": {
+        "scheme_code": "uk-turkey",
+        "title": "UK-Turkey Trade Agreement",
+        "unilateral": false
+      }
+    }
+  ]
+}

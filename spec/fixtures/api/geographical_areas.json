@@ -1,0 +1,12 @@
+{
+  "data": [
+    {
+      "id": "TR",
+      "type": "geographical_area",
+      "attributes": {
+        "description": "Turkey",
+        "geographical_area_id": "TR"
+      }
+    }
+  ]
+}
