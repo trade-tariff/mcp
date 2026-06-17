@@ -35,7 +35,6 @@ Unrecognised service values return an error rather than silently defaulting.
 
 - Ruby 4.0.5
 - `TARIFF_API_URL` — base URL for the tariff API (both UK and XI services are served from the same host)
-- `TARIFF_API_TOKEN` — bearer token for authenticating with the tariff backend API
 
 ## Setup
 
@@ -82,11 +81,20 @@ npx @modelcontextprotocol/inspector http://localhost:3000/mcp
 bundle exec rspec
 ```
 
+## Authentication
+
+Clients must pass a bearer token on every request:
+
+```
+Authorization: Bearer <your-api-token>
+```
+
+The token is forwarded as-is to the tariff backend API. Requests without a token receive a `401 Unauthorized` response.
+
 ## Environment Variables
 
 | Variable | Description | Example |
 |----------|-------------|---------|
 | `TARIFF_API_URL` | Base URL for the tariff backend | `https://www.trade-tariff.service.gov.uk` |
-| `TARIFF_API_TOKEN` | Bearer token for authenticating with the tariff backend API | `your-api-token-here` |
 
 Required at startup in non-test environments.

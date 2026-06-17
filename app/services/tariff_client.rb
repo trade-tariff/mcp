@@ -34,9 +34,9 @@ class TariffClient
   private
 
   def connection
-    @connection ||= Faraday.new(url: @base_url) do |f|
+    Faraday.new(url: @base_url) do |f|
       f.headers["Accept"] = "application/vnd.hmrc.2.0+json"
-      f.headers["Authorization"] = "Bearer #{ENV.fetch('TARIFF_API_TOKEN')}"
+      f.headers["Authorization"] = "Bearer #{CurrentRequest.bearer_token}"
     end
   end
 end

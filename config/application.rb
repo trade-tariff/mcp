@@ -9,6 +9,7 @@ require "action_controller/railtie"
 Bundler.require(*Rails.groups)
 
 require_relative "../app/middleware/mcp_cors_middleware"
+require_relative "../app/middleware/bearer_token_middleware"
 
 module TradeTariffMcp
   class Application < Rails::Application
@@ -26,5 +27,6 @@ module TradeTariffMcp
     config.api_only = true
 
     config.middleware.insert_before 0, McpCorsMiddleware
+    config.middleware.use BearerTokenMiddleware
   end
 end
