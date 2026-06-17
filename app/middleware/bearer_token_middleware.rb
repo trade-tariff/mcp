@@ -10,7 +10,7 @@ class BearerTokenMiddleware
   def call(env)
     if env["PATH_INFO"] != HEALTH_PATH
       token = extract_token(env["HTTP_AUTHORIZATION"])
-      return unauthorized unless token
+      return unauthorized unless token || Rails.env.development?
 
       CurrentRequest.bearer_token = token
     end
