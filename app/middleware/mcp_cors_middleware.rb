@@ -1,9 +1,8 @@
 # frozen_string_literal: true
 
-# Handles CORS for the /mcp endpoint before Rails routing.
-# Rails does not route OPTIONS requests to mounted Rack apps, so preflight
-# must be intercepted here. We also inject CORS headers into every /mcp
-# response so browser-based clients (e.g. MCP Inspector) can read them.
+# Handles CORS before Rails routing. Rails does not route OPTIONS requests to
+# mounted Rack apps, so preflight must be intercepted here. CORS headers are
+# added to all responses except the health check.
 class McpCorsMiddleware
   CORS_HEADERS = {
     "Access-Control-Allow-Origin" => "*",
@@ -13,6 +12,8 @@ class McpCorsMiddleware
     "Access-Control-Max-Age" => "86400"
   }.freeze
 
+  HEALTH_PATH = "/up"
+
   def initialize(app)
     @app = app
   end
@@ -20,15 +21,11 @@ class McpCorsMiddleware
   def call(env)
     path = env["PATH_INFO"]
 
-    if env["REQUEST_METHOD"] == "OPTIONS" && path.start_with?("/mcp")
-      return [ 200, CORS_HEADERS.dup, [] ]
-    end
+    return [ 200, CORS_HEADERS.dup, [] ] if env["REQUEST_METHOD"] == "OPTIONS" && path != HEALTH_PATH
 
     status, headers, body = @app.call(env)
 
-    if path.start_with?("/mcp")
-      headers = headers.merge(CORS_HEADERS)
-    end
+    headers = headers.merge(CORS_HEADERS) unless path == HEALTH_PATH
 
     [ status, headers, body ]
   end

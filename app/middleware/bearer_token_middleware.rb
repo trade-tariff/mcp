@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 class BearerTokenMiddleware
-  MCP_PATH_PREFIX = "/mcp"
   HEALTH_PATH = "/up"
 
   def initialize(app)
@@ -9,9 +8,7 @@ class BearerTokenMiddleware
   end
 
   def call(env)
-    path = env["PATH_INFO"]
-
-    if path.start_with?(MCP_PATH_PREFIX)
+    if env["PATH_INFO"] != HEALTH_PATH
       token = extract_token(env["HTTP_AUTHORIZATION"])
       return unauthorized unless token
 

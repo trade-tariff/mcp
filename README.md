@@ -50,7 +50,7 @@ cp .env.example .env
 bundle exec rails server
 ```
 
-The MCP endpoint is available at `http://localhost:3000/mcp`.
+The MCP endpoint is available at `http://localhost:3000/`.
 
 ## Connecting to Claude Desktop
 
@@ -60,7 +60,10 @@ Add to your `claude_desktop_config.json`:
 {
   "mcpServers": {
     "trade-tariff": {
-      "url": "http://localhost:3000/mcp"
+      "url": "http://localhost:3000/",
+      "headers": {
+        "Authorization": "Bearer <your-api-token>"
+      }
     }
   }
 }
@@ -69,7 +72,7 @@ Add to your `claude_desktop_config.json`:
 ## Testing with MCP Inspector
 
 ```bash
-npx @modelcontextprotocol/inspector http://localhost:3000/mcp
+npx @modelcontextprotocol/inspector http://localhost:3000/
 ```
 
 <img width="801" height="615" alt="Screenshot 2026-06-16 at 16 22 51" src="https://github.com/user-attachments/assets/91a770e6-ca18-4260-afd7-28112c27233b" />

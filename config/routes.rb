@@ -22,5 +22,5 @@ Rails.application.routes.draw do
     mcp_transport.call(env)
   end
 
-  mount mcp_app, at: "/mcp"
+  mount mcp_app, at: "/"
 end
