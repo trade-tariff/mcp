@@ -10,7 +10,7 @@ RSpec.describe SearchQuotasTool do
   after  { ENV.delete("TARIFF_API_URL") }
 
   it "calls the UK quotas search endpoint with no filters by default" do
-    stub_request(:get, "#{base_url}/uk/api/v2/quotas/search")
+    stub_request(:get, /uk\/api\/v2\/quotas\/search/)
       .to_return(status: 200, body: response_body, headers: { "Content-Type" => "application/json" })
 
     result = described_class.call(service: nil)
@@ -20,7 +20,7 @@ RSpec.describe SearchQuotasTool do
   end
 
   it "passes order_number as a query param when supplied" do
-    stub = stub_request(:get, "#{base_url}/uk/api/v2/quotas/search")
+    stub = stub_request(:get, /uk\/api\/v2\/quotas\/search/)
              .with(query: hash_including("order_number" => "094011"))
              .to_return(status: 200, body: response_body, headers: { "Content-Type" => "application/json" })
 
@@ -30,7 +30,7 @@ RSpec.describe SearchQuotasTool do
   end
 
   it "passes year, month and day as query params when supplied" do
-    stub = stub_request(:get, "#{base_url}/uk/api/v2/quotas/search")
+    stub = stub_request(:get, /uk\/api\/v2\/quotas\/search/)
              .with(query: hash_including("year" => "2026", "month" => "6", "day" => "1"))
              .to_return(status: 200, body: response_body, headers: { "Content-Type" => "application/json" })
 
@@ -40,7 +40,7 @@ RSpec.describe SearchQuotasTool do
   end
 
   it "calls the XI endpoint when service is ni" do
-    stub_request(:get, "#{base_url}/xi/api/v2/quotas/search")
+    stub_request(:get, /xi\/api\/v2\/quotas\/search/)
       .to_return(status: 200, body: response_body, headers: { "Content-Type" => "application/json" })
 
     result = described_class.call(service: "ni")
@@ -56,7 +56,7 @@ RSpec.describe SearchQuotasTool do
   end
 
   it "raises StandardError when the backend returns a 5xx status" do
-    stub_request(:get, "#{base_url}/uk/api/v2/quotas/search")
+    stub_request(:get, /uk\/api\/v2\/quotas\/search/)
       .to_return(status: 500, body: "{}")
 
     expect { described_class.call(service: nil) }.to raise_error(StandardError, /API error 500/)

@@ -15,7 +15,7 @@ RSpec.describe ShowHeadingTool do
   end
 
   it "returns heading details for the UK service by default" do
-    stub_request(:get, "#{base_url}/uk/api/v2/headings/0101")
+    stub_request(:get, /uk\/api\/v2\/headings\/0101/)
       .to_return(status: 200, body: heading_response, headers: { "Content-Type" => "application/json" })
 
     result = described_class.call(heading_id: "0101", service: nil)
@@ -25,7 +25,7 @@ RSpec.describe ShowHeadingTool do
   end
 
   it "calls the XI endpoint when service is NI" do
-    stub_request(:get, "#{base_url}/xi/api/v2/headings/0101")
+    stub_request(:get, /xi\/api\/v2\/headings\/0101/)
       .to_return(status: 200, body: heading_response, headers: { "Content-Type" => "application/json" })
 
     result = described_class.call(heading_id: "0101", service: "NI")
@@ -34,7 +34,7 @@ RSpec.describe ShowHeadingTool do
   end
 
   it "returns an error response when heading is not found" do
-    stub_request(:get, "#{base_url}/uk/api/v2/headings/9999")
+    stub_request(:get, /uk\/api\/v2\/headings\/9999/)
       .to_return(status: 404, body: "{}")
 
     result = described_class.call(heading_id: "9999", service: nil)

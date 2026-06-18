@@ -23,7 +23,24 @@ class LookupCommodityTool < ApplicationTool
 
     resolved = ServiceNormaliser.call(service)
     with_error_handling do
-      raw = client_for(service: resolved).get("/#{resolved}/api/v2/commodities/#{commodity_code}", as_of: validity_date)
+      params = {
+        "include" => "section,chapter,heading,footnotes," \
+                     "import_measures,import_measures.measure_type,import_measures.duty_expression," \
+                     "import_measures.geographical_area,import_measures.measure_conditions," \
+                     "export_measures,export_measures.measure_type,export_measures.duty_expression," \
+                     "export_measures.geographical_area,export_measures.measure_conditions",
+        "fields[commodity]" => "goods_nomenclature_item_id,description_plain,declarable,basic_duty_rate,validity_start_date,validity_end_date",
+        "fields[measure]" => "effective_start_date,effective_end_date",
+        "fields[measure_type]" => "description",
+        "fields[duty_expression]" => "base",
+        "fields[geographical_area]" => "id,description,geographical_area_id",
+        "fields[measure_condition]" => "condition,document_code,requirement,action",
+        "fields[section]" => "title",
+        "fields[chapter]" => "formatted_description",
+        "fields[heading]" => "description_plain",
+        "fields[footnote]" => "code,description"
+      }
+      raw = client_for(service: resolved).get("/#{resolved}/api/v2/commodities/#{commodity_code}", params: params, as_of: validity_date)
       text_response(CommodityShaper.call(raw))
     end
   end

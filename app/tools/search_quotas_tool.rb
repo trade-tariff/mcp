@@ -41,7 +41,12 @@ class SearchQuotasTool < ApplicationTool
     error = validate_date(validity_date)
     return error if error
 
-    params = {}
+    params = {
+      "include" => "order_number,order_number.geographical_areas",
+      "fields[definition]" => "description,status,balance,initial_volume,measurement_unit,validity_start_date,validity_end_date",
+      "fields[order_number]" => "number",
+      "fields[geographical_area]" => "id,description,geographical_area_id"
+    }
     params["order_number"] = order_number if order_number
     params["year"] = year if year
     params["month"] = month if month

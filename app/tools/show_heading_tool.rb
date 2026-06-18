@@ -23,7 +23,15 @@ class ShowHeadingTool < ApplicationTool
 
     resolved = ServiceNormaliser.call(service)
     with_error_handling do
-      raw = client_for(service: resolved).get("/#{resolved}/api/v2/headings/#{heading_id}", as_of: validity_date)
+      params = {
+        "include" => "section,chapter,footnotes,commodities",
+        "fields[heading]" => "goods_nomenclature_item_id,description_plain,declarable,validity_start_date,validity_end_date",
+        "fields[section]" => "title",
+        "fields[chapter]" => "description_plain,formatted_description",
+        "fields[commodity]" => "goods_nomenclature_item_id,description_plain,declarable,leaf",
+        "fields[footnote]" => "code,description"
+      }
+      raw = client_for(service: resolved).get("/#{resolved}/api/v2/headings/#{heading_id}", params: params, as_of: validity_date)
       text_response(HeadingShaper.call(raw))
     end
   end

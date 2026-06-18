@@ -15,7 +15,7 @@ RSpec.describe LookupCommodityTool do
   end
 
   it "returns commodity details for UK by default" do
-    stub_request(:get, "#{base_url}/uk/api/v2/commodities/0101210000")
+    stub_request(:get, /uk\/api\/v2\/commodities\/0101210000/)
       .to_return(status: 200, body: commodity_response, headers: { "Content-Type" => "application/json" })
 
     result = described_class.call(commodity_code: "0101210000", service: nil)
@@ -25,7 +25,7 @@ RSpec.describe LookupCommodityTool do
   end
 
   it "calls the XI endpoint when service is xi" do
-    stub_request(:get, "#{base_url}/xi/api/v2/commodities/0101210000")
+    stub_request(:get, /xi\/api\/v2\/commodities\/0101210000/)
       .to_return(status: 200, body: commodity_response, headers: { "Content-Type" => "application/json" })
 
     result = described_class.call(commodity_code: "0101210000", service: "xi")
@@ -33,8 +33,18 @@ RSpec.describe LookupCommodityTool do
     expect(JSON.parse(result.content.first[:text])).to include("commodity_code")
   end
 
+  it "sends sparse field and include params to the API" do
+    stub = stub_request(:get, /uk\/api\/v2\/commodities\/0101210000/)
+             .to_return(status: 200, body: commodity_response, headers: { "Content-Type" => "application/json" })
+
+    described_class.call(commodity_code: "0101210000", service: nil)
+
+    expect(stub).to have_been_requested
+    expect(stub.with { |req| req.uri.query }.to_s).to be_truthy
+  end
+
   it "returns an error response when commodity is not found" do
-    stub_request(:get, "#{base_url}/uk/api/v2/commodities/9999999999")
+    stub_request(:get, /uk\/api\/v2\/commodities\/9999999999/)
       .to_return(status: 404, body: "{}")
 
     result = described_class.call(commodity_code: "9999999999", service: nil)
