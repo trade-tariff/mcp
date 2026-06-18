@@ -14,7 +14,7 @@ class BearerTokenMiddleware
   def call(env)
     if UNAUTHENTICATED_PATHS.exclude?(env["PATH_INFO"])
       token = extract_token(env["HTTP_AUTHORIZATION"])
-      return unauthorized unless token || Rails.env.development?
+      return unauthorized(env) unless token || Rails.env.development?
 
       CurrentRequest.bearer_token = token
     end
@@ -34,8 +34,14 @@ class BearerTokenMiddleware
     end
   end
 
-  def unauthorized
+  def unauthorized(env)
+    host = "#{env["rack.url_scheme"]}://#{env["HTTP_HOST"]}"
+    metadata_url = "#{host}/.well-known/oauth-authorization-server"
     body = { error: "Unauthorized", message: "A Bearer token is required." }.to_json
-    [ 401, { "Content-Type" => "application/json" }, [ body ] ]
+    headers = {
+      "Content-Type" => "application/json",
+      "WWW-Authenticate" => %(Bearer resource_metadata="#{metadata_url}")
+    }
+    [ 401, headers, [ body ] ]
   end
 end

@@ -22,11 +22,12 @@ RSpec.describe BearerTokenMiddleware do
     expect(CurrentRequest.bearer_token).to eq("my-token")
   end
 
-  it "returns 401 when no Authorization header is present outside development" do
+  it "returns 401 with a WWW-Authenticate header when no Authorization header is present outside development" do
     allow(Rails).to receive(:env).and_return(ActiveSupport::StringInquirer.new("production"))
 
-    status, = middleware.call(env_for)
+    status, headers, = middleware.call(env_for)
     expect(status).to eq(401)
+    expect(headers["WWW-Authenticate"]).to match(/Bearer resource_metadata=".*\/.well-known\/oauth-authorization-server"/)
   end
 
   it "passes through unauthenticated paths without a token" do
