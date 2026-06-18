@@ -3,7 +3,9 @@
 class BearerTokenMiddleware
   UNAUTHENTICATED_PATHS = [
     "/healthcheckz",
+    "/.well-known/oauth-protected-resource",
     "/.well-known/oauth-authorization-server",
+    "/oauth/authorize",
     "/oauth/token"
   ].freeze
 
