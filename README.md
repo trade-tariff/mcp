@@ -12,7 +12,7 @@ Add to your `claude_desktop_config.json`:
 {
   "mcpServers": {
     "trade-tariff": {
-      "url": "https://mcp.trade-tariff.service.gov.uk/mcp"
+      "url": "https://mcp.trade-tariff.service.gov.uk/"
     }
   }
 }
