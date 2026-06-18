@@ -37,9 +37,15 @@ class TariffClient
   private
 
   def connection
-    Faraday.new(url: @base_url) do |f|
+    Faraday.new(url: @base_url, ssl: ssl_options) do |f|
       f.headers["Accept"] = "application/vnd.hmrc.2.0+json"
       f.headers["Authorization"] = "Bearer #{CurrentRequest.bearer_token}" if CurrentRequest.bearer_token
     end
+  end
+
+  def ssl_options
+    return { verify: false } if URI.parse(@base_url).host&.end_with?(".internal")
+
+    {}
   end
 end
