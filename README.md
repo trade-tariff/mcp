@@ -61,20 +61,38 @@ Unrecognised service values return an error rather than silently defaulting.
 Clients must pass a bearer token on every request:
 
 ```
-Authorization: Bearer <your-api-token>
+Authorization: Bearer <access-token>
 ```
 
-The token is forwarded as-is to the tariff backend API. Requests without a token receive a `401 Unauthorized` response.
+Requests without a valid token receive a `401 Unauthorized` response. In the development environment the bearer token requirement is skipped.
 
-In the development environment the bearer token requirement is skipped — no `Authorization` header is needed when running locally.
+### Getting credentials
 
-### Adding as a custom connector in Claude.ai
+Register at the [Trade Tariff developer portal (Hub)](https://hub.trade-tariff.service.gov.uk/) and create an application. You will receive a **client_id** and **client_secret**.
 
-Claude.ai's connector UI uses OAuth 2.0 client credentials. The server implements a thin OAuth wrapper so it works without a separate auth system:
+### OAuth 2.0 (Claude.ai connectors and other OAuth clients)
 
-1. In Claude.ai, choose **Add connector → Custom** and enter `https://mcp.trade-tariff.service.gov.uk` as the server URL.
-2. When prompted for credentials, leave **Client ID** blank and paste your API token into **Client Secret**.
-3. Claude will call `/oauth/token` with your secret and receive it back as a bearer token for all subsequent requests.
+The server implements OAuth 2.0 Authorization Code + PKCE. When an OAuth-capable client (such as Claude.ai) connects:
+
+1. The client initiates an Authorization Code + PKCE flow with the MCP server.
+2. The MCP server exchanges your Hub **client_id** and **client_secret** against the Hub token endpoint using the `client_credentials` grant.
+3. Hub issues a signed JWT which the MCP server returns to the client as the access token.
+
+To add as a connector in Claude.ai:
+
+1. Choose **Add connector → Custom** and enter `https://mcp.trade-tariff.service.gov.uk` as the server URL.
+2. When prompted for credentials, enter your Hub **client_id** and **client_secret**.
+
+### Static bearer token (Claude Desktop, Cursor, Windsurf, etc.)
+
+Clients that take a static `Authorization` header need a bearer token. Obtain one by exchanging your Hub credentials directly:
+
+```bash
+curl -X POST https://auth.id.trade-tariff.service.gov.uk/oauth2/token \
+  -d "grant_type=client_credentials&client_id=<client_id>&client_secret=<client_secret>&scope=tariff/read"
+```
+
+Use the returned `access_token` as your bearer token. Note that these tokens expire — you will need to refresh them periodically.
 
 ## Development
 
