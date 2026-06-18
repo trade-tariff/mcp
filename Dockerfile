@@ -10,7 +10,7 @@ RUN apk add \
   --no-cache \
   build-base \
   git \
-  libyaml-dev \
+  yaml-dev \
   tzdata \
   && \
   cp /usr/share/zoneinfo/Europe/London /etc/localtime && \
