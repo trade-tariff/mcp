@@ -10,6 +10,7 @@ RUN apk add \
   --no-cache \
   build-base \
   git \
+  openssl-dev \
   yaml-dev \
   tzdata \
   && \
@@ -35,6 +36,7 @@ FROM ruby:${RUBY_VERSION}-alpine${ALPINE_VERSION} AS production
 RUN apk add --no-cache \
     bash \
     netcat-openbsd \
+    openssl \
     tzdata && \
     cp /usr/share/zoneinfo/Europe/London /etc/localtime && \
     echo "Europe/London" > /etc/timezone
