@@ -12,16 +12,18 @@ Add to your `claude_desktop_config.json`:
 {
   "mcpServers": {
     "trade-tariff": {
-      "url": "https://mcp.trade-tariff.service.gov.uk/",
-      "headers": {
-        "Authorization": "Bearer <your-api-token>"
-      }
+      "url": "https://mcp.trade-tariff.service.gov.uk/mcp"
     }
   }
 }
 ```
 
-A bearer token is required on every request — see [Authentication](#authentication).
+File locations:
+
+- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+
+Restart Claude Desktop after saving. It will prompt for your Hub **client_id** and **client_secret** on first use — see [Authentication](#authentication).
 
 ## Tools
 
