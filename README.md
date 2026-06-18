@@ -58,41 +58,11 @@ Unrecognised service values return an error rather than silently defaulting.
 
 ## Authentication
 
-Clients must pass a bearer token on every request:
-
-```
-Authorization: Bearer <access-token>
-```
-
-Requests without a valid token receive a `401 Unauthorized` response. In the development environment the bearer token requirement is skipped.
-
-### Getting credentials
-
 Register at the [Trade Tariff developer portal (Hub)](https://hub.trade-tariff.service.gov.uk/) and create an application. You will receive a **client_id** and **client_secret**.
 
-### OAuth 2.0 (Claude.ai connectors and other OAuth clients)
+The server implements OAuth 2.0 Authorization Code + PKCE. When a client connects, enter your Hub **client_id** and **client_secret** when prompted. The MCP server exchanges these with Hub internally and returns a signed access token to the client.
 
-The server implements OAuth 2.0 Authorization Code + PKCE. When an OAuth-capable client (such as Claude.ai) connects:
-
-1. The client initiates an Authorization Code + PKCE flow with the MCP server.
-2. The MCP server exchanges your Hub **client_id** and **client_secret** against the Hub token endpoint using the `client_credentials` grant.
-3. Hub issues a signed JWT which the MCP server returns to the client as the access token.
-
-To add as a connector in Claude.ai:
-
-1. Choose **Add connector → Custom** and enter `https://mcp.trade-tariff.service.gov.uk` as the server URL.
-2. When prompted for credentials, enter your Hub **client_id** and **client_secret**.
-
-### Static bearer token (Claude Desktop, Cursor, Windsurf, etc.)
-
-Clients that take a static `Authorization` header need a bearer token. Obtain one by exchanging your Hub credentials directly:
-
-```bash
-curl -X POST https://auth.id.trade-tariff.service.gov.uk/oauth2/token \
-  -d "grant_type=client_credentials&client_id=<client_id>&client_secret=<client_secret>&scope=tariff/read"
-```
-
-Use the returned `access_token` as your bearer token. Note that these tokens expire — you will need to refresh them periodically.
+Requests without a valid token receive a `401 Unauthorized` response. In the development environment authentication is skipped.
 
 ## Development
 
