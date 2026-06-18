@@ -33,7 +33,7 @@ FROM ruby:${RUBY_VERSION}-alpine${ALPINE_VERSION} AS production
 
 RUN apk add --no-cache \
     bash \
-    curl \
+    netcat-openbsd \
     tzdata && \
     cp /usr/share/zoneinfo/Europe/London /etc/localtime && \
     echo "Europe/London" > /etc/timezone
@@ -56,7 +56,7 @@ RUN addgroup -S tariff && \
   chown -R tariff:tariff /app && \
   chown -R tariff:tariff /usr/local/bundle
 
-HEALTHCHECK CMD curl -f http://localhost:$PORT/up || exit 1
+HEALTHCHECK CMD nc -z 0.0.0.0 $SSL_PORT
 
 USER tariff
 
