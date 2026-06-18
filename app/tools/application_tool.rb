@@ -29,7 +29,7 @@ class ApplicationTool < MCP::Tool
     def with_error_handling
       yield
     rescue TariffClient::NotFound => e
-      MCP::Tool::Response.new([ { type: "text", text: e.message } ], error: true)
+      MCP::Tool::Response.new([ { type: "text", text: "#{e.message}. Use show_heading or navigate_hierarchy to find valid commodity codes — do not guess or construct them." } ], error: true)
     rescue TariffClient::RateLimited => e
       MCP::Tool::Response.new([ { type: "text", text: e.message } ], error: true)
     rescue TariffClient::ApiError => e

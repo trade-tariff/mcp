@@ -74,14 +74,13 @@ class HeadingShaper
     refs.filter_map do |ref|
       comm = lookup(ref["type"], ref["id"])
       next unless comm
+      next unless comm.dig("attributes", "declarable")
 
       attrs = comm["attributes"]
       {
         code: attrs["goods_nomenclature_item_id"],
-        description: attrs["description_plain"],
-        declarable: attrs["declarable"],
-        leaf: attrs["leaf"]
-      }.compact
+        description: attrs["description_plain"]
+      }
     end
   end
 end
