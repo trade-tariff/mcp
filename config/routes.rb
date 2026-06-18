@@ -27,7 +27,7 @@ Rails.application.routes.draw do
           RulesOfOriginTool
         ]
       ),
-      stateless: false,
+      stateless: true,
       enable_json_response: true
     )
     mcp_transport.call(env)
