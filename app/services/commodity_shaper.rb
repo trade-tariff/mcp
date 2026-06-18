@@ -68,12 +68,17 @@ class CommodityShaper
       measure_type  = resolve_typed(mrels, "measure_type")
       duty_expr     = resolve_typed(mrels, "duty_expression")
       geo_area      = resolve_typed(mrels, "geographical_area")
+      order_number  = resolve_typed(mrels, "order_number")
       conditions    = shape_conditions(mrels.dig("measure_conditions", "data"))
 
       {
         type: measure_type&.dig("attributes", "description"),
         duty: duty_expr&.dig("attributes", "base"),
         geographical_area: format_geo(geo_area),
+        excise: mattrs["excise"] || nil,
+        vat: mattrs["vat"] || nil,
+        reduction_indicator: mattrs["reduction_indicator"],
+        quota_order_number: order_number&.dig("attributes", "number"),
         effective_start_date: mattrs["effective_start_date"]&.then { |d| d[0, 10] },
         effective_end_date: mattrs["effective_end_date"]&.then { |d| d[0, 10] },
         conditions: conditions.empty? ? nil : conditions
@@ -92,6 +97,7 @@ class CommodityShaper
       {
         condition: cattrs["condition"],
         document_code: cattrs["document_code"].then { |v| v.nil? || v.empty? ? nil : v },
+        certificate_description: cattrs["certificate_description"].then { |v| v.nil? || v.empty? ? nil : v },
         requirement: cattrs["requirement"].then { |v| v.nil? || v.empty? ? nil : v },
         action: cattrs["action"]
       }.compact

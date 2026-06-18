@@ -42,10 +42,12 @@ class SearchQuotasTool < ApplicationTool
     return error if error
 
     params = {
-      "include" => "order_number,order_number.geographical_areas",
+      "include" => "order_number,order_number.geographical_areas,measures,measures.goods_nomenclature",
       "fields[definition]" => "description,status,balance,initial_volume,measurement_unit,validity_start_date,validity_end_date",
       "fields[order_number]" => "number",
-      "fields[geographical_area]" => "id,description,geographical_area_id"
+      "fields[geographical_area]" => "id,description,geographical_area_id",
+      "fields[measure]" => "goods_nomenclature_item_id",
+      "fields[commodity]" => "goods_nomenclature_item_id,description_plain"
     }
     params["order_number"] = order_number if order_number
     params["year"] = year if year

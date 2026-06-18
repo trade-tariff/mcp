@@ -76,7 +76,7 @@ class SearchQuotasShaper
       measure = lookup(ref["type"], ref["id"])
       next unless measure
 
-      comm_ref = measure.dig("relationships", "commodity", "data")
+      comm_ref = measure.dig("relationships", "goods_nomenclature", "data")
       next unless comm_ref
 
       comm = lookup(comm_ref["type"], comm_ref["id"])
@@ -85,7 +85,7 @@ class SearchQuotasShaper
       comm_attrs = comm["attributes"]
       {
         code: comm_attrs["goods_nomenclature_item_id"],
-        description: comm_attrs["description"]
+        description: comm_attrs["description_plain"] || comm_attrs["description"]
       }
     end
   end
