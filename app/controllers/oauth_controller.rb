@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class OauthController < ApplicationController
-  HUB_TOKEN_URL = "https://auth.id.trade-tariff.service.gov.uk/oauth2/token"
+  HUB_TOKEN_URL = ENV.fetch("HUB_TOKEN_URL", "https://auth.id.trade-tariff.service.gov.uk/oauth2/token")
 
   # Codes are single-use and short-lived.
   AUTH_CODE_TTL = 5.minutes
