@@ -29,7 +29,7 @@ class LookupCommodityTool < ApplicationTool
                      "import_measures.geographical_area,import_measures.measure_conditions,import_measures.order_number," \
                      "export_measures,export_measures.measure_type,export_measures.duty_expression," \
                      "export_measures.geographical_area,export_measures.measure_conditions",
-        "fields[commodity]" => "goods_nomenclature_item_id,description_plain,declarable,basic_duty_rate,validity_start_date,validity_end_date",
+        "fields[commodity]" => "goods_nomenclature_item_id,description_plain,declarable,basic_duty_rate,validity_start_date,validity_end_date,import_measures,export_measures,section,chapter,heading,footnotes",
         "fields[measure]" => "effective_start_date,effective_end_date,excise,vat,reduction_indicator",
         "fields[measure_type]" => "description",
         "fields[duty_expression]" => "base",

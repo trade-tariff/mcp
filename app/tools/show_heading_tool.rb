@@ -25,7 +25,7 @@ class ShowHeadingTool < ApplicationTool
     with_error_handling do
       params = {
         "include" => "section,chapter,footnotes,commodities",
-        "fields[heading]" => "goods_nomenclature_item_id,description_plain,declarable,validity_start_date,validity_end_date",
+        "fields[heading]" => "goods_nomenclature_item_id,description_plain,declarable,validity_start_date,validity_end_date,section,chapter,footnotes,commodities",
         "fields[section]" => "title",
         "fields[chapter]" => "description_plain,formatted_description",
         "fields[commodity]" => "goods_nomenclature_item_id,description_plain,declarable,leaf",
