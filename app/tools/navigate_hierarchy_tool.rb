@@ -21,7 +21,8 @@ class NavigateHierarchyTool < ApplicationTool
     error = validate_format(code, /\A\d{4,10}\z/, "code") || validate_date(validity_date)
     return error if error
 
+    padded = code.ljust(10, "0")
     resolved = ServiceNormaliser.call(service)
-    with_error_handling { text_response(client_for(service: resolved).get("/#{resolved}/api/v2/goods_nomenclatures/#{code}", as_of: validity_date)) }
+    with_error_handling { text_response(client_for(service: resolved).get("/#{resolved}/api/v2/goods_nomenclatures/#{padded}", as_of: validity_date)) }
   end
 end

@@ -24,11 +24,20 @@ RSpec.describe NavigateHierarchyTool do
     expect(JSON.parse(result.content.first[:text])).to include("data")
   end
 
-  it "accepts a 4-digit heading code" do
-    stub_request(:get, "#{base_url}/uk/api/v2/goods_nomenclatures/0101")
+  it "pads a 4-digit heading code to 10 digits" do
+    stub_request(:get, "#{base_url}/uk/api/v2/goods_nomenclatures/0101000000")
       .to_return(status: 200, body: gn_response, headers: { "Content-Type" => "application/json" })
 
     result = described_class.call(code: "0101", service: nil)
+
+    expect(JSON.parse(result.content.first[:text])).to include("data")
+  end
+
+  it "pads an 8-digit subheading code to 10 digits" do
+    stub_request(:get, "#{base_url}/uk/api/v2/goods_nomenclatures/8703240000")
+      .to_return(status: 200, body: gn_response, headers: { "Content-Type" => "application/json" })
+
+    result = described_class.call(code: "87032400", service: nil)
 
     expect(JSON.parse(result.content.first[:text])).to include("data")
   end
@@ -43,7 +52,7 @@ RSpec.describe NavigateHierarchyTool do
   end
 
   it "returns an error response when code is not found" do
-    stub_request(:get, "#{base_url}/uk/api/v2/goods_nomenclatures/9999")
+    stub_request(:get, "#{base_url}/uk/api/v2/goods_nomenclatures/9999000000")
       .to_return(status: 404, body: "{}")
 
     result = described_class.call(code: "9999", service: nil)
