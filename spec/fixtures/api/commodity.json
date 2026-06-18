@@ -5,7 +5,21 @@
     "attributes": {
       "goods_nomenclature_item_id": "0101210000",
       "description": "Horses",
-      "formatted_description": "Horses"
+      "description_plain": "Horses",
+      "formatted_description": "Horses",
+      "declarable": true,
+      "validity_start_date": "2012-01-01T00:00:00.000Z",
+      "validity_end_date": null,
+      "basic_duty_rate": "0.00 %"
+    },
+    "relationships": {
+      "footnotes": { "data": [] },
+      "section": { "data": null },
+      "chapter": { "data": null },
+      "heading": { "data": null },
+      "import_measures": { "data": [] },
+      "export_measures": { "data": [] }
     }
-  }
+  },
+  "included": []
 }

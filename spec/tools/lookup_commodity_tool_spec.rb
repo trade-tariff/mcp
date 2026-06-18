@@ -21,7 +21,7 @@ RSpec.describe LookupCommodityTool do
     result = described_class.call(commodity_code: "0101210000", service: nil)
 
     expect(result).to be_a(MCP::Tool::Response)
-    expect(JSON.parse(result.content.first[:text])).to include("data")
+    expect(JSON.parse(result.content.first[:text])).to include("commodity_code")
   end
 
   it "calls the XI endpoint when service is xi" do
@@ -30,7 +30,7 @@ RSpec.describe LookupCommodityTool do
 
     result = described_class.call(commodity_code: "0101210000", service: "xi")
 
-    expect(JSON.parse(result.content.first[:text])).to include("data")
+    expect(JSON.parse(result.content.first[:text])).to include("commodity_code")
   end
 
   it "returns an error response when commodity is not found" do
