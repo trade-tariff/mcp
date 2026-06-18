@@ -46,5 +46,10 @@ variable "memory" {
 variable "enable_alarms" {
   description = "Whether to enable CloudWatch alarms for the service."
   type        = bool
-  default     = true
+  default     = false
+}
+
+variable "enable_observability_alerts" {
+  type    = bool
+  default = false
 }
