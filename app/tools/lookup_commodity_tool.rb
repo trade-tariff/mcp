@@ -2,7 +2,7 @@
 
 class LookupCommodityTool < ApplicationTool
   tool_name "lookup_commodity"
-  description "Look up a commodity by its 10-digit commodity code. Returns description, measures, duties, and other tariff details."
+  description "Look up a commodity by its 10-digit commodity code. Returns description, measures, duties, and other tariff details. Only use codes obtained from show_heading or navigate_hierarchy — do not guess or construct codes."
 
   input_schema(
     properties: {

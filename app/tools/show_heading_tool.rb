@@ -2,7 +2,7 @@
 
 class ShowHeadingTool < ApplicationTool
   tool_name "show_heading"
-  description "Show details of a tariff heading by its 4-digit code (e.g. '0101' for live horses)."
+  description "Show details of a tariff heading by its 4-digit code (e.g. '0101' for live horses). Returns the heading's commodity children with their codes — use these codes with lookup_commodity."
 
   input_schema(
     properties: {
