@@ -25,11 +25,11 @@ class SearchQuotasShaper
   private
 
   def build_index(included)
-    included.each_with_object({}) { |item, h| h[[item["type"], item["id"]]] = item }
+    included.each_with_object({}) { |item, h| h[[ item["type"], item["id"] ]] = item }
   end
 
   def lookup(type, id)
-    @included[[type, id]]
+    @included[[ type, id ]]
   end
 
   def shape_quota(quota)
