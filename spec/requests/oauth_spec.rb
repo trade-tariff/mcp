@@ -15,24 +15,54 @@ RSpec.describe "OAuth endpoints" do
   end
 
   describe "POST /oauth/token" do
-    it "returns the client_secret as the access_token for a client_credentials grant" do
-      post "/oauth/token", params: { grant_type: "client_credentials", client_secret: "my-api-token" }
+    let(:hub_token_url) { OauthController::HUB_TOKEN_URL }
+    let(:jwt) { "a.b.c" }
 
-      expect(response).to have_http_status(:ok)
-      body = JSON.parse(response.body)
-      expect(body["access_token"]).to eq("my-api-token")
-      expect(body["token_type"]).to eq("bearer")
+    context "with valid client_id and client_secret" do
+      before do
+        stub_request(:post, hub_token_url)
+          .to_return(status: 200, body: { access_token: jwt }.to_json, headers: { "Content-Type" => "application/json" })
+      end
+
+      it "exchanges credentials with Hub and returns the JWT as the access_token" do
+        post "/oauth/token", params: { grant_type: "client_credentials", client_id: "my-client-id", client_secret: "my-client-secret" }
+
+        expect(response).to have_http_status(:ok)
+        body = JSON.parse(response.body)
+        expect(body["access_token"]).to eq(jwt)
+        expect(body["token_type"]).to eq("bearer")
+      end
+
+      it "sends client_id, client_secret, and scope to Hub" do
+        post "/oauth/token", params: { grant_type: "client_credentials", client_id: "my-client-id", client_secret: "my-client-secret" }
+
+        expect(WebMock).to have_requested(:post, hub_token_url)
+          .with(body: hash_including("client_id" => "my-client-id", "client_secret" => "my-client-secret", "scope" => "tariff/read"))
+      end
+    end
+
+    context "when Hub rejects the credentials" do
+      before do
+        stub_request(:post, hub_token_url).to_return(status: 401, body: { error: "invalid_client" }.to_json)
+      end
+
+      it "returns 401" do
+        post "/oauth/token", params: { grant_type: "client_credentials", client_id: "bad-id", client_secret: "bad-secret" }
+
+        expect(response).to have_http_status(:unauthorized)
+        expect(JSON.parse(response.body)["error"]).to eq("invalid_client")
+      end
     end
 
     it "returns 400 for an unsupported grant_type" do
-      post "/oauth/token", params: { grant_type: "authorization_code", client_secret: "my-api-token" }
+      post "/oauth/token", params: { grant_type: "authorization_code", client_id: "x", client_secret: "y" }
 
       expect(response).to have_http_status(:bad_request)
       expect(JSON.parse(response.body)["error"]).to eq("unsupported_grant_type")
     end
 
-    it "returns 401 when client_secret is missing" do
-      post "/oauth/token", params: { grant_type: "client_credentials" }
+    it "returns 401 when client_id or client_secret is missing" do
+      post "/oauth/token", params: { grant_type: "client_credentials", client_secret: "my-client-secret" }
 
       expect(response).to have_http_status(:unauthorized)
       expect(JSON.parse(response.body)["error"]).to eq("invalid_client")
