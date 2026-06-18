@@ -21,7 +21,7 @@ RSpec.describe ShowHeadingTool do
     result = described_class.call(heading_id: "0101", service: nil)
 
     expect(result).to be_a(MCP::Tool::Response)
-    expect(JSON.parse(result.content.first[:text])).to include("data")
+    expect(JSON.parse(result.content.first[:text])).to include("heading_code")
   end
 
   it "calls the XI endpoint when service is NI" do
@@ -30,7 +30,7 @@ RSpec.describe ShowHeadingTool do
 
     result = described_class.call(heading_id: "0101", service: "NI")
 
-    expect(JSON.parse(result.content.first[:text])).to include("data")
+    expect(JSON.parse(result.content.first[:text])).to include("heading_code")
   end
 
   it "returns an error response when heading is not found" do

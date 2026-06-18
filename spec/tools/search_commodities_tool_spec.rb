@@ -22,7 +22,7 @@ RSpec.describe SearchCommoditiesTool do
     result = described_class.call(query: "horses", service: nil)
 
     expect(result).to be_a(MCP::Tool::Response)
-    expect(JSON.parse(result.content.first[:text])).to include("data")
+    expect(JSON.parse(result.content.first[:text])).to include("goods_nomenclature_matches")
   end
 
   it "searches the XI service when service is northern_ireland" do
@@ -32,7 +32,7 @@ RSpec.describe SearchCommoditiesTool do
 
     result = described_class.call(query: "horses", service: "northern_ireland")
 
-    expect(JSON.parse(result.content.first[:text])).to include("data")
+    expect(JSON.parse(result.content.first[:text])).to include("goods_nomenclature_matches")
   end
 
   it "raises StandardError on backend API error" do

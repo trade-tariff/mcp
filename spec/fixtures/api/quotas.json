@@ -1,17 +1,47 @@
 {
   "data": [
     {
-      "id": "094011",
+      "id": "1",
       "type": "quota_definition",
       "attributes": {
         "quota_definition_sid": 1,
         "quota_order_number_id": "094011",
-        "validity_start_date": "2026-01-01",
-        "validity_end_date": "2026-12-31",
+        "description": "Beef and veal",
+        "status": "open",
+        "balance": "5000.0",
         "initial_volume": "10000.0",
         "measurement_unit": "KGM",
-        "status": "open"
+        "measurement_unit_qualifier": null,
+        "monetary_unit": null,
+        "validity_start_date": "2026-01-01T00:00:00.000Z",
+        "validity_end_date": "2026-12-31T00:00:00.000Z",
+        "last_allocation_date": null,
+        "suspension_period_start_date": null,
+        "suspension_period_end_date": null,
+        "blocking_period_start_date": null,
+        "blocking_period_end_date": null
+      },
+      "relationships": {
+        "order_number": { "data": { "id": "094011", "type": "order_number" } },
+        "measures": { "data": [] },
+        "quota_order_number_origins": { "data": [] }
       }
     }
-  ]
+  ],
+  "included": [
+    {
+      "id": "094011",
+      "type": "order_number",
+      "attributes": { "number": "094011" },
+      "relationships": {
+        "geographical_areas": { "data": [{ "id": "1011", "type": "geographical_area" }] }
+      }
+    },
+    {
+      "id": "1011",
+      "type": "geographical_area",
+      "attributes": { "id": "1011", "description": "ERGA OMNES", "geographical_area_id": "1011" }
+    }
+  ],
+  "meta": {}
 }

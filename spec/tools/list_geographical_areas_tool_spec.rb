@@ -16,7 +16,7 @@ RSpec.describe ListGeographicalAreasTool do
     result = described_class.call(service: nil)
 
     expect(result).to be_a(MCP::Tool::Response)
-    expect(JSON.parse(result.content.first[:text])).to include("data")
+    expect(JSON.parse(result.content.first[:text])).to be_an(Array)
   end
 
   it "calls the XI endpoint when service is xi" do
@@ -25,7 +25,7 @@ RSpec.describe ListGeographicalAreasTool do
 
     result = described_class.call(service: "xi")
 
-    expect(JSON.parse(result.content.first[:text])).to include("data")
+    expect(JSON.parse(result.content.first[:text])).to be_an(Array)
   end
 
   it "passes validity_date as as_of query param" do

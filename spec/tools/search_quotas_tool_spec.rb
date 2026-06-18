@@ -16,7 +16,7 @@ RSpec.describe SearchQuotasTool do
     result = described_class.call(service: nil)
 
     expect(result).to be_a(MCP::Tool::Response)
-    expect(JSON.parse(result.content.first[:text])).to include("data")
+    expect(JSON.parse(result.content.first[:text])).to include("quotas")
   end
 
   it "passes order_number as a query param when supplied" do
@@ -45,7 +45,7 @@ RSpec.describe SearchQuotasTool do
 
     result = described_class.call(service: "ni")
 
-    expect(JSON.parse(result.content.first[:text])).to include("data")
+    expect(JSON.parse(result.content.first[:text])).to include("quotas")
   end
 
   it "returns an error for an invalid validity_date" do

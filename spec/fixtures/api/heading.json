@@ -5,7 +5,18 @@
     "attributes": {
       "goods_nomenclature_item_id": "0101000000",
       "description": "Live horses, asses, mules and hinnies",
-      "formatted_description": "Live horses, asses, mules and hinnies"
+      "description_plain": "Live horses, asses, mules and hinnies",
+      "formatted_description": "Live horses, asses, mules and hinnies",
+      "declarable": false,
+      "validity_start_date": "1972-01-01T00:00:00.000Z",
+      "validity_end_date": null
+    },
+    "relationships": {
+      "footnotes": { "data": [] },
+      "section": { "data": null },
+      "chapter": { "data": null },
+      "commodities": { "data": [] }
     }
-  }
+  },
+  "included": []
 }

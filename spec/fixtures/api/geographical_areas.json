@@ -7,6 +7,15 @@
         "description": "Turkey",
         "geographical_area_id": "TR"
       }
+    },
+    {
+      "id": "GB",
+      "type": "geographical_area",
+      "attributes": {
+        "description": "United Kingdom",
+        "geographical_area_id": "GB"
+      }
     }
-  ]
+  ],
+  "included": []
 }
