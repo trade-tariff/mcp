@@ -56,11 +56,18 @@ class OauthController < ApplicationController
       )
     end
 
-    return nil unless response.status == 200
+    unless response.status == 200
+      Rails.logger.warn("Hub token exchange failed: status=#{response.status} body=#{response.body.truncate(500)}")
+      return nil
+    end
 
     body = JSON.parse(response.body)
     body["access_token"]
-  rescue Faraday::Error, JSON::ParserError
+  rescue Faraday::Error => e
+    Rails.logger.warn("Hub token exchange error: #{e.class} #{e.message}")
+    nil
+  rescue JSON::ParserError => e
+    Rails.logger.warn("Hub token exchange unparseable response: #{e.message}")
     nil
   end
 end
