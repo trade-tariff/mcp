@@ -28,5 +28,10 @@ locals {
     }
   ]
 
-  service_env_vars = concat(local.secret_env_vars, local.tls_env_vars)
+  redis_env_var = [{
+    name  = "REDIS_URL"
+    value = data.aws_secretsmanager_secret_version.valkey_frontend.secret_string
+  }]
+
+  service_env_vars = concat(local.secret_env_vars, local.tls_env_vars, local.redis_env_var)
 }

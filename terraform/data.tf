@@ -43,6 +43,14 @@ data "aws_secretsmanager_secret_version" "ecs_tls_certificate" {
   secret_id = data.aws_secretsmanager_secret.ecs_tls_certificate.id
 }
 
+data "aws_secretsmanager_secret" "valkey_frontend" {
+  name = "valkey-frontend-connection-string"
+}
+
+data "aws_secretsmanager_secret_version" "valkey_frontend" {
+  secret_id = data.aws_secretsmanager_secret.valkey_frontend.id
+}
+
 data "aws_sns_topic" "slack_topic" {
   name = "slack-topic"
 }

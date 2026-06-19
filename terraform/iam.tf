@@ -28,7 +28,10 @@ data "aws_iam_policy_document" "exec" {
       "secretsmanager:DescribeSecret",
       "secretsmanager:ListSecretVersionIds"
     ]
-    resources = [data.aws_secretsmanager_secret.this.arn]
+    resources = [
+      data.aws_secretsmanager_secret.this.arn,
+      data.aws_secretsmanager_secret.valkey_frontend.arn,
+    ]
   }
 
   statement {

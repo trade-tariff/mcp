@@ -8,6 +8,7 @@ gem "rails", require: false
 gem "puma"
 gem "mcp"
 gem "faraday"
+gem "redis-client"
 gem "dotenv-rails", groups: %i[development test]
 
 group :development, :test do
