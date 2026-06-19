@@ -18,6 +18,8 @@ Rails.application.routes.draw do
           ShowHeadingTool,
           LookupCommodityTool,
           SearchCommoditiesTool,
+          ClassificationSearchTool,
+          NoteMentionsTool,
           NavigateHierarchyTool,
           ListExchangeRatesTool,
           ListGeographicalAreasTool,

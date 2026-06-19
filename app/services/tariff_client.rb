@@ -22,6 +22,22 @@ class TariffClient
       req.params["as_of"] = as_of if as_of
     end
 
+    handle_response(response, path)
+  end
+
+  def post(path, body: {}, as_of: nil)
+    response = connection.post(path) do |req|
+      req.params["as_of"] = as_of if as_of
+      req.headers["Content-Type"] = "application/json"
+      req.body = body.to_json
+    end
+
+    handle_response(response, path)
+  end
+
+  private
+
+  def handle_response(response, path)
     case response.status
     when 200..299
       JSON.parse(response.body)
@@ -33,8 +49,6 @@ class TariffClient
       raise ApiError, "API error #{response.status}: #{path}"
     end
   end
-
-  private
 
   def connection
     Faraday.new(url: @base_url, ssl: ssl_options) do |f|
