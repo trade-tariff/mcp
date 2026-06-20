@@ -2,6 +2,7 @@
 
 class OauthController < ApplicationController
   HUB_TOKEN_URL = ENV.fetch("HUB_TOKEN_URL", "https://auth.id.trade-tariff.service.gov.uk/oauth2/token")
+  DEVHUB_URL = ENV.fetch("DEVHUB_URL", "https://hub.trade-tariff.service.gov.uk")
 
   # Codes are single-use and short-lived.
   AUTH_CODE_TTL = 5.minutes
@@ -28,10 +29,25 @@ class OauthController < ApplicationController
       issuer: request.base_url,
       authorization_endpoint: "#{request.base_url}/oauth/authorize",
       token_endpoint: "#{request.base_url}/oauth/token",
+      registration_endpoint: "#{request.base_url}/oauth/register",
       grant_types_supported: [ "authorization_code" ],
       code_challenge_methods_supported: [ "S256" ],
       token_endpoint_auth_methods_supported: [ "client_secret_post" ]
     }
+  end
+
+  # POST /oauth/register
+  #
+  # Dynamic Client Registration (RFC 7591). We don't support automated
+  # registration — clients must obtain credentials from the developer portal
+  # and configure them in their MCP client manually.
+  def register
+    render json: {
+      error: "invalid_client_metadata",
+      error_description: "Automatic client registration is not supported. " \
+                         "Please register at #{DEVHUB_URL} to obtain a client_id and client_secret, " \
+                         "then configure them in your MCP client."
+    }, status: :bad_request
   end
 
   # GET /oauth/authorize

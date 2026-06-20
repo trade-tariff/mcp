@@ -6,7 +6,8 @@ class BearerTokenMiddleware
     "/.well-known/oauth-protected-resource",
     "/.well-known/oauth-authorization-server",
     "/oauth/authorize",
-    "/oauth/token"
+    "/oauth/token",
+    "/oauth/register"
   ].freeze
 
   def initialize(app)

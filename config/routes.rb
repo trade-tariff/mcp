@@ -5,6 +5,7 @@ Rails.application.routes.draw do
   get ".well-known/oauth-authorization-server" => "oauth#metadata"
   get "oauth/authorize" => "oauth#authorize"
   post "oauth/token" => "oauth#token"
+  post "oauth/register" => "oauth#register"
 
   mcp_transport = nil
   mcp_app = lambda do |env|
