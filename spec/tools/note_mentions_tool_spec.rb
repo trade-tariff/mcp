@@ -8,21 +8,38 @@ RSpec.describe NoteMentionsTool do
     {
       data: [
         {
-          note: {
+          type: "knowledge_graph_node",
+          id: "note_fragment:customs_tariff_chapter_note:01:0001",
+          attributes: {
+            node_type: "note_fragment",
             key: "note_fragment:customs_tariff_chapter_note:01:0001",
             source_type: "customs_tariff_chapter_note",
             source_id: "01",
             content: "This chapter covers live animals."
+          }
+        }
+      ],
+      included: [
+        {
+          type: "knowledge_graph_edge",
+          id: "1",
+          attributes: {
+            relationship_type: "applies_to"
           },
-          applies_to: [
-            { goods_nomenclature_item_id: "0101210000", goods_nomenclature_sid: 123 }
-          ],
-          references: []
+          relationships: {
+            source: {
+              data: { type: "knowledge_graph_node", id: "note_fragment:customs_tariff_chapter_note:01:0001" }
+            },
+            target: {
+              data: { type: "knowledge_graph_node", id: "goods_nomenclature:123" }
+            }
+          }
         }
       ],
       meta: {
-        candidate_count: 1,
-        mention_count: 1
+        subject_count: 1,
+        result_count: 1,
+        truncated: false
       }
     }.to_json
   end
@@ -35,9 +52,33 @@ RSpec.describe NoteMentionsTool do
     ENV.delete("TARIFF_API_URL")
   end
 
-  it "calls the UK note mentions endpoint" do
-    stub = stub_request(:post, "#{base_url}/uk/api/v2/tariff_knowledge/note_mentions")
-      .with(body: { goods_nomenclature_item_ids: [ "0101210000" ], goods_nomenclature_sids: [ 123 ] }.to_json)
+  it "calls the UK knowledge graph query endpoint" do
+    stub = stub_request(:post, "#{base_url}/uk/api/v2/knowledge_graph/queries")
+      .with(
+        body: {
+          data: {
+            type: "knowledge_graph_query",
+            attributes: {
+              preset: "note_mentions",
+              subjects: [
+                {
+                  type: "goods_nomenclature",
+                  identifiers: {
+                    goods_nomenclature_item_id: "0101210000"
+                  }
+                },
+                {
+                  type: "goods_nomenclature",
+                  identifiers: {
+                    goods_nomenclature_sid: 123
+                  }
+                }
+              ],
+              include: %w[nodes edges content]
+            }
+          }
+        }.to_json
+      )
       .to_return(status: 200, body: response_body, headers: { "Content-Type" => "application/json" })
 
     result = described_class.call(goods_nomenclature_item_ids: [ "0101210000" ], goods_nomenclature_sids: [ 123 ], service: nil)
@@ -47,7 +88,7 @@ RSpec.describe NoteMentionsTool do
   end
 
   it "calls the XI endpoint when requested" do
-    stub = stub_request(:post, "#{base_url}/xi/api/v2/tariff_knowledge/note_mentions")
+    stub = stub_request(:post, "#{base_url}/xi/api/v2/knowledge_graph/queries")
       .to_return(status: 200, body: response_body, headers: { "Content-Type" => "application/json" })
 
     described_class.call(goods_nomenclature_item_ids: [ "0101210000" ], service: "northern ireland")

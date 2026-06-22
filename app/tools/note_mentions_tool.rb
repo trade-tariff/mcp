@@ -34,14 +34,43 @@ class NoteMentionsTool < ApplicationTool
 
     resolved = ServiceNormaliser.call(service)
     body = {
-      goods_nomenclature_item_ids: Array(goods_nomenclature_item_ids).compact,
-      goods_nomenclature_sids: Array(goods_nomenclature_sids).compact
+      data: {
+        type: "knowledge_graph_query",
+        attributes: {
+          preset: "note_mentions",
+          subjects: subjects_for(goods_nomenclature_item_ids:, goods_nomenclature_sids:),
+          include: %w[nodes edges content]
+        }
+      }
     }
 
     with_error_handling do
-      text_response(client_for(service: resolved).post("/#{resolved}/api/v2/tariff_knowledge/note_mentions", body: body, as_of: validity_date))
+      text_response(client_for(service: resolved).post("/#{resolved}/api/v2/knowledge_graph/queries", body: body, as_of: validity_date))
     end
   end
+
+  def self.subjects_for(goods_nomenclature_item_ids:, goods_nomenclature_sids:)
+    item_id_subjects = Array(goods_nomenclature_item_ids).compact.uniq.map do |item_id|
+      {
+        type: "goods_nomenclature",
+        identifiers: {
+          goods_nomenclature_item_id: item_id
+        }
+      }
+    end
+
+    sid_subjects = Array(goods_nomenclature_sids).compact.uniq.map do |sid|
+      {
+        type: "goods_nomenclature",
+        identifiers: {
+          goods_nomenclature_sid: sid
+        }
+      }
+    end
+
+    item_id_subjects + sid_subjects
+  end
+  private_class_method :subjects_for
 
   def self.validate_collection(values, pattern, field_name)
     Array(values).each do |value|
