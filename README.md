@@ -33,7 +33,8 @@ Restart Claude Desktop after saving. It will prompt for your Hub **client_id** a
 | `show_chapter` | Show a chapter by 2-digit ID (e.g. `01`) |
 | `show_heading` | Show a heading by 4-digit code (e.g. `0101`) |
 | `lookup_commodity` | Look up a commodity by 10-digit code (e.g. `0101210000`) |
-| `search_commodities` | Search by keyword (e.g. `"live horses"`) |
+| `classification_search` | Use hybrid semantic retrieval to shortlist candidate goods nomenclatures for product descriptions |
+| `note_mentions` | Return chapter and section note fragments linked to shortlisted candidate goods nomenclatures |
 | `navigate_hierarchy` | Look up any goods nomenclature entry by 4–10 digit code |
 | `list_exchange_rates` | List GBP monetary exchange rates used in duty calculations |
 | `list_geographical_areas` | List all countries and country groups (use to find country codes) |
@@ -57,6 +58,16 @@ All tools accept these optional parameters:
 | `xi`, `ni`, `northern ireland`, `northern_ireland` | Northern Ireland |
 
 Unrecognised service values return an error rather than silently defaulting.
+
+## Classification Workflow
+
+Use the classification tools as an evidence-gathering workflow, not as a single authoritative classifier:
+
+1. Call `classification_search` with the product description to get a recall-focused shortlist of candidate goods nomenclatures.
+2. Call `note_mentions` with the returned candidate item IDs or SIDs to retrieve linked chapter and section note fragments.
+3. Use `navigate_hierarchy`, `show_heading`, and `lookup_commodity` to verify the tariff structure and inspect declarable commodities.
+4. Use the note mentions to decide which product facts are still needed, ask or answer those classification questions, and apply the relevant section notes, chapter notes, and General Interpretative Rules.
+5. Treat semantic shortlist scores as search evidence only. A final classification still needs to be grounded in the tariff hierarchy, notes, commodity text, measures, and any missing product facts.
 
 ## Authentication
 
