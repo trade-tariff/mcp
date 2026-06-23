@@ -6,6 +6,14 @@ RSpec.describe NavigateHierarchyTool do
   let(:base_url) { "https://example.com" }
   let(:gn_response) { File.read("spec/fixtures/api/goods_nomenclature.json") }
 
+  it "advertises itself as code navigation after classification search" do
+    description = described_class.description
+
+    expect(description).to include("Use after classification_search")
+    expect(description).to include("known commodity code")
+    expect(description).to include("tariff hierarchy")
+  end
+
   before do
     ENV["TARIFF_API_URL"] = base_url
   end

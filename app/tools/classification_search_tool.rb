@@ -2,13 +2,14 @@
 
 class ClassificationSearchTool < ApplicationTool
   tool_name "classification_search"
-  description "Use hybrid semantic retrieval to get a shortlist of candidate goods nomenclatures for a product description. Treat this as recall evidence, not a final classification."
+  title "Classify a product and find commodity code candidates"
+  description "First tool to call when classifying an unknown product from a natural-language product description, including commodity lookup, commodity code lookup, HS code lookup, and tariff classification requests. Searches for candidate goods nomenclatures using hybrid semantic retrieval. Use before show_heading, navigate_hierarchy, or lookup_commodity unless you already have a specific tariff code. Treat results as recall evidence, not a final classification."
 
   input_schema(
     properties: {
       query: {
         type: "string",
-        description: "Product description to search, e.g. 'wireless bluetooth noise cancelling headphones'."
+        description: "Natural-language product description to classify or find commodity code candidates for, e.g. 'wireless bluetooth noise cancelling headphones'."
       },
       limit: {
         type: "integer",

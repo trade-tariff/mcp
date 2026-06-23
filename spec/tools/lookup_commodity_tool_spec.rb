@@ -6,6 +6,15 @@ RSpec.describe LookupCommodityTool do
   let(:base_url) { "https://example.com" }
   let(:commodity_response) { File.read("spec/fixtures/api/commodity.json") }
 
+  it "advertises itself as a follow-up to classification search for product descriptions" do
+    description = described_class.description
+
+    expect(description).to include("Use after classification_search")
+    expect(description).to include("commodity lookup")
+    expect(description).to include("commodity code")
+    expect(description).to include("tariff measures")
+  end
+
   before do
     ENV["TARIFF_API_URL"] = base_url
   end

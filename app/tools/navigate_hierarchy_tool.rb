@@ -2,7 +2,7 @@
 
 class NavigateHierarchyTool < ApplicationTool
   tool_name "navigate_hierarchy"
-  description "Look up a goods nomenclature entry by a 4-10 digit code. Use this to explore the tariff hierarchy and find valid 10-digit commodity codes before calling lookup_commodity. Codes shorter than 10 digits are automatically zero-padded."
+  description "Use after classification_search, show_heading, or when you already have a known commodity code, heading, or subheading. Navigates the tariff hierarchy for a 4-10 digit goods nomenclature code and helps find valid 10-digit commodity codes before calling lookup_commodity. For natural-language product descriptions, start with classification_search. Codes shorter than 10 digits are automatically zero-padded."
 
   input_schema(
     properties: {
