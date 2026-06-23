@@ -40,7 +40,10 @@
         devShells.default = pkgs.mkShell {
           shellHook = ''
             export GEM_HOME=$PWD/.nix/ruby/$(${ruby}/bin/ruby -e "puts RUBY_VERSION")
-            mkdir -p "$GEM_HOME"
+            export BUNDLE_PATH=$PWD/.bundle
+            export BUNDLE_APP_CONFIG=$PWD/.bundle
+            export BUNDLE_IGNORE_CONFIG=1
+            mkdir -p "$GEM_HOME" "$BUNDLE_PATH"
             export GEM_PATH=$GEM_HOME
             export PATH=${ruby}/bin:$GEM_HOME/bin:$PATH
 
