@@ -33,7 +33,7 @@ Restart Claude Desktop after saving. It will prompt for your Hub **client_id** a
 | `show_chapter` | Show a chapter by 2-digit ID (e.g. `01`) |
 | `show_heading` | Show a heading by 4-digit code (e.g. `0101`) |
 | `lookup_commodity` | Look up a commodity by 10-digit code (e.g. `0101210000`) |
-| `classification_search` | Use hybrid semantic retrieval to shortlist candidate goods nomenclatures for product descriptions |
+| `classification_search` | First tool for natural-language product classification, commodity lookup, commodity code lookup, HS code lookup, and tariff classification requests |
 | `note_mentions` | Return chapter and section note fragments linked to shortlisted candidate goods nomenclatures |
 | `navigate_hierarchy` | Look up any goods nomenclature entry by 4–10 digit code |
 | `list_exchange_rates` | List GBP monetary exchange rates used in duty calculations |

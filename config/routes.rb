@@ -15,11 +15,11 @@ Rails.application.routes.draw do
         version: "0.1.0",
         tools: [
           ListSectionsTool,
+          ClassificationSearchTool,
+          NoteMentionsTool,
           ShowChapterTool,
           ShowHeadingTool,
           LookupCommodityTool,
-          ClassificationSearchTool,
-          NoteMentionsTool,
           NavigateHierarchyTool,
           ListExchangeRatesTool,
           ListGeographicalAreasTool,

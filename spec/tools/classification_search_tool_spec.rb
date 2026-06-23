@@ -35,6 +35,20 @@ RSpec.describe ClassificationSearchTool do
     ENV.delete("TARIFF_API_URL")
   end
 
+  it "advertises itself as the starting point for product classification" do
+    expect(described_class.title).to include("Classify a product")
+
+    description = described_class.description
+
+    expect(description).to include("First tool")
+    expect(description).to include("classifying")
+    expect(description).to include("natural-language product description")
+    expect(description).to include("commodity lookup")
+    expect(description).to include("commodity code")
+    expect(description).to include("HS code")
+    expect(description).to include("tariff classification")
+  end
+
   it "calls the UK classification search endpoint" do
     stub_request(:get, "#{base_url}/uk/api/v2/classification_search")
       .with(query: { "q" => "wireless headphones", "limit" => "5" })
