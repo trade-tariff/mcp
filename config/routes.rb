@@ -17,7 +17,6 @@ Rails.application.routes.draw do
           ShowChapterTool,
           ShowHeadingTool,
           LookupCommodityTool,
-          SearchCommoditiesTool,
           ClassificationSearchTool,
           NoteMentionsTool,
           NavigateHierarchyTool,
