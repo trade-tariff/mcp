@@ -3,13 +3,13 @@
 class ClassificationSearchTool < ApplicationTool
   tool_name "classification_search"
   title "Classify a product and find commodity code candidates"
-  description "First tool to call when classifying an unknown product from a natural-language product description, including commodity lookup, commodity code lookup, HS code lookup, and tariff classification requests. Searches for candidate goods nomenclatures using hybrid semantic retrieval. Use before show_heading, navigate_hierarchy, or lookup_commodity unless you already have a specific tariff code. Treat results as recall evidence, not a final classification."
+  description "First tool to call when classifying an unknown product from a natural-language product description, including commodity lookup, commodity code lookup, HS code lookup, and tariff classification requests. Include classification pivots from product evidence: ingredients, material composition, flavour names that may imply ingredients, pack size, physical form, preparation method, intended use, and whether facts are confirmed or implied. Searches for candidate goods nomenclatures using hybrid semantic retrieval. Use before show_heading, navigate_hierarchy, or lookup_commodity unless you already have a specific tariff code. Treat results as recall evidence, not a final classification; run a follow-up query when a pivot suggests an alternate chapter or heading that did not surface."
 
   input_schema(
     properties: {
       query: {
         type: "string",
-        description: "Natural-language product description to classify or find commodity code candidates for, e.g. 'wireless bluetooth noise cancelling headphones'."
+        description: "Natural-language product description to classify or find commodity code candidates for, including legally significant product facts and unresolved pivots, e.g. 'wireless bluetooth noise cancelling headphones' or 'chocolate-flavoured whey protein powder; cocoa content not confirmed; 600g retail pack'."
       },
       limit: {
         type: "integer",
@@ -19,7 +19,7 @@ class ClassificationSearchTool < ApplicationTool
       },
       expanded_query: {
         type: "string",
-        description: "Optional expanded query text to use for retrieval."
+        description: "Optional expanded query text to use for retrieval. Use this to test alternate routes suggested by product pivots, e.g. 'food preparation containing cocoa protein powder retail pack under 1kg'."
       },
       service: SERVICE_SCHEMA,
       validity_date: VALIDITY_DATE_SCHEMA
