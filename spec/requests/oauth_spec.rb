@@ -20,14 +20,14 @@ RSpec.describe "OAuth endpoints" do
 
       expect(response).to have_http_status(:ok)
       body = JSON.parse(response.body)
-      expect(body["authorization_endpoint"]).to end_with("/oauth/authorize")
-      expect(body["token_endpoint"]).to end_with("/oauth/token")
+      expect(body["authorization_endpoint"]).to end_with("/authorize")
+      expect(body["token_endpoint"]).to end_with("/token")
       expect(body["grant_types_supported"]).to include("authorization_code")
       expect(body["code_challenge_methods_supported"]).to include("S256")
     end
   end
 
-  describe "GET /oauth/authorize" do
+  describe "GET /authorize" do
     let(:code_verifier) { SecureRandom.urlsafe_base64(43) }
     let(:code_challenge) { Base64.urlsafe_encode64(Digest::SHA256.digest(code_verifier), padding: false) }
     let(:valid_params) do
@@ -42,7 +42,7 @@ RSpec.describe "OAuth endpoints" do
     end
 
     it "redirects to the redirect_uri with a code and state" do
-      get "/oauth/authorize", params: valid_params
+      get "/authorize", params: valid_params
 
       expect(response).to have_http_status(:redirect)
       location = URI.parse(response.headers["Location"])
@@ -52,7 +52,7 @@ RSpec.describe "OAuth endpoints" do
     end
 
     it "stores the code in the cache for later token exchange" do
-      get "/oauth/authorize", params: valid_params
+      get "/authorize", params: valid_params
 
       location = URI.parse(response.headers["Location"])
       code = URI.decode_www_form(location.query).to_h["code"]
@@ -62,22 +62,22 @@ RSpec.describe "OAuth endpoints" do
     end
 
     it "returns 400 when response_type is not code" do
-      get "/oauth/authorize", params: valid_params.merge(response_type: "token")
+      get "/authorize", params: valid_params.merge(response_type: "token")
       expect(response).to have_http_status(:bad_request)
     end
 
     it "returns 400 when code_challenge_method is not S256" do
-      get "/oauth/authorize", params: valid_params.merge(code_challenge_method: "plain")
+      get "/authorize", params: valid_params.merge(code_challenge_method: "plain")
       expect(response).to have_http_status(:bad_request)
     end
 
     it "returns 400 when required params are missing" do
-      get "/oauth/authorize", params: valid_params.except(:code_challenge)
+      get "/authorize", params: valid_params.except(:code_challenge)
       expect(response).to have_http_status(:bad_request)
     end
   end
 
-  describe "POST /oauth/token" do
+  describe "POST /token" do
     let(:hub_token_url) { OauthController::HUB_TOKEN_URL }
     let(:jwt) { "a.b.c" }
     let(:code_verifier) { SecureRandom.urlsafe_base64(43) }
@@ -95,7 +95,7 @@ RSpec.describe "OAuth endpoints" do
       end
 
       it "returns the JWT as the access_token" do
-        post "/oauth/token", params: {
+        post "/token", params: {
           grant_type: "authorization_code",
           code: code,
           client_id: "my-client-id",
@@ -110,7 +110,7 @@ RSpec.describe "OAuth endpoints" do
       end
 
       it "consumes the code so it cannot be reused" do
-        post "/oauth/token", params: {
+        post "/token", params: {
           grant_type: "authorization_code",
           code: code,
           client_id: "my-client-id",
@@ -118,7 +118,7 @@ RSpec.describe "OAuth endpoints" do
           code_verifier: code_verifier
         }
 
-        post "/oauth/token", params: {
+        post "/token", params: {
           grant_type: "authorization_code",
           code: code,
           client_id: "my-client-id",
@@ -132,7 +132,7 @@ RSpec.describe "OAuth endpoints" do
     end
 
     it "returns invalid_grant when the code_verifier does not match" do
-      post "/oauth/token", params: {
+      post "/token", params: {
         grant_type: "authorization_code",
         code: code,
         client_id: "my-client-id",
@@ -145,7 +145,7 @@ RSpec.describe "OAuth endpoints" do
     end
 
     it "returns invalid_grant when the client_id does not match" do
-      post "/oauth/token", params: {
+      post "/token", params: {
         grant_type: "authorization_code",
         code: code,
         client_id: "wrong-client-id",
@@ -163,7 +163,7 @@ RSpec.describe "OAuth endpoints" do
       end
 
       it "returns 401" do
-        post "/oauth/token", params: {
+        post "/token", params: {
           grant_type: "authorization_code",
           code: code,
           client_id: "my-client-id",
@@ -177,13 +177,13 @@ RSpec.describe "OAuth endpoints" do
     end
 
     it "returns 400 for an unsupported grant_type" do
-      post "/oauth/token", params: { grant_type: "client_credentials", client_id: "x", client_secret: "y" }
+      post "/token", params: { grant_type: "client_credentials", client_id: "x", client_secret: "y" }
       expect(response).to have_http_status(:bad_request)
       expect(JSON.parse(response.body)["error"]).to eq("unsupported_grant_type")
     end
 
     it "returns 400 when required params are missing" do
-      post "/oauth/token", params: { grant_type: "authorization_code", code: code, client_id: "my-client-id" }
+      post "/token", params: { grant_type: "authorization_code", code: code, client_id: "my-client-id" }
       expect(response).to have_http_status(:bad_request)
       expect(JSON.parse(response.body)["error"]).to eq("invalid_request")
     end
