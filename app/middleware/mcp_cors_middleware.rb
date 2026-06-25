@@ -7,7 +7,7 @@ class McpCorsMiddleware
   CORS_HEADERS = {
     "Access-Control-Allow-Origin" => "*",
     "Access-Control-Allow-Methods" => "GET, POST, DELETE, OPTIONS",
-    "Access-Control-Allow-Headers" => "Content-Type, Accept, Mcp-Session-Id, Mcp-Protocol-Version",
+    "Access-Control-Allow-Headers" => "Authorization, Content-Type, Accept, Mcp-Session-Id, Mcp-Protocol-Version",
     "Access-Control-Expose-Headers" => "Mcp-Session-Id",
     "Access-Control-Max-Age" => "86400"
   }.freeze
