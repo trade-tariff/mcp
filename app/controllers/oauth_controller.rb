@@ -29,7 +29,6 @@ class OauthController < ApplicationController
       issuer: request.base_url,
       authorization_endpoint: "#{request.base_url}/oauth/authorize",
       token_endpoint: "#{request.base_url}/oauth/token",
-      registration_endpoint: "#{request.base_url}/oauth/register",
       grant_types_supported: [ "authorization_code" ],
       code_challenge_methods_supported: [ "S256" ],
       token_endpoint_auth_methods_supported: [ "client_secret_post" ]
