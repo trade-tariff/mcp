@@ -7,10 +7,15 @@ Rails.application.routes.draw do
   post "oauth/token" => "oauth#token"
   post "oauth/register" => "oauth#register"
 
+  RESOURCES = [
+    ClassificationWorkflowResource,
+    GriRulesResource
+  ].freeze
+
   mcp_transport = nil
   mcp_app = lambda do |env|
-    mcp_transport ||= MCP::Server::Transports::StreamableHTTPTransport.new(
-      MCP::Server.new(
+    mcp_transport ||= begin
+      server = MCP::Server.new(
         name: "trade-tariff",
         version: "0.1.0",
         tools: [
@@ -27,11 +32,19 @@ Rails.application.routes.draw do
           SearchAdditionalCodesTool,
           ListCertificateTypesTool,
           RulesOfOriginTool
-        ]
-      ),
-      stateless: true,
-      enable_json_response: true
-    )
+        ],
+        resources: RESOURCES.map(&:resource)
+      )
+
+      server.resources_read_handler do |params|
+        resource_class = RESOURCES.find { |r| r.resource.uri == params[:uri] }
+        raise MCP::Server::ResourceNotFoundError.new(params[:uri], params) unless resource_class
+
+        [ { uri: params[:uri], mimeType: "text/markdown", text: resource_class.content } ]
+      end
+
+      MCP::Server::Transports::StreamableHTTPTransport.new(server, stateless: true, enable_json_response: true)
+    end
     mcp_transport.call(env)
   end
 
