@@ -3,8 +3,8 @@ Rails.application.routes.draw do
 
   get ".well-known/oauth-protected-resource" => "oauth#protected_resource"
   get ".well-known/oauth-authorization-server" => "oauth#metadata"
-  get "oauth/authorize" => "oauth#authorize"
-  post "oauth/token" => "oauth#token"
+  get "authorize" => "oauth#authorize"
+  post "token" => "oauth#token"
   post "oauth/register" => "oauth#register"
 
   RESOURCES = [

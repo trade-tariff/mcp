@@ -46,12 +46,12 @@ RSpec.describe BearerTokenMiddleware do
   end
 
   it "passes through the OAuth authorize path without a token" do
-    status, = middleware.call(env_for(path: "/oauth/authorize"))
+    status, = middleware.call(env_for(path: "/authorize"))
     expect(status).to eq(200)
   end
 
   it "passes through the OAuth token path without a token" do
-    status, = middleware.call(env_for(path: "/oauth/token"))
+    status, = middleware.call(env_for(path: "/token"))
     expect(status).to eq(200)
   end
 end

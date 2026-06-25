@@ -5,8 +5,8 @@ class BearerTokenMiddleware
     "/healthcheckz",
     "/.well-known/oauth-protected-resource",
     "/.well-known/oauth-authorization-server",
-    "/oauth/authorize",
-    "/oauth/token",
+    "/authorize",
+    "/token",
     "/oauth/register"
   ].freeze
 

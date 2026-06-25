@@ -27,8 +27,8 @@ class OauthController < ApplicationController
   def metadata
     render json: {
       issuer: request.base_url,
-      authorization_endpoint: "#{request.base_url}/oauth/authorize",
-      token_endpoint: "#{request.base_url}/oauth/token",
+      authorization_endpoint: "#{request.base_url}/authorize",
+      token_endpoint: "#{request.base_url}/token",
       grant_types_supported: [ "authorization_code" ],
       code_challenge_methods_supported: [ "S256" ],
       token_endpoint_auth_methods_supported: [ "client_secret_post" ]
