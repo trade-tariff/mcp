@@ -31,7 +31,12 @@ Rails.application.routes.draw do
           SearchQuotasTool,
           SearchAdditionalCodesTool,
           ListCertificateTypesTool,
-          RulesOfOriginTool
+          RulesOfOriginTool,
+          DutyVatCalculatorTool,
+          FullTextSearchTool,
+          CommodityHistoryDiffTool,
+          CommodityMeasuresTool,
+          CommodityQuotasTool
         ],
         resources: RESOURCES.map(&:resource)
       )
