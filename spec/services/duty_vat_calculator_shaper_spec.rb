@@ -165,4 +165,12 @@ RSpec.describe DutyVatCalculatorShaper do
     expect(vat[:rate]).to eq("20%")
     expect(vat).not_to have_key(:vat_amount)
   end
+
+  it "strips the internal geo_id field from every applicable measure" do
+    result = described_class.call(full_response(pct_measure, vat_measure), country_code: nil, customs_value: 500.0)
+
+    result[:applicable_measures].each do |measure|
+      expect(measure).not_to have_key(:geo_id)
+    end
+  end
 end
