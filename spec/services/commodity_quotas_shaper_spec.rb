@@ -48,23 +48,14 @@ RSpec.describe CommodityQuotasShaper do
     )
   end
 
-  it "returns all unique order numbers when no country_code given" do
+  it "returns all unique order numbers present in the response" do
     result = described_class.call(response, country_code: nil)
     expect(result[:order_numbers]).to contain_exactly("094011", "094012")
   end
 
-  it "filters to matching + ERGA OMNES order numbers when country_code given" do
+  it "shapes whatever order numbers the backend already filtered to (country filtering is server-side)" do
     result = described_class.call(response, country_code: "CN")
     expect(result[:order_numbers]).to contain_exactly("094011", "094012")
-  end
-
-  it "returns empty order_numbers when country has no quota measures and no ERGA OMNES fallback exists" do
-    no_erga_response = api_response(
-      [ { "id" => "m1", "type" => "measure" } ],
-      [ on_a, geo_cn, m_cn ]
-    )
-    result = described_class.call(no_erga_response, country_code: "DE")
-    expect(result[:order_numbers]).to be_empty
   end
 
   it "skips measures with no order_number" do

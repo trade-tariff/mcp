@@ -30,9 +30,12 @@ class CommodityQuotasTool < ApplicationTool
 
     resolved = ServiceNormaliser.call(service)
     with_error_handling do
+      params = { "include" => QUOTA_DISCOVERY_INCLUDE }
+      params["filter.geographical_area_id"] = country_code if country_code
+
       commodity_raw = client_for(service: resolved).get(
         "/#{resolved}/api/v2/commodities/#{commodity_code}",
-        params: { "include" => QUOTA_DISCOVERY_INCLUDE },
+        params: params,
         as_of: validity_date
       )
 

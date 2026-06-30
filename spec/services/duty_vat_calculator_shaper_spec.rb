@@ -48,6 +48,14 @@ RSpec.describe DutyVatCalculatorShaper do
     { "id" => "d2", "type" => "duty_expression",
       "attributes" => { "base" => "GBP 1.50 / 100 kg" } }
   end
+  let(:duty_vat_standard) do
+    { "id" => "d4", "type" => "duty_expression",
+      "attributes" => { "base" => "20.00 %" } }
+  end
+  let(:duty_vat_reduced) do
+    { "id" => "d5", "type" => "duty_expression",
+      "attributes" => { "base" => "5.00 %" } }
+  end
 
   def measure(id, type_id, duty_id, geo_id, vat: false)
     {
@@ -73,11 +81,12 @@ RSpec.describe DutyVatCalculatorShaper do
   end
 
   let(:pct_measure) { measure("m1", "103", "d1", "1011") }
-  let(:vat_measure) { measure("m2", "305", "d1", "1011", vat: true) }
+  let(:vat_measure) { measure("m2", "305", "d4", "1011", vat: true) }
   let(:specific_measure) { measure("m3", "103", "d2", "1011") }
+  let(:reduced_vat_measure) { measure("m6", "305", "d5", "1011", vat: true) }
 
   def full_response(*measures)
-    included = measures + [ erga_geo, mtype_third, mtype_vat, duty_pct, duty_specific ]
+    included = measures + [ erga_geo, mtype_third, mtype_vat, duty_pct, duty_specific, duty_vat_standard, duty_vat_reduced ]
     {
       "data" => {
         "attributes" => { "goods_nomenclature_item_id" => "0101210000" },
@@ -103,17 +112,24 @@ RSpec.describe DutyVatCalculatorShaper do
     expect(m[:duty_amount]).to eq(60.0)
   end
 
-  it "calculates VAT as 20% of customs_value + duty when customs_value given" do
+  it "calculates VAT using the backend's own VAT duty expression rate, not a hard-coded 20%" do
     result = described_class.call(full_response(pct_measure, vat_measure), country_code: nil, customs_value: 500.0)
     vat = result[:applicable_measures].find { |x| x[:vat] }
-    expect(vat[:vat_amount]).to eq(112.0)  # (500 + 60) * 0.20
+    expect(vat[:vat_amount]).to eq(112.0)  # (500 + 60) * 0.20, where 20% comes from duty_vat_standard's "20.00 %"
+  end
+
+  it "uses a reduced VAT rate when the backend's VAT measure carries one, instead of forcing 20%" do
+    result = described_class.call(full_response(pct_measure, reduced_vat_measure), country_code: nil, customs_value: 500.0)
+    vat = result[:applicable_measures].find { |x| x[:vat] }
+    expect(vat[:rate]).to eq("5.00 %")
+    expect(vat[:vat_amount]).to eq(28.0) # (500 + 60) * 0.05
   end
 
   it "returns specific duties with a calculation_note and no amount" do
     result = described_class.call(full_response(specific_measure), country_code: nil, customs_value: 500.0)
     m = result[:applicable_measures].find { |x| x[:type] == "Third country duty" }
     expect(m[:duty_amount]).to be_nil
-    expect(m[:calculation_note]).to include("quantity")
+    expect(m[:calculation_note]).to include("specific duty")
   end
 
   it "includes commodity_code and inputs in result" do
@@ -130,10 +146,10 @@ RSpec.describe DutyVatCalculatorShaper do
 
     erga_pct_measure = measure("m1", "103", "d1", "1011")        # 12.00 %, ERGA OMNES
     cn_pct_measure    = measure("m4", "103", "d3", "40")          # 5.00 %, country-specific
-    vat_for_cn        = measure("m5", "305", "d1", "40", vat: true)
+    vat_for_cn        = measure("m5", "305", "d4", "40", vat: true)
 
     included = [ erga_pct_measure, cn_pct_measure, vat_for_cn, erga_geo, cn_geo, mtype_third,
-                mtype_vat, duty_pct, duty_specific, duty_cn_pct ]
+                mtype_vat, duty_pct, duty_specific, duty_cn_pct, duty_vat_standard ]
     response = {
       "data" => {
         "attributes" => { "goods_nomenclature_item_id" => "0101210000" },
@@ -159,10 +175,10 @@ RSpec.describe DutyVatCalculatorShaper do
     expect(vat_measure[:vat_amount]).to eq(105.0) # (500 + 25) * 0.20
   end
 
-  it "returns VAT rate as 20% even when no customs_value given" do
+  it "returns the VAT rate from the backend's duty expression even when no customs_value given" do
     result = described_class.call(full_response(vat_measure), country_code: nil, customs_value: nil)
     vat = result[:applicable_measures].find { |x| x[:vat] }
-    expect(vat[:rate]).to eq("20%")
+    expect(vat[:rate]).to eq("20.00 %")
     expect(vat).not_to have_key(:vat_amount)
   end
 

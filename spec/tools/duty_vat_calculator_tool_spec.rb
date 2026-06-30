@@ -27,6 +27,16 @@ RSpec.describe DutyVatCalculatorTool do
     expect(parsed).to include("applicable_measures")
   end
 
+  it "passes filter.geographical_area_id to the backend when country_code is given" do
+    stub_request(:get, /uk\/api\/v2\/commodities\/0101210000/)
+      .to_return(status: 200, body: commodity_body, headers: { "Content-Type" => "application/json" })
+
+    described_class.call(commodity_code: "0101210000", country_code: "CN")
+
+    expect(WebMock).to have_requested(:get, /uk\/api\/v2\/commodities\/0101210000/)
+      .with(query: hash_including("filter.geographical_area_id" => "CN"))
+  end
+
   it "returns an error for an invalid commodity_code" do
     result = described_class.call(commodity_code: "short")
     expect(result.error?).to be true
