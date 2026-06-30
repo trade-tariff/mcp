@@ -36,15 +36,15 @@ RSpec.describe CommodityQuotasShaper do
   let(:on_a)    { order_number("on1", "094011") }
   let(:on_b)    { order_number("on2", "094012") }
   let(:geo_cn)  { geo("CN", "China") }
-  let(:geo_erga){ geo("1011", "ERGA OMNES") }
+  let(:geo_erga) { geo("1011", "ERGA OMNES") }
   let(:m_cn)    { measure("m1", "on1", "CN") }
   let(:m_erga)  { measure("m2", "on2", "1011") }
   let(:m_none)  { measure("m3", nil, "1011") }
 
   let(:response) do
     api_response(
-      [{ "id" => "m1", "type" => "measure" }, { "id" => "m2", "type" => "measure" }, { "id" => "m3", "type" => "measure" }],
-      [on_a, on_b, geo_cn, geo_erga, m_cn, m_erga, m_none]
+      [ { "id" => "m1", "type" => "measure" }, { "id" => "m2", "type" => "measure" }, { "id" => "m3", "type" => "measure" } ],
+      [ on_a, on_b, geo_cn, geo_erga, m_cn, m_erga, m_none ]
     )
   end
 
@@ -60,8 +60,8 @@ RSpec.describe CommodityQuotasShaper do
 
   it "returns empty order_numbers when country has no quota measures and no ERGA OMNES fallback exists" do
     no_erga_response = api_response(
-      [{ "id" => "m1", "type" => "measure" }],
-      [on_a, geo_cn, m_cn]
+      [ { "id" => "m1", "type" => "measure" } ],
+      [ on_a, geo_cn, m_cn ]
     )
     result = described_class.call(no_erga_response, country_code: "DE")
     expect(result[:order_numbers]).to be_empty

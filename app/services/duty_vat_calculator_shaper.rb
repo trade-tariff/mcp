@@ -122,7 +122,7 @@ class DutyVatCalculatorShaper < ApplicationShaper
       else
         note = if @customs_value && duty_str
                  "Cannot calculate amount for specific duty '#{duty_str}' — provide quantity and unit."
-               end
+        end
         result.merge(calculation_note: note).compact
       end
     end

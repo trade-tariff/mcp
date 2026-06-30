@@ -20,7 +20,7 @@ class CommodityQuotasTool < ApplicationTool
       service: SERVICE_SCHEMA,
       validity_date: VALIDITY_DATE_SCHEMA
     },
-    required: ["commodity_code"]
+    required: [ "commodity_code" ]
   )
 
   def self.call(commodity_code:, country_code: nil, service: nil, validity_date: nil, server_context: nil)

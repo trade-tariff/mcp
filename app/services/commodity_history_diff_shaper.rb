@@ -71,7 +71,7 @@ class CommodityHistoryDiffShaper
 
   def group_by_key(measures)
     measures.each_with_object({}) do |m, h|
-      key = [m[:type], m[:geographical_area], m[:quota_order_number]]
+      key = [ m[:type], m[:geographical_area], m[:quota_order_number] ]
       (h[key] ||= []) << m
     end
   end
@@ -93,6 +93,6 @@ class CommodityHistoryDiffShaper
       end
     end
 
-    [matched, leftover_from, remaining_to]
+    [ matched, leftover_from, remaining_to ]
   end
 end

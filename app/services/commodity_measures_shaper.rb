@@ -17,15 +17,15 @@ class CommodityMeasuresShaper < ApplicationShaper
 
     import = if @direction == "export"
                []
-             else
+    else
                shape_measures(filter_by_country(rels.dig("import_measures", "data") || []))
-             end
+    end
 
     export = if @direction == "import"
                []
-             else
+    else
                shape_measures(filter_by_country(rels.dig("export_measures", "data") || []))
-             end
+    end
 
     {
       commodity_code: @data.dig("attributes", "goods_nomenclature_item_id"),

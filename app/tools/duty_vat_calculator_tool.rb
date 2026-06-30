@@ -32,7 +32,7 @@ class DutyVatCalculatorTool < ApplicationTool
       service: SERVICE_SCHEMA,
       validity_date: VALIDITY_DATE_SCHEMA
     },
-    required: ["commodity_code"]
+    required: [ "commodity_code" ]
   )
 
   def self.call(commodity_code:, country_code: nil, customs_value: nil, quantity: nil, unit: nil, service: nil, validity_date: nil, server_context: nil)
@@ -64,7 +64,7 @@ class DutyVatCalculatorTool < ApplicationTool
     return nil if value.nil? || value >= 0
 
     MCP::Tool::Response.new(
-      [{ type: "text", text: "Invalid customs_value: must be zero or positive." }],
+      [ { type: "text", text: "Invalid customs_value: must be zero or positive." } ],
       error: true
     )
   end

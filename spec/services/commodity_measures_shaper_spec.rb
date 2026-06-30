@@ -53,8 +53,8 @@ RSpec.describe CommodityMeasuresShaper do
 
   let(:response) do
     api_response(
-      import_refs: [{ "id" => "m1", "type" => "measure" }, { "id" => "m2", "type" => "measure" }],
-      included: [geo_erga, geo_cn, mtype, duty, m_erga, m_cn]
+      import_refs: [ { "id" => "m1", "type" => "measure" }, { "id" => "m2", "type" => "measure" } ],
+      included: [ geo_erga, geo_cn, mtype, duty, m_erga, m_cn ]
     )
   end
 
@@ -93,8 +93,8 @@ RSpec.describe CommodityMeasuresShaper do
 
   it "returns ERGA OMNES measure when no country-specific measure exists" do
     response_with_only_erga = api_response(
-      import_refs: [{ "id" => "m1", "type" => "measure" }],
-      included: [geo_erga, mtype, duty, m_erga]
+      import_refs: [ { "id" => "m1", "type" => "measure" } ],
+      included: [ geo_erga, mtype, duty, m_erga ]
     )
     result = described_class.call(response_with_only_erga, country_code: "JP", direction: "import")
     expect(result[:import_measures].length).to eq(1)
