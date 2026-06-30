@@ -235,6 +235,32 @@ Fallback if no unified endpoint exists: two separate calls — one for descripti
 
 ---
 
+## Shared Infrastructure: `ApplicationShaper`
+
+Introduce `app/services/application_shaper.rb` as a base class for all shapers. It provides the two JSONAPI resolution methods that every shaper currently duplicates:
+
+```ruby
+class ApplicationShaper
+  def self.call(api_response)
+    new(api_response).call
+  end
+
+  private
+
+  def build_index(included)
+    included.each_with_object({}) { |item, h| h[[item["type"], item["id"]]] = item }
+  end
+
+  def lookup(type, id)
+    @included[[type, id]]
+  end
+end
+```
+
+All five new shapers inherit from `ApplicationShaper`. Existing shapers (`CommodityShaper`, `SearchQuotasShaper`, etc.) are migrated to inherit from it as part of this work, removing their duplicate private methods. No other behaviour changes.
+
+---
+
 ## Minor Enhancement: `CommodityShaper`
 
 Add `bti_url` to the shaped commodity output. This field is already present in the API response but currently dropped by the shaper. Surfacing it allows LLM clients to direct users to the GOV.UK binding tariff ruling guidance when relevant.
