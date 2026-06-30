@@ -1,0 +1,124 @@
+# frozen_string_literal: true
+
+require "rails_helper"
+
+RSpec.describe DutyVatCalculatorShaper do
+  def api_response(measures: [], vat_measures: [])
+    {
+      "data" => {
+        "attributes" => { "goods_nomenclature_item_id" => "0101210000" },
+        "relationships" => {
+          "import_measures" => { "data" => measures.map { |m| { "id" => m["id"], "type" => "measure" } } },
+          "export_measures" => { "data" => [] }
+        }
+      },
+      "included" => measures + vat_measures + build_supporting_included(measures, vat_measures)
+    }
+  end
+
+  def build_supporting_included(measures, vat_measures)
+    all = measures + vat_measures
+    all.flat_map do |m|
+      rels = m["relationships"]
+      [
+        rels.dig("measure_type", "data"),
+        rels.dig("duty_expression", "data"),
+        rels.dig("geographical_area", "data")
+      ].compact.map { |ref| @index[ref["type"]]&.fetch(ref["id"], nil) }.compact
+    end
+  end
+
+  let(:erga_geo) do
+    { "id" => "1011", "type" => "geographical_area",
+      "attributes" => { "geographical_area_id" => "1011", "description" => "ERGA OMNES" } }
+  end
+  let(:mtype_third) do
+    { "id" => "103", "type" => "measure_type",
+      "attributes" => { "description" => "Third country duty" } }
+  end
+  let(:mtype_vat) do
+    { "id" => "305", "type" => "measure_type",
+      "attributes" => { "description" => "Value added tax" } }
+  end
+  let(:duty_pct) do
+    { "id" => "d1", "type" => "duty_expression",
+      "attributes" => { "base" => "12.00 %" } }
+  end
+  let(:duty_specific) do
+    { "id" => "d2", "type" => "duty_expression",
+      "attributes" => { "base" => "GBP 1.50 / 100 kg" } }
+  end
+
+  def measure(id, type_id, duty_id, geo_id, vat: false)
+    {
+      "id" => id, "type" => "measure",
+      "attributes" => { "vat" => vat, "excise" => false, "reduction_indicator" => nil,
+                        "effective_start_date" => nil, "effective_end_date" => nil },
+      "relationships" => {
+        "measure_type"      => { "data" => { "id" => type_id, "type" => "measure_type" } },
+        "duty_expression"   => { "data" => { "id" => duty_id, "type" => "duty_expression" } },
+        "geographical_area" => { "data" => { "id" => geo_id, "type" => "geographical_area" } },
+        "order_number"      => { "data" => nil },
+        "measure_conditions"=> { "data" => [] }
+      }
+    }
+  end
+
+  before do
+    @index = {
+      "measure_type"      => { "103" => mtype_third, "305" => mtype_vat },
+      "duty_expression"   => { "d1" => duty_pct, "d2" => duty_specific },
+      "geographical_area" => { "1011" => erga_geo }
+    }
+  end
+
+  let(:pct_measure) { measure("m1", "103", "d1", "1011") }
+  let(:vat_measure) { measure("m2", "305", "d1", "1011", vat: true) }
+  let(:specific_measure) { measure("m3", "103", "d2", "1011") }
+
+  def full_response(*measures)
+    included = measures + [erga_geo, mtype_third, mtype_vat, duty_pct, duty_specific]
+    {
+      "data" => {
+        "attributes" => { "goods_nomenclature_item_id" => "0101210000" },
+        "relationships" => {
+          "import_measures" => { "data" => measures.map { |m| { "id" => m["id"], "type" => "measure" } } },
+          "export_measures" => { "data" => [] }
+        }
+      },
+      "included" => included.uniq { |x| [x["type"], x["id"]] }
+    }
+  end
+
+  it "returns rates only when no customs_value given" do
+    result = described_class.call(full_response(pct_measure), country_code: nil, customs_value: nil)
+    m = result[:applicable_measures].find { |x| x[:type] == "Third country duty" }
+    expect(m[:rate]).to eq("12.00 %")
+    expect(m).not_to have_key(:duty_amount)
+  end
+
+  it "calculates duty_amount for ad-valorem duties when customs_value given" do
+    result = described_class.call(full_response(pct_measure), country_code: nil, customs_value: 500.0)
+    m = result[:applicable_measures].find { |x| x[:type] == "Third country duty" }
+    expect(m[:duty_amount]).to eq(60.0)
+  end
+
+  it "calculates VAT as 20% of customs_value + duty when customs_value given" do
+    result = described_class.call(full_response(pct_measure, vat_measure), country_code: nil, customs_value: 500.0)
+    vat = result[:applicable_measures].find { |x| x[:vat] }
+    expect(vat[:vat_amount]).to eq(112.0)  # (500 + 60) * 0.20
+  end
+
+  it "returns specific duties with a calculation_note and no amount" do
+    result = described_class.call(full_response(specific_measure), country_code: nil, customs_value: 500.0)
+    m = result[:applicable_measures].find { |x| x[:type] == "Third country duty" }
+    expect(m[:duty_amount]).to be_nil
+    expect(m[:calculation_note]).to include("quantity")
+  end
+
+  it "includes commodity_code and inputs in result" do
+    result = described_class.call(full_response(pct_measure), country_code: "CN", customs_value: 100.0)
+    expect(result[:commodity_code]).to eq("0101210000")
+    expect(result[:inputs][:customs_value]).to eq(100.0)
+  end
+end
