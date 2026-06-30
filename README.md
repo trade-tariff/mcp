@@ -42,6 +42,11 @@ Restart Claude Desktop after saving. It will prompt for your Hub **client_id** a
 | `search_additional_codes` | Search additional codes (e.g. Meursing codes for agricultural goods) |
 | `list_certificate_types` | List all certificate and licence types required by measures |
 | `rules_of_origin` | Get rules of origin schemes for a heading and country combination |
+| `commodity_measures` | Return import/export measures for a commodity, optionally filtered by country and direction |
+| `duty_vat_calculator` | Return duty rates for a commodity+country; optionally calculate amounts from a customs value |
+| `commodity_quotas` | Look up live quota balances by commodity code, without needing quota order numbers in advance |
+| `commodity_history_diff` | Show what changed for a commodity between two dates: measures added/removed, duty rate changes |
+| `full_text_search` | Keyword search across commodity, heading and chapter descriptions |
 
 All tools accept these optional parameters:
 
