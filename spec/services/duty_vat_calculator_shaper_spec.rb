@@ -122,6 +122,43 @@ RSpec.describe DutyVatCalculatorShaper do
     expect(result[:inputs][:customs_value]).to eq(100.0)
   end
 
+  it "uses only the country-specific duty_amount (not the sum) as the VAT base when both ERGA OMNES and a country-specific ad-valorem duty apply" do
+    cn_geo = { "id" => "40", "type" => "geographical_area",
+               "attributes" => { "geographical_area_id" => "CN", "description" => "China" } }
+    duty_cn_pct = { "id" => "d3", "type" => "duty_expression",
+                     "attributes" => { "base" => "5.00 %" } }
+
+    erga_pct_measure = measure("m1", "103", "d1", "1011")        # 12.00 %, ERGA OMNES
+    cn_pct_measure    = measure("m4", "103", "d3", "40")          # 5.00 %, country-specific
+    vat_for_cn        = measure("m5", "305", "d1", "40", vat: true)
+
+    included = [erga_pct_measure, cn_pct_measure, vat_for_cn, erga_geo, cn_geo, mtype_third,
+                mtype_vat, duty_pct, duty_specific, duty_cn_pct]
+    response = {
+      "data" => {
+        "attributes" => { "goods_nomenclature_item_id" => "0101210000" },
+        "relationships" => {
+          "import_measures" => {
+            "data" => [erga_pct_measure, cn_pct_measure, vat_for_cn].map { |m| { "id" => m["id"], "type" => "measure" } }
+          },
+          "export_measures" => { "data" => [] }
+        }
+      },
+      "included" => included.uniq { |x| [x["type"], x["id"]] }
+    }
+
+    result = described_class.call(response, country_code: "CN", customs_value: 500.0)
+
+    erga_measure = result[:applicable_measures].find { |m| m[:rate] == "12.00 %" }
+    cn_measure   = result[:applicable_measures].find { |m| m[:rate] == "5.00 %" }
+    vat_measure  = result[:applicable_measures].find { |m| m[:vat] }
+
+    expect(erga_measure[:duty_amount]).to eq(60.0)
+    expect(cn_measure[:duty_amount]).to eq(25.0)
+    # VAT base should be customs_value + country-specific duty (25.0), not + 85.0 (sum)
+    expect(vat_measure[:vat_amount]).to eq(105.0) # (500 + 25) * 0.20
+  end
+
   it "returns VAT rate as 20% even when no customs_value given" do
     result = described_class.call(full_response(vat_measure), country_code: nil, customs_value: nil)
     vat = result[:applicable_measures].find { |x| x[:vat] }

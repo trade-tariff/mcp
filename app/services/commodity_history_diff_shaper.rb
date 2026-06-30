@@ -15,30 +15,41 @@ class CommodityHistoryDiffShaper
   end
 
   def call
-    from_index = index_by_key(@from_measures)
-    to_index   = index_by_key(@to_measures)
+    from_groups = group_by_key(@from_measures)
+    to_groups   = group_by_key(@to_measures)
 
-    from_keys = from_index.keys.to_set
-    to_keys   = to_index.keys.to_set
+    added        = []
+    removed      = []
+    duty_changes = []
+    unchanged_count = 0
 
-    added   = (to_keys - from_keys).map { |k| to_index[k] }
-    removed = (from_keys - to_keys).map { |k| from_index[k] }
+    (from_groups.keys | to_groups.keys).each do |key|
+      from_list = from_groups[key] || []
+      to_list   = to_groups[key]   || []
 
-    duty_changes = (from_keys & to_keys).filter_map do |k|
-      from_m = from_index[k]
-      to_m   = to_index[k]
-      next if from_m[:duty] == to_m[:duty]
+      if from_list.length == 1 && to_list.length == 1
+        from_m = from_list.first
+        to_m   = to_list.first
 
-      {
-        type: from_m[:type],
-        geographical_area: from_m[:geographical_area],
-        quota_order_number: from_m[:quota_order_number],
-        from: from_m[:duty],
-        to: to_m[:duty]
-      }.compact
+        if from_m[:duty] == to_m[:duty]
+          unchanged_count += 1
+        else
+          duty_changes << {
+            type: from_m[:type],
+            geographical_area: from_m[:geographical_area],
+            quota_order_number: from_m[:quota_order_number],
+            from: from_m[:duty],
+            to: to_m[:duty]
+          }.compact
+        end
+      else
+        matched, leftover_from, leftover_to = match_by_duty(from_list, to_list)
+        unchanged_count += matched
+        removed.concat(leftover_from)
+        added.concat(leftover_to)
+      end
     end
 
-    unchanged_count = (from_keys & to_keys).count { |k| from_index[k][:duty] == to_index[k][:duty] }
     identical = added.empty? && removed.empty? && duty_changes.empty?
 
     result = {
@@ -58,10 +69,30 @@ class CommodityHistoryDiffShaper
 
   private
 
-  def index_by_key(measures)
+  def group_by_key(measures)
     measures.each_with_object({}) do |m, h|
       key = [m[:type], m[:geographical_area], m[:quota_order_number]]
-      h[key] = m
+      (h[key] ||= []) << m
     end
+  end
+
+  # Multiset-match measures between from_list and to_list by exact duty value.
+  # Returns [matched_count, leftover_from_measures, leftover_to_measures]
+  def match_by_duty(from_list, to_list)
+    remaining_to = to_list.dup
+    leftover_from = []
+    matched = 0
+
+    from_list.each do |from_m|
+      idx = remaining_to.index { |to_m| to_m[:duty] == from_m[:duty] }
+      if idx
+        remaining_to.delete_at(idx)
+        matched += 1
+      else
+        leftover_from << from_m
+      end
+    end
+
+    [matched, leftover_from, remaining_to]
   end
 end
