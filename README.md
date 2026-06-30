@@ -25,6 +25,33 @@ File locations:
 
 Restart Claude Desktop after saving. It will prompt for your Hub **client_id** and **client_secret** on first use — see [Authentication](#authentication).
 
+## Connecting to GitHub Copilot
+
+In VS Code, add to your `.vscode/mcp.json` (workspace) or user MCP config:
+
+```json
+{
+  "servers": {
+    "trade-tariff": {
+      "url": "https://mcp.trade-tariff.service.gov.uk/"
+    }
+  }
+}
+```
+
+Or run the **MCP: Add Server** command from the Command Palette and choose **HTTP**, then enter `https://mcp.trade-tariff.service.gov.uk/` when prompted.
+
+Copilot will prompt for your Hub **client_id** and **client_secret** on first use — see [Authentication](#authentication).
+
+## Connecting to ChatGPT
+
+ChatGPT connects to MCP servers as **Apps/Connectors** (requires a paid plan):
+
+1. Go to **Settings → Connectors → Advanced settings** and enable **Developer mode**.
+2. Go to **Settings → Connectors → Add custom connector**.
+3. Enter a name (e.g. `Trade Tariff`) and the server URL `https://mcp.trade-tariff.service.gov.uk/`.
+4. Save, then enable the connector in a chat. You will be prompted for your Hub **client_id** and **client_secret** — see [Authentication](#authentication).
+
 ## Tools
 
 | Tool | Description |
