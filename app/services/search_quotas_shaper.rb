@@ -5,11 +5,7 @@
 # The bulk of the included array is quota_order_number_origin_exclusion items
 # (typically 140+) which list countries explicitly excluded from quota
 # origins — these are dropped as they are rarely needed for a first pass.
-class SearchQuotasShaper
-  def self.call(api_response)
-    new(api_response).call
-  end
-
+class SearchQuotasShaper < ApplicationShaper
   def initialize(api_response)
     @data     = api_response["data"] || []
     @included = build_index(api_response["included"] || [])
@@ -24,21 +20,13 @@ class SearchQuotasShaper
 
   private
 
-  def build_index(included)
-    included.each_with_object({}) { |item, h| h[[ item["type"], item["id"] ]] = item }
-  end
-
-  def lookup(type, id)
-    @included[[ type, id ]]
-  end
-
   def shape_quota(quota)
     attrs = quota["attributes"]
     rels  = quota["relationships"]
 
-    order_ref  = rels.dig("order_number", "data")
-    order      = order_ref ? lookup(order_ref["type"], order_ref["id"]) : nil
-    geo_areas  = resolve_geo_areas(order)
+    order_ref   = rels.dig("order_number", "data")
+    order       = order_ref ? lookup(order_ref["type"], order_ref["id"]) : nil
+    geo_areas   = resolve_geo_areas(order)
     commodities = resolve_commodities(rels.dig("measures", "data") || [])
 
     {
@@ -91,8 +79,6 @@ class SearchQuotasShaper
   end
 
   def shape_meta(meta)
-    {
-      pagination: meta["pagination"]
-    }.compact
+    { pagination: meta["pagination"] }.compact
   end
 end
