@@ -23,7 +23,6 @@ class CommodityShaper < ApplicationShaper
       validity_start_date: attrs["validity_start_date"]&.then { |d| d[0, 10] },
       validity_end_date: attrs["validity_end_date"]&.then { |d| d[0, 10] },
       basic_duty_rate: attrs["basic_duty_rate"],
-      bti_url: attrs["bti_url"],
       section: resolve_one(rels, "section")&.dig("attributes", "title"),
       chapter: resolve_one(rels, "chapter")&.then { |c| c.dig("attributes", "description_plain") || c.dig("attributes", "formatted_description") },
       heading: resolve_one(rels, "heading")&.dig("attributes", "description_plain"),
