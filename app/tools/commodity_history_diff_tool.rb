@@ -66,7 +66,7 @@ class CommodityHistoryDiffTool < ApplicationTool
     return nil if value && !value.to_s.strip.empty?
 
     MCP::Tool::Response.new(
-      [{ type: "text", text: "Missing required field: #{field_name}." }],
+      [ { type: "text", text: "Missing required field: #{field_name}." } ],
       error: true
     )
   end
@@ -77,7 +77,7 @@ class CommodityHistoryDiffTool < ApplicationTool
     return nil if Date.parse(from_date) <= Date.parse(to_date)
 
     MCP::Tool::Response.new(
-      [{ type: "text", text: "Invalid from_date: must be before or equal to to_date." }],
+      [ { type: "text", text: "Invalid from_date: must be before or equal to to_date." } ],
       error: true
     )
   rescue Date::Error

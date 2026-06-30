@@ -30,7 +30,7 @@ class CommodityMeasuresTool < ApplicationTool
       service: SERVICE_SCHEMA,
       validity_date: VALIDITY_DATE_SCHEMA
     },
-    required: ["commodity_code"]
+    required: [ "commodity_code" ]
   )
 
   def self.call(commodity_code:, country_code: nil, direction: "both", service: nil, validity_date: nil, server_context: nil)
@@ -54,7 +54,7 @@ class CommodityMeasuresTool < ApplicationTool
     return nil if %w[import export both].include?(direction)
 
     MCP::Tool::Response.new(
-      [{ type: "text", text: "Invalid direction: '#{direction}'. Must be 'import', 'export', or 'both'." }],
+      [ { type: "text", text: "Invalid direction: '#{direction}'. Must be 'import', 'export', or 'both'." } ],
       error: true
     )
   end

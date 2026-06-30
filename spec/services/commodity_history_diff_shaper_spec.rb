@@ -15,7 +15,7 @@ RSpec.describe CommodityHistoryDiffShaper do
     result = described_class.call(
       commodity_code: "0101210000",
       from_date: "2024-01-01", to_date: "2025-01-01",
-      from_measures: [m_third_erga_12], to_measures: [m_third_erga_12]
+      from_measures: [ m_third_erga_12 ], to_measures: [ m_third_erga_12 ]
     )
     expect(result[:changes][:measures_added]).to be_empty
     expect(result[:changes][:measures_removed]).to be_empty
@@ -27,7 +27,7 @@ RSpec.describe CommodityHistoryDiffShaper do
     result = described_class.call(
       commodity_code: "0101210000",
       from_date: "2024-01-01", to_date: "2025-01-01",
-      from_measures: [m_third_erga_12, m_pref_eu], to_measures: [m_third_erga_12]
+      from_measures: [ m_third_erga_12, m_pref_eu ], to_measures: [ m_third_erga_12 ]
     )
     expect(result[:changes][:measures_removed].length).to eq(1)
     expect(result[:changes][:measures_removed].first[:type]).to eq("Tariff preference")
@@ -37,7 +37,7 @@ RSpec.describe CommodityHistoryDiffShaper do
     result = described_class.call(
       commodity_code: "0101210000",
       from_date: "2024-01-01", to_date: "2025-01-01",
-      from_measures: [m_third_erga_12], to_measures: [m_third_erga_12, m_pref_eu]
+      from_measures: [ m_third_erga_12 ], to_measures: [ m_third_erga_12, m_pref_eu ]
     )
     expect(result[:changes][:measures_added].length).to eq(1)
     expect(result[:changes][:measures_added].first[:type]).to eq("Tariff preference")
@@ -47,7 +47,7 @@ RSpec.describe CommodityHistoryDiffShaper do
     result = described_class.call(
       commodity_code: "0101210000",
       from_date: "2024-01-01", to_date: "2025-01-01",
-      from_measures: [m_third_erga_12], to_measures: [m_third_erga_8]
+      from_measures: [ m_third_erga_12 ], to_measures: [ m_third_erga_8 ]
     )
     expect(result[:changes][:duty_changes].length).to eq(1)
     change = result[:changes][:duty_changes].first
@@ -59,14 +59,14 @@ RSpec.describe CommodityHistoryDiffShaper do
     result = described_class.call(
       commodity_code: "0101210000",
       from_date: "2024-01-01", to_date: "2025-01-01",
-      from_measures: [m_third_erga_12, m_pref_eu], to_measures: [m_third_erga_12]
+      from_measures: [ m_third_erga_12, m_pref_eu ], to_measures: [ m_third_erga_12 ]
     )
     expect(result[:unchanged_measure_count]).to eq(1)
   end
 
   it "counts both measures unchanged when two measures share the same key with different duty rates" do
-    duplicate_key_from = [m_third_erga_12, m_third_erga_8]
-    duplicate_key_to   = [m_third_erga_12, m_third_erga_8]
+    duplicate_key_from = [ m_third_erga_12, m_third_erga_8 ]
+    duplicate_key_to   = [ m_third_erga_12, m_third_erga_8 ]
 
     result = described_class.call(
       commodity_code: "0101210000",
@@ -88,8 +88,8 @@ RSpec.describe CommodityHistoryDiffShaper do
     # still be correctly counted as unchanged, not swept up as a false positive.
     m_third_erga_8_changed = measure(type: "Third country duty", geo: "ERGA OMNES (1011)", duty: "5.00 %")
 
-    from_measures = [m_third_erga_12, m_third_erga_8]
-    to_measures   = [m_third_erga_12, m_third_erga_8_changed]
+    from_measures = [ m_third_erga_12, m_third_erga_8 ]
+    to_measures   = [ m_third_erga_12, m_third_erga_8_changed ]
 
     result = described_class.call(
       commodity_code: "0101210000",

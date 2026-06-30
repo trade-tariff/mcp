@@ -11,7 +11,7 @@ RSpec.describe CommodityQuotasTool do
         "attributes" => { "goods_nomenclature_item_id" => "0101210000" },
         "relationships" => {
           "import_measures" => {
-            "data" => [{ "id" => "m1", "type" => "measure" }]
+            "data" => [ { "id" => "m1", "type" => "measure" } ]
           }
         }
       },

@@ -77,7 +77,7 @@ RSpec.describe DutyVatCalculatorShaper do
   let(:specific_measure) { measure("m3", "103", "d2", "1011") }
 
   def full_response(*measures)
-    included = measures + [erga_geo, mtype_third, mtype_vat, duty_pct, duty_specific]
+    included = measures + [ erga_geo, mtype_third, mtype_vat, duty_pct, duty_specific ]
     {
       "data" => {
         "attributes" => { "goods_nomenclature_item_id" => "0101210000" },
@@ -86,7 +86,7 @@ RSpec.describe DutyVatCalculatorShaper do
           "export_measures" => { "data" => [] }
         }
       },
-      "included" => included.uniq { |x| [x["type"], x["id"]] }
+      "included" => included.uniq { |x| [ x["type"], x["id"] ] }
     }
   end
 
@@ -132,19 +132,19 @@ RSpec.describe DutyVatCalculatorShaper do
     cn_pct_measure    = measure("m4", "103", "d3", "40")          # 5.00 %, country-specific
     vat_for_cn        = measure("m5", "305", "d1", "40", vat: true)
 
-    included = [erga_pct_measure, cn_pct_measure, vat_for_cn, erga_geo, cn_geo, mtype_third,
-                mtype_vat, duty_pct, duty_specific, duty_cn_pct]
+    included = [ erga_pct_measure, cn_pct_measure, vat_for_cn, erga_geo, cn_geo, mtype_third,
+                mtype_vat, duty_pct, duty_specific, duty_cn_pct ]
     response = {
       "data" => {
         "attributes" => { "goods_nomenclature_item_id" => "0101210000" },
         "relationships" => {
           "import_measures" => {
-            "data" => [erga_pct_measure, cn_pct_measure, vat_for_cn].map { |m| { "id" => m["id"], "type" => "measure" } }
+            "data" => [ erga_pct_measure, cn_pct_measure, vat_for_cn ].map { |m| { "id" => m["id"], "type" => "measure" } }
           },
           "export_measures" => { "data" => [] }
         }
       },
-      "included" => included.uniq { |x| [x["type"], x["id"]] }
+      "included" => included.uniq { |x| [ x["type"], x["id"] ] }
     }
 
     result = described_class.call(response, country_code: "CN", customs_value: 500.0)
