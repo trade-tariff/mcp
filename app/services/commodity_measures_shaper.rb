@@ -41,27 +41,16 @@ class CommodityMeasuresShaper < ApplicationShaper
   def filter_by_country(refs)
     return refs if @country_code.nil?
 
-    country_specific = []
-    erga_omnes = []
-
-    refs.each do |ref|
+    refs.select do |ref|
       measure = lookup(ref["type"], ref["id"])
-      next unless measure
+      next false unless measure
 
       geo_ref = measure.dig("relationships", "geographical_area", "data")
-      next unless geo_ref
+      next false unless geo_ref
 
       geo    = lookup(geo_ref["type"], geo_ref["id"])
       geo_id = geo&.dig("attributes", "geographical_area_id") || geo&.dig("attributes", "id")
-
-      if geo_id == @country_code
-        country_specific << ref
-      elsif geo_id == "1011"
-        erga_omnes << ref
-      end
+      geo_id == @country_code || geo_id == "1011"
     end
-
-    # Only return ERGA OMNES if country has country-specific measures
-    country_specific.empty? ? [] : country_specific + erga_omnes
   end
 end

@@ -10,12 +10,16 @@ RSpec.describe CommodityMeasuresTool do
   after  { ENV.delete("TARIFF_API_URL") }
 
   it "calls the UK commodity endpoint with measures-only includes" do
-    stub = stub_request(:get, /uk\/api\/v2\/commodities\/0101210000.*import_measures/)
+    stub = stub_request(:get, /uk\/api\/v2\/commodities\/0101210000/)
              .to_return(status: 200, body: commodity_body, headers: { "Content-Type" => "application/json" })
 
     described_class.call(commodity_code: "0101210000")
 
     expect(stub).to have_been_requested
+    # Verify the request included measures-only params (and not hierarchy/footnote data)
+    expect(WebMock).to have_requested(:get, /uk\/api\/v2\/commodities\/0101210000/).with { |req|
+      req.uri.query.include?("import_measures") && !req.uri.query.include?("section")
+    }
   end
 
   it "returns a response with import_measures and export_measures keys" do
