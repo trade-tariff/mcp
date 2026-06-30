@@ -121,4 +121,11 @@ RSpec.describe DutyVatCalculatorShaper do
     expect(result[:commodity_code]).to eq("0101210000")
     expect(result[:inputs][:customs_value]).to eq(100.0)
   end
+
+  it "returns VAT rate as 20% even when no customs_value given" do
+    result = described_class.call(full_response(vat_measure), country_code: nil, customs_value: nil)
+    vat = result[:applicable_measures].find { |x| x[:vat] }
+    expect(vat[:rate]).to eq("20%")
+    expect(vat).not_to have_key(:vat_amount)
+  end
 end

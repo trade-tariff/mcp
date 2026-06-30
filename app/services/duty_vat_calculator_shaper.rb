@@ -33,10 +33,9 @@ class DutyVatCalculatorShaper < ApplicationShaper
 
       if @customs_value
         m.merge(vat_amount: ((@customs_value + total_ad_valorem) * VAT_RATE).round(2),
-                rate: "#{(VAT_RATE * 100).to_i}%",
                 basis: "customs value + duty")
       else
-        m.merge(rate: "#{(VAT_RATE * 100).to_i}%")
+        m
       end
     end
 
@@ -93,7 +92,7 @@ class DutyVatCalculatorShaper < ApplicationShaper
       }
 
       if mattrs["vat"]
-        result
+        result.merge(rate: "#{(VAT_RATE * 100).to_i}%")
       elsif duty_str&.match?(/\A\s*(\d+\.?\d*)\s*%/)
         rate = duty_str.match(/(\d+\.?\d*)\s*%/)[1].to_f
         if @customs_value
