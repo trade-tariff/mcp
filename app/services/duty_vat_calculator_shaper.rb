@@ -2,7 +2,6 @@
 
 class DutyVatCalculatorShaper < ApplicationShaper
   ERGA_OMNES_ID = "1011"
-  VAT_RATE      = 0.20
 
   def self.call(api_response, country_code: nil, customs_value: nil, quantity: nil, unit: nil)
     new(api_response,
@@ -23,7 +22,7 @@ class DutyVatCalculatorShaper < ApplicationShaper
 
   def call
     rels         = @data["relationships"]
-    measure_refs = filter_by_country(rels.dig("import_measures", "data") || [])
+    measure_refs = rels.dig("import_measures", "data") || []
     measures     = shape_duty_measures(measure_refs)
 
     total_ad_valorem = select_ad_valorem_total(measures)
@@ -33,12 +32,11 @@ class DutyVatCalculatorShaper < ApplicationShaper
 
       next m unless m[:vat]
 
-      if @customs_value
-        m.merge(vat_amount: ((@customs_value + total_ad_valorem) * VAT_RATE).round(2),
-                basis: "customs value + duty")
-      else
-        m
-      end
+      vat_rate = percentage_rate(m[:rate])
+      next m if @customs_value.nil? || vat_rate.nil?
+
+      m.merge(vat_amount: ((@customs_value + total_ad_valorem) * vat_rate / 100.0).round(2),
+              basis: "customs value + duty")
     end
 
     inputs = {}
@@ -72,22 +70,6 @@ class DutyVatCalculatorShaper < ApplicationShaper
     (erga_omnes || ad_valorem.first)[:duty_amount]
   end
 
-  def filter_by_country(refs)
-    return refs if @country_code.nil?
-
-    refs.select do |ref|
-      measure = lookup(ref["type"], ref["id"])
-      next false unless measure
-
-      geo_ref = measure.dig("relationships", "geographical_area", "data")
-      next false unless geo_ref
-
-      geo    = lookup(geo_ref["type"], geo_ref["id"])
-      geo_id = geo&.dig("attributes", "geographical_area_id") || geo&.dig("attributes", "id")
-      geo_id == @country_code || geo_id == ERGA_OMNES_ID
-    end
-  end
-
   def shape_duty_measures(refs)
     refs.filter_map do |ref|
       measure = lookup(ref["type"], ref["id"])
@@ -110,10 +92,11 @@ class DutyVatCalculatorShaper < ApplicationShaper
         geo_id: geo_id
       }
 
+      rate = percentage_rate(duty_str)
+
       if mattrs["vat"]
-        result.merge(rate: "#{(VAT_RATE * 100).to_i}%")
-      elsif duty_str&.match?(/\A\s*(\d+\.?\d*)\s*%/)
-        rate = duty_str.match(/(\d+\.?\d*)\s*%/)[1].to_f
+        result
+      elsif rate
         if @customs_value
           result.merge(duty_amount: (@customs_value * rate / 100.0).round(2), basis: "customs value")
         else
@@ -121,10 +104,15 @@ class DutyVatCalculatorShaper < ApplicationShaper
         end
       else
         note = if @customs_value && duty_str
-                 "Cannot calculate amount for specific duty '#{duty_str}' — provide quantity and unit."
+                 "Cannot calculate amount for specific duty '#{duty_str}' — this tool does not yet resolve specific duty components."
         end
         result.merge(calculation_note: note).compact
       end
     end
+  end
+
+  def percentage_rate(rate_str)
+    match = rate_str&.match(/(\d+\.?\d*)\s*%/)
+    match && match[1].to_f
   end
 end

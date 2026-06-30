@@ -41,9 +41,12 @@ class CommodityMeasuresTool < ApplicationTool
 
     resolved = ServiceNormaliser.call(service)
     with_error_handling do
+      params = { "include" => MEASURES_INCLUDE }
+      params["filter.geographical_area_id"] = country_code if country_code
+
       raw = client_for(service: resolved).get(
         "/#{resolved}/api/v2/commodities/#{commodity_code}",
-        params: { "include" => MEASURES_INCLUDE },
+        params: params,
         as_of: validity_date
       )
       text_response(CommodityMeasuresShaper.call(raw, country_code: country_code, direction: direction))

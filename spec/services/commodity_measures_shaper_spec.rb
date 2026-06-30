@@ -58,24 +58,10 @@ RSpec.describe CommodityMeasuresShaper do
     )
   end
 
-  it "returns all import measures when no country_code given" do
+  it "shapes all import measures present in the response (filtering is done server-side)" do
     result = described_class.call(response, country_code: nil, direction: "import")
     expect(result[:import_measures].length).to eq(2)
     expect(result[:export_measures]).to eq([])
-  end
-
-  it "filters to country-specific + ERGA OMNES when country_code given" do
-    result = described_class.call(response, country_code: "CN", direction: "import")
-    expect(result[:import_measures].length).to eq(2)
-    expect(result[:import_measures].map { |m| m[:geographical_area] }).to include("ERGA OMNES (1011)", "China (CN)")
-  end
-
-  it "returns only ERGA OMNES when filtering to a country with no country-specific measure" do
-    # response only has ERGA OMNES and China measures, no Germany measure
-    result = described_class.call(response, country_code: "DE", direction: "import")
-    # Should return ERGA OMNES as the fallback
-    expect(result[:import_measures].length).to eq(1)
-    expect(result[:import_measures].first[:geographical_area]).to eq("ERGA OMNES (1011)")
   end
 
   it "returns only export_measures when direction is export" do
@@ -91,7 +77,7 @@ RSpec.describe CommodityMeasuresShaper do
     expect(result[:direction]).to eq("both")
   end
 
-  it "returns ERGA OMNES measure when no country-specific measure exists" do
+  it "shapes whatever measures the backend already filtered to, without re-filtering client-side" do
     response_with_only_erga = api_response(
       import_refs: [ { "id" => "m1", "type" => "measure" } ],
       included: [ geo_erga, mtype, duty, m_erga ]

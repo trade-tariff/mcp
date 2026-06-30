@@ -2,7 +2,7 @@
 
 class DutyVatCalculatorTool < ApplicationTool
   tool_name "duty_vat_calculator"
-  description "Return applicable duty rates for a commodity, filtered by origin country. When a customs value is provided, calculates the duty amount and VAT. For ad-valorem (percentage) duties the calculation is automatic. For specific duties (e.g. per kg) provide quantity and unit as well. Rates are returned regardless of whether a value is supplied."
+  description "Return applicable duty rates for a commodity, filtered by origin country. When a customs value is provided, calculates the duty amount and VAT for ad-valorem (percentage) duties. Specific duties (e.g. per kg) are not calculated automatically — the rate text and a calculation_note are returned instead, since the amount depends on duty components this tool does not yet resolve. Rates are returned regardless of whether a value is supplied."
 
   input_schema(
     properties: {
@@ -22,12 +22,12 @@ class DutyVatCalculatorTool < ApplicationTool
       },
       quantity: {
         type: "number",
-        description: "Quantity of goods. Required to calculate amounts for specific duties (e.g. per-kg rates).",
+        description: "Quantity of goods. Echoed back in the response for context — specific (non-percentage) duty amounts are not yet calculated automatically, see calculation_note.",
         minimum: 0
       },
       unit: {
         type: "string",
-        description: "Unit for quantity (e.g. 'kg', 'litre'). Used alongside quantity for specific duty calculations."
+        description: "Unit for quantity (e.g. 'kg', 'litre'). Echoed back alongside quantity; not yet used to calculate specific duty amounts."
       },
       service: SERVICE_SCHEMA,
       validity_date: VALIDITY_DATE_SCHEMA
@@ -43,9 +43,12 @@ class DutyVatCalculatorTool < ApplicationTool
 
     resolved = ServiceNormaliser.call(service)
     with_error_handling do
+      params = { "include" => CommodityMeasuresTool::MEASURES_INCLUDE }
+      params["filter.geographical_area_id"] = country_code if country_code
+
       raw = client_for(service: resolved).get(
         "/#{resolved}/api/v2/commodities/#{commodity_code}",
-        params: { "include" => CommodityMeasuresTool::MEASURES_INCLUDE },
+        params: params,
         as_of: validity_date
       )
       text_response(
