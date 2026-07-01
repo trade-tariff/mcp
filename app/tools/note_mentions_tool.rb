@@ -11,7 +11,7 @@ class NoteMentionsTool < ApplicationTool
         description: "Candidate goods nomenclature item IDs from classification_search, navigate_hierarchy, or show_heading.",
         items: {
           type: "string",
-          pattern: "\\A\\d{4,10}\\z"
+          pattern: "^\\d{4,10}$"
         }
       },
       goods_nomenclature_sids: {

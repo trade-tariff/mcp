@@ -9,7 +9,7 @@ class ShowHeadingTool < ApplicationTool
       heading_id: {
         type: "string",
         description: "Four-digit heading code, e.g. '0101'.",
-        pattern: "\\A\\d{4}\\z"
+        pattern: "^\\d{4}$"
       },
       service: SERVICE_SCHEMA,
       validity_date: VALIDITY_DATE_SCHEMA

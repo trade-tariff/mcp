@@ -9,7 +9,7 @@ class ShowChapterTool < ApplicationTool
       chapter_id: {
         type: "string",
         description: "Two-digit chapter ID, e.g. '01'.",
-        pattern: "\\A\\d{2}\\z"
+        pattern: "^\\d{2}$"
       },
       service: SERVICE_SCHEMA,
       validity_date: VALIDITY_DATE_SCHEMA

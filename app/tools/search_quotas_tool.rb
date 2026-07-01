@@ -9,7 +9,7 @@ class SearchQuotasTool < ApplicationTool
       order_number: {
         type: "string",
         description: "Filter by quota order number (exactly 6 digits, e.g. '094011').",
-        pattern: "\\A\\d{6}\\z"
+        pattern: "^\\d{6}$"
       },
       year: {
         type: "integer",
