@@ -9,17 +9,17 @@ class CommodityHistoryDiffTool < ApplicationTool
       commodity_code: {
         type: "string",
         description: "Ten-digit commodity code, e.g. '0101210000'.",
-        pattern: "\\A\\d{10}\\z"
+        pattern: "^\\d{10}$"
       },
       from_date: {
         type: "string",
         description: "Start date for the comparison (YYYY-MM-DD).",
-        pattern: "\\A\\d{4}-\\d{2}-\\d{2}\\z"
+        pattern: "^\\d{4}-\\d{2}-\\d{2}$"
       },
       to_date: {
         type: "string",
         description: "End date for the comparison (YYYY-MM-DD). Defaults to today.",
-        pattern: "\\A\\d{4}-\\d{2}-\\d{2}\\z"
+        pattern: "^\\d{4}-\\d{2}-\\d{2}$"
       },
       service: SERVICE_SCHEMA
     },

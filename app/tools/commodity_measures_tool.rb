@@ -16,7 +16,7 @@ class CommodityMeasuresTool < ApplicationTool
       commodity_code: {
         type: "string",
         description: "Ten-digit commodity code, e.g. '0101210000'.",
-        pattern: "\\A\\d{10}\\z"
+        pattern: "^\\d{10}$"
       },
       country_code: {
         type: "string",
