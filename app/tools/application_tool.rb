@@ -16,7 +16,7 @@ class ApplicationTool < MCP::Tool
   VALIDITY_DATE_SCHEMA = {
     type: "string",
     description: "Return data as it appeared on this date (YYYY-MM-DD). Defaults to today.",
-    pattern: "\\A\\d{4}-\\d{2}-\\d{2}\\z"
+    pattern: "^\\d{4}-\\d{2}-\\d{2}$"
   }.freeze
 
   class << self

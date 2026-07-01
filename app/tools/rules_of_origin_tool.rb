@@ -9,12 +9,12 @@ class RulesOfOriginTool < ApplicationTool
       heading_code: {
         type: "string",
         description: "4-digit heading code (e.g. '0101').",
-        pattern: "\\A\\d{4}\\z"
+        pattern: "^\\d{4}$"
       },
       country_code: {
         type: "string",
         description: "ISO 2-letter country code (e.g. 'TR' for Turkey).",
-        pattern: "\\A[A-Z]{2}\\z"
+        pattern: "^[A-Z]{2}$"
       },
       service: SERVICE_SCHEMA,
       validity_date: VALIDITY_DATE_SCHEMA

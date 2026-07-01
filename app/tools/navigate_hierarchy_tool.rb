@@ -9,7 +9,7 @@ class NavigateHierarchyTool < ApplicationTool
       code: {
         type: "string",
         description: "4 to 10-digit goods nomenclature code, e.g. '0101' or '0101210000'.",
-        pattern: "\\A\\d{4,10}\\z"
+        pattern: "^\\d{4,10}$"
       },
       service: SERVICE_SCHEMA,
       validity_date: VALIDITY_DATE_SCHEMA
