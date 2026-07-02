@@ -23,9 +23,9 @@ class CommodityShaper < ApplicationShaper
       validity_start_date: attrs["validity_start_date"]&.then { |d| d[0, 10] },
       validity_end_date: attrs["validity_end_date"]&.then { |d| d[0, 10] },
       basic_duty_rate: attrs["basic_duty_rate"],
-      section: resolve_one(rels, "section")&.dig("attributes", "title"),
-      chapter: resolve_one(rels, "chapter")&.then { |c| c.dig("attributes", "description_plain") || c.dig("attributes", "formatted_description") },
-      heading: resolve_one(rels, "heading")&.dig("attributes", "description_plain"),
+      section: resolve_relationship(rels, "section")&.dig("attributes", "title"),
+      chapter: resolve_relationship(rels, "chapter")&.then { |c| c.dig("attributes", "description_plain") || c.dig("attributes", "formatted_description") },
+      heading: resolve_relationship(rels, "heading")&.dig("attributes", "description_plain"),
       import_measures: shape_measures(rels.dig("import_measures", "data")),
       export_measures: shape_measures(rels.dig("export_measures", "data")),
       footnotes: shape_footnotes(rels.dig("footnotes", "data"))
