@@ -119,6 +119,8 @@ class OauthController < ApplicationController
 
   def exchange_credentials(client_id, client_secret)
     response = Faraday.post(HUB_TOKEN_URL) do |req|
+      req.options.open_timeout = 5
+      req.options.timeout = 10
       req.headers["Content-Type"] = "application/x-www-form-urlencoded"
       req.body = URI.encode_www_form(
         grant_type: "client_credentials",

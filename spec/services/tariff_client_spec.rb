@@ -66,5 +66,27 @@ RSpec.describe TariffClient do
         }.to raise_error(TariffClient::ApiError)
       end
     end
+
+    context "when the request times out" do
+      it "raises TariffClient::ApiError" do
+        stub_request(:get, "#{base_url}/uk/api/v2/sections").to_timeout
+
+        expect {
+          described_class.new(service: "uk").get("/uk/api/v2/sections")
+        }.to raise_error(TariffClient::ApiError, /timed out/)
+      end
+    end
+  end
+
+  describe "#post" do
+    context "when the request times out" do
+      it "raises TariffClient::ApiError" do
+        stub_request(:post, "#{base_url}/uk/api/v2/search").to_timeout
+
+        expect {
+          described_class.new(service: "uk").post("/uk/api/v2/search", body: { q: "test" })
+        }.to raise_error(TariffClient::ApiError, /timed out/)
+      end
+    end
   end
 end
