@@ -21,8 +21,9 @@ class TariffClient
       req.params.merge!(params)
       req.params["as_of"] = as_of if as_of
     end
-
     handle_response(response, path)
+  rescue Faraday::TimeoutError, Faraday::ConnectionFailed => e
+    raise ApiError, "Request timed out: #{path} (#{e.message})"
   end
 
   def post(path, body: {}, as_of: nil)
@@ -31,8 +32,9 @@ class TariffClient
       req.headers["Content-Type"] = "application/json"
       req.body = body.to_json
     end
-
     handle_response(response, path)
+  rescue Faraday::TimeoutError, Faraday::ConnectionFailed => e
+    raise ApiError, "Request timed out: #{path} (#{e.message})"
   end
 
   private
@@ -52,6 +54,8 @@ class TariffClient
 
   def connection
     Faraday.new(url: @base_url, ssl: ssl_options) do |f|
+      f.options.open_timeout = 5
+      f.options.timeout = 30
       f.headers["Accept"] = "application/vnd.hmrc.2.0+json"
       f.headers["Authorization"] = "Bearer #{CurrentRequest.bearer_token}" if CurrentRequest.bearer_token
     end

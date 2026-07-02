@@ -157,6 +157,25 @@ RSpec.describe "OAuth endpoints" do
       expect(JSON.parse(response.body)["error"]).to eq("invalid_grant")
     end
 
+    context "when the Hub token request times out" do
+      before do
+        stub_request(:post, hub_token_url).to_timeout
+      end
+
+      it "returns invalid_client rather than hanging" do
+        post "/token", params: {
+          grant_type: "authorization_code",
+          code: code,
+          client_id: "my-client-id",
+          client_secret: "my-client-secret",
+          code_verifier: code_verifier
+        }
+
+        expect(response).to have_http_status(:unauthorized)
+        expect(JSON.parse(response.body)["error"]).to eq("invalid_client")
+      end
+    end
+
     context "when Hub rejects the credentials" do
       before do
         stub_request(:post, hub_token_url).to_return(status: 401, body: { error: "invalid_client" }.to_json)
