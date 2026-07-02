@@ -15,16 +15,7 @@ class ApplicationShaper
     @included[[ type, id ]]
   end
 
-  def resolve_one(rels, name)
-    return nil unless rels
-
-    ref = rels.dig(name, "data")
-    return nil unless ref
-
-    lookup(ref["type"], ref["id"])
-  end
-
-  def resolve_typed(rels, name)
+  def resolve_relationship(rels, name)
     ref = rels&.dig(name, "data")
     return nil unless ref
 
@@ -68,10 +59,10 @@ class ApplicationShaper
       mattrs = measure["attributes"]
       mrels  = measure["relationships"]
 
-      measure_type = resolve_typed(mrels, "measure_type")
-      duty_expr    = resolve_typed(mrels, "duty_expression")
-      geo_area     = resolve_typed(mrels, "geographical_area")
-      order_number = resolve_typed(mrels, "order_number")
+      measure_type = resolve_relationship(mrels, "measure_type")
+      duty_expr    = resolve_relationship(mrels, "duty_expression")
+      geo_area     = resolve_relationship(mrels, "geographical_area")
+      order_number = resolve_relationship(mrels, "order_number")
       conditions   = shape_conditions(mrels.dig("measure_conditions", "data"))
 
       {

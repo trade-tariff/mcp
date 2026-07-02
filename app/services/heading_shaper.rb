@@ -19,7 +19,7 @@ class HeadingShaper < ApplicationShaper
       declarable: attrs["declarable"],
       validity_start_date: attrs["validity_start_date"]&.then { |d| d[0, 10] },
       validity_end_date: attrs["validity_end_date"]&.then { |d| d[0, 10] },
-      section: resolve_one(rels, "section")&.dig("attributes", "title"),
+      section: resolve_relationship(rels, "section")&.dig("attributes", "title"),
       chapter: resolve_chapter(rels),
       footnotes: shape_footnotes(rels.dig("footnotes", "data")),
       commodities: shape_commodities(rels.dig("commodities", "data"))
@@ -29,7 +29,7 @@ class HeadingShaper < ApplicationShaper
   private
 
   def resolve_chapter(rels)
-    chapter = resolve_one(rels, "chapter")
+    chapter = resolve_relationship(rels, "chapter")
     return nil unless chapter
 
     chapter.dig("attributes", "description_plain") ||

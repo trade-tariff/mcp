@@ -77,9 +77,9 @@ class DutyVatCalculatorShaper < ApplicationShaper
 
       mattrs      = measure["attributes"]
       mrels       = measure["relationships"]
-      measure_type = resolve_typed(mrels, "measure_type")
-      duty_expr    = resolve_typed(mrels, "duty_expression")
-      geo_area     = resolve_typed(mrels, "geographical_area")
+      measure_type = resolve_relationship(mrels, "measure_type")
+      duty_expr    = resolve_relationship(mrels, "duty_expression")
+      geo_area     = resolve_relationship(mrels, "geographical_area")
       duty_str     = duty_expr&.dig("attributes", "base")
       geo_id       = geo_area&.dig("attributes", "geographical_area_id") || geo_area&.dig("attributes", "id")
 
