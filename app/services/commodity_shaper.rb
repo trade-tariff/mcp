@@ -26,9 +26,30 @@ class CommodityShaper < ApplicationShaper
       section: resolve_relationship(rels, "section")&.dig("attributes", "title"),
       chapter: resolve_relationship(rels, "chapter")&.then { |c| c.dig("attributes", "description_plain") || c.dig("attributes", "formatted_description") },
       heading: resolve_relationship(rels, "heading")&.dig("attributes", "description_plain"),
+      supplementary_unit: find_supplementary_unit(rels),
       import_measures: shape_measures(rels.dig("import_measures", "data")),
       export_measures: shape_measures(rels.dig("export_measures", "data")),
       footnotes: shape_footnotes(rels.dig("footnotes", "data"))
     }.compact
+  end
+
+  private
+
+  def find_supplementary_unit(rels)
+    import_refs = rels.dig("import_measures", "data") || []
+    export_refs = rels.dig("export_measures", "data") || []
+
+    (import_refs + export_refs).each do |ref|
+      measure = lookup(ref["type"], ref["id"])
+      next unless measure
+
+      type = resolve_relationship(measure["relationships"], "measure_type")
+      next unless type&.dig("attributes", "description")&.include?("Supplementary unit")
+
+      duty = resolve_relationship(measure["relationships"], "duty_expression")
+      return duty&.dig("attributes", "base")
+    end
+
+    nil
   end
 end
