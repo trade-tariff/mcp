@@ -59,15 +59,19 @@ class ApplicationShaper
       mattrs = measure["attributes"]
       mrels  = measure["relationships"]
 
-      measure_type = resolve_relationship(mrels, "measure_type")
-      duty_expr    = resolve_relationship(mrels, "duty_expression")
-      geo_area     = resolve_relationship(mrels, "geographical_area")
-      order_number = resolve_relationship(mrels, "order_number")
-      conditions   = shape_conditions(mrels.dig("measure_conditions", "data"))
+      measure_type      = resolve_relationship(mrels, "measure_type")
+      duty_expr         = resolve_relationship(mrels, "duty_expression")
+      geo_area          = resolve_relationship(mrels, "geographical_area")
+      order_number      = resolve_relationship(mrels, "order_number")
+      conditions        = shape_conditions(mrels.dig("measure_conditions", "data"))
+      type_description  = measure_type&.dig("attributes", "description")
+      expression_value  = duty_expr&.dig("attributes", "base")
+      supplementary     = type_description&.include?("Supplementary unit")
 
       {
-        type: measure_type&.dig("attributes", "description"),
-        duty: duty_expr&.dig("attributes", "base"),
+        type: type_description,
+        duty: supplementary ? nil : expression_value,
+        unit: supplementary ? expression_value : nil,
         geographical_area: format_geo(geo_area),
         excise: mattrs["excise"] || nil,
         vat: mattrs["vat"] || nil,
