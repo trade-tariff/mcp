@@ -47,7 +47,7 @@ RSpec.describe BearerTokenMiddleware do
       block.call
     }
     middleware.call(env_for(authorization: "Bearer #{token}"))
-    expect(tagged_messages).to include("tagged-client")
+    expect(tagged_messages).to include("client_id=tagged-client")
   end
 
   it "accepts a raw token without the Bearer prefix" do
