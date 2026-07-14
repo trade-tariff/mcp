@@ -40,5 +40,16 @@ Rails.application.config.after_initialize do
   end
 
   Rails.application.config.mcp_transport =
-    MCP::Server::Transports::StreamableHTTPTransport.new(server, stateless: true, enable_json_response: true)
+    MCP::Server::Transports::StreamableHTTPTransport.new(
+      server,
+      stateless: true,
+      enable_json_response: true,
+      allowed_hosts: [
+        "mcp.trade-tariff.service.gov.uk",
+        "mcp.staging.trade-tariff.service.gov.uk",
+        "mcp.dev.trade-tariff.service.gov.uk",
+        "localhost",
+        "localhost:3000"
+      ]
+    )
 end
