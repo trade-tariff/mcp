@@ -23,7 +23,10 @@ class BearerTokenMiddleware
       CurrentRequest.client_id = extract_client_id(token)
     end
 
-    Rails.logger.tagged("client_id=#{CurrentRequest.client_id || "anonymous"}") do
+    client_id = CurrentRequest.client_id || "anonymous"
+    Rails.logger.info("client_id=#{client_id} method=#{env["REQUEST_METHOD"]} path=#{env["PATH_INFO"]}")
+
+    Rails.logger.tagged("client_id=#{client_id}") do
       @app.call(env)
     end
   end
@@ -36,7 +39,8 @@ class BearerTokenMiddleware
     segments = token.split(".")
     return nil unless segments.length == 3
 
-    payload = JSON.parse(Base64.urlsafe_decode64(segments[1]))
+    padded = segments[1].ljust((segments[1].length + 3) & ~3, "=")
+    payload = JSON.parse(Base64.urlsafe_decode64(padded))
     payload["client_id"] || payload["sub"]
   rescue ArgumentError, JSON::ParserError
     nil
