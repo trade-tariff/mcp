@@ -20,12 +20,27 @@ class BearerTokenMiddleware
       return unauthorized(env) unless token || Rails.env.development?
 
       CurrentRequest.bearer_token = token
+      CurrentRequest.client_id = extract_client_id(token)
     end
 
-    @app.call(env)
+    Rails.logger.tagged(CurrentRequest.client_id || "anonymous") do
+      @app.call(env)
+    end
   end
 
   private
+
+  def extract_client_id(token)
+    return nil unless token
+
+    segments = token.split(".")
+    return nil unless segments.length == 3
+
+    payload = JSON.parse(Base64.urlsafe_decode64(segments[1]))
+    payload["client_id"] || payload["sub"]
+  rescue ArgumentError, JSON::ParserError
+    nil
+  end
 
   def extract_token(header)
     return nil if header.nil?
