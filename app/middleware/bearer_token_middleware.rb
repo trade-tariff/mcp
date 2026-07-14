@@ -23,7 +23,7 @@ class BearerTokenMiddleware
       CurrentRequest.client_id = extract_client_id(token)
     end
 
-    Rails.logger.tagged(CurrentRequest.client_id || "anonymous") do
+    Rails.logger.tagged("client_id=#{CurrentRequest.client_id || "anonymous"}") do
       @app.call(env)
     end
   end
