@@ -12,9 +12,42 @@ RSpec.describe BearerTokenMiddleware do
     env
   end
 
+  def jwt_with_claims(claims)
+    payload = Base64.urlsafe_encode64(claims.to_json, padding: false)
+    "header.#{payload}.signature"
+  end
+
   it "accepts a token with the Bearer prefix" do
     middleware.call(env_for(authorization: "Bearer my-token"))
     expect(CurrentRequest.bearer_token).to eq("my-token")
+  end
+
+  it "extracts client_id from a JWT with a client_id claim" do
+    token = jwt_with_claims("client_id" => "my-client", "sub" => "my-subject")
+    middleware.call(env_for(authorization: "Bearer #{token}"))
+    expect(CurrentRequest.client_id).to eq("my-client")
+  end
+
+  it "falls back to sub when client_id claim is absent" do
+    token = jwt_with_claims("sub" => "my-subject")
+    middleware.call(env_for(authorization: "Bearer #{token}"))
+    expect(CurrentRequest.client_id).to eq("my-subject")
+  end
+
+  it "sets client_id to nil for a non-JWT token" do
+    middleware.call(env_for(authorization: "Bearer not-a-jwt"))
+    expect(CurrentRequest.client_id).to be_nil
+  end
+
+  it "tags log output with the client_id when a JWT is present" do
+    token = jwt_with_claims("client_id" => "tagged-client")
+    tagged_messages = []
+    allow(Rails.logger).to receive(:tagged) { |tag, &block|
+      tagged_messages << tag
+      block.call
+    }
+    middleware.call(env_for(authorization: "Bearer #{token}"))
+    expect(tagged_messages).to include("tagged-client")
   end
 
   it "accepts a raw token without the Bearer prefix" do
