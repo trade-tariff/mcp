@@ -3,6 +3,8 @@
 require "rails_helper"
 
 RSpec.describe "MCP resources" do
+  before { host! "localhost" }
+
   def mcp_call(method, params = {})
     post "/", params: { jsonrpc: "2.0", id: 1, method: method, params: params }.to_json,
               headers: { "Content-Type" => "application/json", "Accept" => "application/json",
