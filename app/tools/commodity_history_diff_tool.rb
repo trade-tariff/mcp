@@ -61,5 +61,4 @@ class CommodityHistoryDiffTool < ApplicationTool
       )
     end
   end
-
 end

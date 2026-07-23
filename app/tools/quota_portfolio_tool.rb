@@ -12,7 +12,7 @@ class QuotaPortfolioTool < ApplicationTool
       },
       quota_type: {
         type: "string",
-        enum: ["Licensed", "First Come First Served"],
+        enum: [ "Licensed", "First Come First Served" ],
         description: "Filter by quota type."
       },
       page: {
