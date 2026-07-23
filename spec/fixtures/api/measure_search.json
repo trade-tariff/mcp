@@ -1,0 +1,34 @@
+{
+  "data": [
+    {
+      "id": "12345",
+      "type": "measure",
+      "attributes": {
+        "goods_nomenclature_item_id": "0101210000",
+        "measure_type_id": "103",
+        "geographical_area_id": "1011",
+        "validity_start_date": "2021-01-01T00:00:00.000Z",
+        "validity_end_date": null,
+        "measure_generating_regulation_id": "R2101234",
+        "measure_generating_regulation_role": 1,
+        "reduction_indicator": null,
+        "national": false,
+        "ordernumber": null,
+        "measure_type_series_id": "C",
+        "measure_type_description": "Third country duty",
+        "trade_movement_code": 0,
+        "geographical_area_description": "ERGA OMNES",
+        "excluded_geographical_area_ids": [],
+        "has_geographical_exclusions": false
+      }
+    }
+  ],
+  "meta": {
+    "as_of": "2025-01-01",
+    "pagination": {
+      "page": 1,
+      "per_page": 25,
+      "total_count": 1
+    }
+  }
+}

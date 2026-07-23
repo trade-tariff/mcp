@@ -27,7 +27,13 @@ Rails.application.config.after_initialize do
       FullTextSearchTool,
       CommodityHistoryDiffTool,
       CommodityMeasuresTool,
-      CommodityQuotasTool
+      CommodityQuotasTool,
+      SearchMeasuresTool,
+      SummariseMeasuresTool,
+      MeasureChangesTool,
+      NomenclatureChangesTool,
+      QuotaUtilizationTool,
+      QuotaPortfolioTool
     ],
     resources: resources.map(&:resource)
   )

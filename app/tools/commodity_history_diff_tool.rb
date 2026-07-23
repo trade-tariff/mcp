@@ -61,27 +61,4 @@ class CommodityHistoryDiffTool < ApplicationTool
       )
     end
   end
-
-  def self.validate_required(value, field_name)
-    return nil if value && !value.to_s.strip.empty?
-
-    MCP::Tool::Response.new(
-      [ { type: "text", text: "Missing required field: #{field_name}." } ],
-      error: true
-    )
-  end
-  private_class_method :validate_required
-
-  def self.validate_date_order(from_date, to_date)
-    return nil if from_date.nil? || to_date.nil?
-    return nil if Date.parse(from_date) <= Date.parse(to_date)
-
-    MCP::Tool::Response.new(
-      [ { type: "text", text: "Invalid from_date: must be before or equal to to_date." } ],
-      error: true
-    )
-  rescue Date::Error
-    nil
-  end
-  private_class_method :validate_date_order
 end
