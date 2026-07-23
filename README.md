@@ -47,6 +47,12 @@ Restart Claude Desktop after saving. It will prompt for your Hub **client_id** a
 | `commodity_quotas` | Look up live quota balances by commodity code, without needing quota order numbers in advance |
 | `commodity_history_diff` | Show what changed for a commodity between two dates: measures added/removed, duty rate changes |
 | `full_text_search` | Keyword search across commodity, heading and chapter descriptions |
+| `search_measures` | Search for measures across all commodities using composable filters (type, country, direction, etc.) |
+| `summarise_measures` | Return aggregate measure counts by type series; same filters as `search_measures` but returns totals |
+| `measure_changes` | Return measure-level changes (created/updated/deleted) across all commodities within a date range |
+| `nomenclature_changes` | Return goods nomenclature structural changes (commodity codes added/removed) within a date range |
+| `quota_utilization` | Return utilization details for a specific quota order number: balance, volume used, drawdown events |
+| `quota_portfolio` | Paginated portfolio view of all quota definitions with utilization figures |
 
 All tools accept these optional parameters:
 

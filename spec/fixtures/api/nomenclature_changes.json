@@ -1,0 +1,25 @@
+{
+  "data": [
+    {
+      "id": "1",
+      "type": "change",
+      "attributes": {
+        "goods_nomenclature_item_id": "0101210000",
+        "goods_nomenclature_sid": 12345,
+        "productline_suffix": "80",
+        "end_line": false,
+        "change_type": "created",
+        "change_date": "2025-01-15"
+      }
+    }
+  ],
+  "meta": {
+    "from_date": "2025-01-01",
+    "to_date": "2025-01-31",
+    "pagination": {
+      "page": 1,
+      "per_page": 25,
+      "total_count": 1
+    }
+  }
+}

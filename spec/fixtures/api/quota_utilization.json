@@ -1,0 +1,29 @@
+{
+  "data": [
+    {
+      "id": "456",
+      "type": "quota_utilization",
+      "attributes": {
+        "quota_order_number_id": "094011",
+        "quota_definition_sid": 456,
+        "validity_start_date": "2025-01-01T00:00:00.000Z",
+        "validity_end_date": "2025-12-31T00:00:00.000Z",
+        "status": "Open",
+        "measurement_unit_code": "KGM",
+        "quota_type": "First Come First Served",
+        "initial_volume": 10000.0,
+        "current_balance": 7500.0,
+        "volume_used": 2500.0,
+        "utilization_percentage": 25.0,
+        "balance_event_summary": [
+          { "occurrence_timestamp": "2025-02-01T00:00:00.000Z", "new_balance": 7500.0 }
+        ]
+      }
+    }
+  ],
+  "meta": {
+    "quota_order_number_id": "094011",
+    "from_date": "2025-01-01",
+    "to_date": "2025-07-23"
+  }
+}

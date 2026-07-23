@@ -1,0 +1,28 @@
+{
+  "data": [
+    {
+      "id": "1",
+      "type": "measure_operation",
+      "attributes": {
+        "measure_sid": 90000001,
+        "measure_type_id": "103",
+        "goods_nomenclature_item_id": "0101210000",
+        "geographical_area_id": "1011",
+        "validity_start_date": "2025-01-01T00:00:00.000Z",
+        "validity_end_date": null,
+        "measure_generating_regulation_id": "R2101234",
+        "operation_date": "2025-01-15",
+        "operation": "created"
+      }
+    }
+  ],
+  "meta": {
+    "from_date": "2025-01-01",
+    "to_date": "2025-01-31",
+    "pagination": {
+      "page": 1,
+      "per_page": 25,
+      "total_count": 1
+    }
+  }
+}
