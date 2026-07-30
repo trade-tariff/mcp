@@ -30,7 +30,10 @@ jobs:
       ) &&
       (
         github.event_name != 'pull_request_review' ||
-        github.event.review.user.login == 'copilot-pull-request-reviewer[bot]'
+        github.event.review.user.login == 'copilot' ||
+        github.event.review.user.login == 'copilot-pull-request-reviewer' ||
+        github.event.review.user.login == 'copilot-pull-request-reviewer[bot]' ||
+        github.event.review.user.login == 'github-copilot[bot]'
       )
     uses: trade-tariff/trade-tariff-tools/.github/workflows/auto-merge-low-risk.yml@main
     with:
