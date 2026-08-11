@@ -16,7 +16,9 @@ RSpec.describe SearchAdditionalCodesTool do
     result = described_class.call(service: nil)
 
     expect(result).to be_a(MCP::Tool::Response)
-    expect(JSON.parse(result.content.first[:text])).to include("data")
+    parsed = JSON.parse(result.content.first[:text])
+    expect(parsed).to be_an(Array)
+    expect(parsed.first).to include("code", "description")
   end
 
   it "passes description as a query param when supplied" do
@@ -65,7 +67,9 @@ RSpec.describe SearchAdditionalCodesTool do
 
     result = described_class.call(service: "ni")
 
-    expect(JSON.parse(result.content.first[:text])).to include("data")
+    parsed = JSON.parse(result.content.first[:text])
+    expect(parsed).to be_an(Array)
+    expect(parsed.first).to include("code", "description")
   end
 
   it "returns an error for an invalid validity_date" do

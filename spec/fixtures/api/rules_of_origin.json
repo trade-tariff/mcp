@@ -6,7 +6,39 @@
       "attributes": {
         "scheme_code": "uk-turkey",
         "title": "UK-Turkey Trade Agreement",
-        "unilateral": false
+        "countries": ["TR"],
+        "footnote": null,
+        "unilateral": false,
+        "fta_intro": null,
+        "introductory_notes": null,
+        "cumulation_methods": {},
+        "proof_intro": null,
+        "proof_codes": [],
+        "show_proofs_for_geographical_areas": []
+      },
+      "relationships": {
+        "rules": {
+          "data": [
+            { "type": "rules_of_origin_rule", "id": "1" }
+          ]
+        },
+        "rule_sets": { "data": [] },
+        "proofs": { "data": [] },
+        "articles": { "data": [] },
+        "links": { "data": [] }
+      }
+    }
+  ],
+  "included": [
+    {
+      "id": "1",
+      "type": "rules_of_origin_rule",
+      "attributes": {
+        "id_rule": "1",
+        "heading": "0101",
+        "description": "Wholly obtained",
+        "rule": "WO",
+        "alternate_rule": null
       }
     }
   ]

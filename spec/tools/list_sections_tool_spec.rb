@@ -21,7 +21,9 @@ RSpec.describe ListSectionsTool do
     result = described_class.call(service: nil)
 
     expect(result).to be_a(MCP::Tool::Response)
-    expect(JSON.parse(result.content.first[:text])).to include("data")
+    parsed = JSON.parse(result.content.first[:text])
+    expect(parsed).to be_an(Array)
+    expect(parsed.first).to include("numeral", "title", "chapters")
   end
 
   it "calls the UK sections endpoint when service is uk" do
@@ -30,7 +32,9 @@ RSpec.describe ListSectionsTool do
 
     result = described_class.call(service: "uk")
 
-    expect(JSON.parse(result.content.first[:text])).to include("data")
+    parsed = JSON.parse(result.content.first[:text])
+    expect(parsed).to be_an(Array)
+    expect(parsed.first).to include("numeral", "title", "chapters")
   end
 
   it "calls the XI sections endpoint when service is ni" do
@@ -39,7 +43,9 @@ RSpec.describe ListSectionsTool do
 
     result = described_class.call(service: "ni")
 
-    expect(JSON.parse(result.content.first[:text])).to include("data")
+    parsed = JSON.parse(result.content.first[:text])
+    expect(parsed).to be_an(Array)
+    expect(parsed.first).to include("numeral", "title", "chapters")
   end
 
   it "returns an error response when the backend returns 404" do

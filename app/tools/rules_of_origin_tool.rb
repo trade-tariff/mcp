@@ -30,6 +30,9 @@ class RulesOfOriginTool < ApplicationTool
 
     subheading_code = "#{heading_code}00"
     resolved = ServiceNormaliser.call(service)
-    with_error_handling { text_response(client_for(service: resolved).get("/#{resolved}/api/v2/rules_of_origin_schemes/#{subheading_code}/#{country_code}", as_of: validity_date)) }
+    with_error_handling do
+      raw = client_for(service: resolved).get("/#{resolved}/api/v2/rules_of_origin_schemes/#{subheading_code}/#{country_code}", as_of: validity_date)
+      text_response(RulesOfOriginShaper.call(raw))
+    end
   end
 end

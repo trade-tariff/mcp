@@ -43,7 +43,7 @@ class DutyVatCalculatorTool < ApplicationTool
 
     resolved = ServiceNormaliser.call(service)
     with_error_handling do
-      params = { "include" => CommodityMeasuresTool::MEASURES_INCLUDE }
+      params = { "include" => LookupCommodityTool::MEASURES_INCLUDE }
       params["filter.geographical_area_id"] = country_code if country_code
 
       raw = client_for(service: resolved).get(

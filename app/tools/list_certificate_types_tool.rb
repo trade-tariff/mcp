@@ -16,6 +16,9 @@ class ListCertificateTypesTool < ApplicationTool
     return error if error
 
     resolved = ServiceNormaliser.call(service)
-    with_error_handling { text_response(client_for(service: resolved).get("/#{resolved}/api/v2/certificate_types", as_of: validity_date)) }
+    with_error_handling do
+      raw = client_for(service: resolved).get("/#{resolved}/api/v2/certificate_types", as_of: validity_date)
+      text_response(CertificateTypesShaper.call(raw))
+    end
   end
 end

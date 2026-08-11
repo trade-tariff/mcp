@@ -30,19 +30,17 @@ Restart Claude Desktop after saving. It will prompt for your Hub **client_id** a
 | Tool | Description |
 |------|-------------|
 | `list_sections` | List all top-level sections of the tariff |
-| `show_chapter` | Show a chapter by 2-digit ID (e.g. `01`) |
 | `show_heading` | Show a heading by 4-digit code (e.g. `0101`) |
-| `lookup_commodity` | Look up a commodity by 10-digit code (e.g. `0101210000`) |
+| `lookup_commodity` | Look up a commodity by 10-digit code (e.g. `0101210000`); also returns import/export measures |
 | `classification_search` | First tool for natural-language product classification, commodity lookup, commodity code lookup, HS code lookup, and tariff classification requests |
 | `note_mentions` | Return chapter and section note fragments linked to shortlisted candidate goods nomenclatures |
-| `navigate_hierarchy` | Look up any goods nomenclature entry by 4–10 digit code |
+| `navigate_hierarchy` | Look up any goods nomenclature entry by 2–10 digit code |
 | `list_exchange_rates` | List GBP monetary exchange rates used in duty calculations |
 | `list_geographical_areas` | List all countries and country groups (use to find country codes) |
 | `search_quotas` | Search quota definitions to check quota relief eligibility and balances |
 | `search_additional_codes` | Search additional codes (e.g. Meursing codes for agricultural goods) |
 | `list_certificate_types` | List all certificate and licence types required by measures |
 | `rules_of_origin` | Get rules of origin schemes for a heading and country combination |
-| `commodity_measures` | Return import/export measures for a commodity, optionally filtered by country and direction |
 | `duty_vat_calculator` | Return duty rates for a commodity+country; optionally calculate amounts from a customs value |
 | `commodity_quotas` | Look up live quota balances by commodity code, without needing quota order numbers in advance |
 | `commodity_history_diff` | Show what changed for a commodity between two dates: measures added/removed, duty rate changes |

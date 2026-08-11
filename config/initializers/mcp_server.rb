@@ -13,7 +13,6 @@ Rails.application.config.after_initialize do
       ListSectionsTool,
       ClassificationSearchTool,
       NoteMentionsTool,
-      ShowChapterTool,
       ShowHeadingTool,
       LookupCommodityTool,
       NavigateHierarchyTool,
@@ -26,7 +25,6 @@ Rails.application.config.after_initialize do
       DutyVatCalculatorTool,
       FullTextSearchTool,
       CommodityHistoryDiffTool,
-      CommodityMeasuresTool,
       CommodityQuotasTool
     ],
     resources: resources.map(&:resource)

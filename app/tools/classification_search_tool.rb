@@ -2,8 +2,8 @@
 
 class ClassificationSearchTool < ApplicationTool
   tool_name "classification_search"
-  title "Classify a product and find commodity code candidates"
-  description "First tool to call when classifying an unknown product from a natural-language product description, including commodity lookup, commodity code lookup, HS code lookup, and tariff classification requests. Include classification pivots from product evidence: ingredients, material composition, flavour names that may imply ingredients, pack size, physical form, preparation method, intended use, and whether facts are confirmed or implied. Searches for candidate goods nomenclatures using hybrid semantic retrieval. Use before show_heading, navigate_hierarchy, or lookup_commodity unless you already have a specific tariff code. Treat results as recall evidence, not a final classification; run a follow-up query when a pivot suggests an alternate chapter or heading that did not surface."
+  title "Find commodity code candidates"
+  description "First tool to call when classifying an unknown product from a natural-language description. Returns ranked candidate goods nomenclatures using hybrid semantic retrieval. Treat results as candidates, not a final classification. See tariff://classification-workflow for the full classification process."
 
   input_schema(
     properties: {
@@ -37,7 +37,8 @@ class ClassificationSearchTool < ApplicationTool
     params["expanded_query"] = expanded_query if expanded_query.present?
 
     with_error_handling do
-      text_response(client_for(service: resolved).get("/#{resolved}/api/v2/classification_search", params: params, as_of: validity_date))
+      raw = client_for(service: resolved).get("/#{resolved}/api/v2/classification_search", params: params, as_of: validity_date)
+      text_response(ClassificationSearchShaper.call(raw))
     end
   end
 
