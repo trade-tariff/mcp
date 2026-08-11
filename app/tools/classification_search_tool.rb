@@ -37,7 +37,8 @@ class ClassificationSearchTool < ApplicationTool
     params["expanded_query"] = expanded_query if expanded_query.present?
 
     with_error_handling do
-      text_response(client_for(service: resolved).get("/#{resolved}/api/v2/classification_search", params: params, as_of: validity_date))
+      raw = client_for(service: resolved).get("/#{resolved}/api/v2/classification_search", params: params, as_of: validity_date)
+      text_response(ClassificationSearchShaper.call(raw))
     end
   end
 

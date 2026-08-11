@@ -57,7 +57,10 @@ RSpec.describe ClassificationSearchTool do
     result = described_class.call(query: "wireless headphones", limit: 5, service: nil)
 
     expect(result).to be_a(MCP::Tool::Response)
-    expect(JSON.parse(result.content.first[:text])).to include("data", "meta")
+    result_json = JSON.parse(result.content.first[:text], symbolize_names: true)
+    expect(result_json[:results]).to be_an(Array)
+    expect(result_json[:results].first[:code]).to eq("8518300090")
+    expect(result_json[:retrieval_method]).to eq("hybrid")
   end
 
   it "passes optional date and expanded query" do
