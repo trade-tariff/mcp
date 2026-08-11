@@ -3,11 +3,11 @@
 require "rails_helper"
 
 RSpec.describe RulesOfOriginShaper do
-  def api_response(schemes: [])
-    { "data" => schemes }
+  def api_response(schemes: [], included: [])
+    { "data" => schemes, "included" => included }
   end
 
-  def scheme(code: "uk-turkey", title: "UK-Turkey Trade Agreement", unilateral: false, extra_attrs: {})
+  def scheme(code: "uk-turkey", title: "UK-Turkey Trade Agreement", unilateral: false, rules_refs: [], rule_sets_refs: [])
     {
       "id" => code,
       "type" => "rules_of_origin_scheme",
@@ -15,7 +15,28 @@ RSpec.describe RulesOfOriginShaper do
         "scheme_code" => code,
         "title" => title,
         "unilateral" => unilateral
-      }.merge(extra_attrs)
+      },
+      "relationships" => {
+        "rules"     => { "data" => rules_refs },
+        "rule_sets" => { "data" => rule_sets_refs },
+        "proofs"    => { "data" => [] },
+        "articles"  => { "data" => [] },
+        "links"     => { "data" => [] }
+      }
+    }
+  end
+
+  def rule_resource(id: "1", heading: "0101", description: "Wholly obtained", rule: "WO", alternate_rule: nil)
+    {
+      "id" => id,
+      "type" => "rules_of_origin_rule",
+      "attributes" => {
+        "id_rule" => id,
+        "heading" => heading,
+        "description" => description,
+        "rule" => rule,
+        "alternate_rule" => alternate_rule
+      }.compact
     }
   end
 
@@ -31,14 +52,32 @@ RSpec.describe RulesOfOriginShaper do
     expect(output.first[:unilateral]).to be false
   end
 
-  it "includes proof_of_origin when present" do
-    s = scheme(extra_attrs: { "proof_of_origin" => "EUR.1 movement certificate or origin declaration" })
-    output = described_class.call(api_response(schemes: [ s ]))
-    expect(output.first[:proof_of_origin]).to include("EUR.1")
+  it "omits rules key when there are no rules" do
+    output = described_class.call(api_response(schemes: [ scheme ]))
+    expect(output.first).not_to have_key(:rules)
   end
 
-  it "omits proof_of_origin when absent" do
-    output = described_class.call(api_response(schemes: [ scheme ]))
-    expect(output.first).not_to have_key(:proof_of_origin)
+  it "includes rules content when rules are sideloaded" do
+    rule_ref = { "type" => "rules_of_origin_rule", "id" => "1" }
+    included = [ rule_resource ]
+    s = scheme(rules_refs: [ rule_ref ])
+
+    output = described_class.call(api_response(schemes: [ s ], included: included))
+
+    rules = output.first[:rules]
+    expect(rules).not_to be_nil
+    expect(rules.length).to eq(1)
+    expect(rules.first[:heading]).to eq("0101")
+    expect(rules.first[:rule]).to eq("WO")
+  end
+
+  it "omits alternate_rule from a rule when nil" do
+    rule_ref = { "type" => "rules_of_origin_rule", "id" => "1" }
+    included = [ rule_resource(alternate_rule: nil) ]
+    s = scheme(rules_refs: [ rule_ref ])
+
+    output = described_class.call(api_response(schemes: [ s ], included: included))
+
+    expect(output.first[:rules].first).not_to have_key(:alternate_rule)
   end
 end

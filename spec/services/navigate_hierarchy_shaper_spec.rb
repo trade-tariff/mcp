@@ -4,7 +4,7 @@ require "rails_helper"
 
 RSpec.describe NavigateHierarchyShaper do
   describe "goods_nomenclature response" do
-    def gn_response(attrs: {}, children: [])
+    def gn_response(attrs: {})
       {
         "data" => {
           "id" => "0101210000",
@@ -12,13 +12,11 @@ RSpec.describe NavigateHierarchyShaper do
           "attributes" => {
             "goods_nomenclature_item_id" => "0101210000",
             "description" => "Horses",
-            "number_indents" => 3
-          }.merge(attrs),
-          "relationships" => {
-            "children" => { "data" => children }
-          }
+            "number_indents" => 3,
+            "declarable" => true
+          }.merge(attrs)
         },
-        "included" => children
+        "included" => []
       }
     end
 
@@ -29,26 +27,19 @@ RSpec.describe NavigateHierarchyShaper do
       expect(output[:indent]).to eq(3)
     end
 
-    it "returns an empty children array when none are present" do
+    it "includes declarable" do
       output = described_class.call(gn_response)
-      expect(output[:children]).to eq([])
+      expect(output[:declarable]).to be true
     end
 
-    it "extracts children when present" do
-      child = {
-        "id" => "0101210010",
-        "type" => "goods_nomenclature",
-        "attributes" => {
-          "goods_nomenclature_item_id" => "0101210010",
-          "description" => "Pure-bred breeding animals",
-          "number_indents" => 4
-        }
-      }
-      output = described_class.call(gn_response(
-        children: [ { "type" => "goods_nomenclature", "id" => "0101210010" } ]
-      ).merge("included" => [ child ]))
-      expect(output[:children].length).to eq(1)
-      expect(output[:children].first[:code]).to eq("0101210010")
+    it "omits declarable when absent from the response" do
+      output = described_class.call(gn_response(attrs: { "declarable" => nil }))
+      expect(output).not_to have_key(:declarable)
+    end
+
+    it "does not include a children key" do
+      output = described_class.call(gn_response)
+      expect(output).not_to have_key(:children)
     end
   end
 

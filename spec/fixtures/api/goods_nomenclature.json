@@ -5,7 +5,8 @@
     "attributes": {
       "goods_nomenclature_item_id": "0101210000",
       "description": "Horses",
-      "number_indents": 3
+      "number_indents": 3,
+      "declarable": true
     }
   }
 }

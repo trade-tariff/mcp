@@ -31,13 +31,12 @@ class NavigateHierarchyShaper < ApplicationShaper
 
   def shape_goods_nomenclature
     attrs = @data["attributes"]
-    children_refs = @data.dig("relationships", "children", "data") || []
 
     {
-      code: attrs["goods_nomenclature_item_id"],
+      code:        attrs["goods_nomenclature_item_id"],
       description: attrs["description"],
-      indent: attrs["number_indents"],
-      children: children_refs.filter_map { |ref| shape_child(ref) }
+      indent:      attrs["number_indents"],
+      declarable:  attrs["declarable"]
     }.compact
   end
 
