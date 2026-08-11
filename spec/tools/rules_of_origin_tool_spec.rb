@@ -16,7 +16,9 @@ RSpec.describe RulesOfOriginTool do
     result = described_class.call(heading_code: "0409", country_code: "TR", service: nil)
 
     expect(result).to be_a(MCP::Tool::Response)
-    expect(JSON.parse(result.content.first[:text])).to include("data")
+    parsed = JSON.parse(result.content.first[:text])
+    expect(parsed).to be_an(Array)
+    expect(parsed.first).to include("scheme_code", "title")
   end
 
   it "calls the XI endpoint when service is ni" do
@@ -25,7 +27,9 @@ RSpec.describe RulesOfOriginTool do
 
     result = described_class.call(heading_code: "0101", country_code: "TR", service: "ni")
 
-    expect(JSON.parse(result.content.first[:text])).to include("data")
+    parsed = JSON.parse(result.content.first[:text])
+    expect(parsed).to be_an(Array)
+    expect(parsed.first).to include("scheme_code", "title")
   end
 
   it "passes validity_date as as_of query param" do
