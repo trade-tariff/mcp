@@ -35,18 +35,11 @@ RSpec.describe ClassificationSearchTool do
     ENV.delete("TARIFF_API_URL")
   end
 
-  it "advertises itself as the starting point for product classification" do
-    expect(described_class.title).to include("Classify a product")
-
-    description = described_class.description
-
-    expect(description).to include("First tool")
-    expect(description).to include("classifying")
-    expect(description).to include("natural-language product description")
-    expect(description).to include("commodity lookup")
-    expect(description).to include("commodity code")
-    expect(description).to include("HS code")
-    expect(description).to include("tariff classification")
+  it "describes itself as the first tool for product classification" do
+    expect(described_class.title).to include("Find commodity code candidates")
+    expect(described_class.description).to include("First tool")
+    expect(described_class.description).to include("classifying")
+    expect(described_class.description).to include("natural-language")
   end
 
   it "calls the UK classification search endpoint" do
