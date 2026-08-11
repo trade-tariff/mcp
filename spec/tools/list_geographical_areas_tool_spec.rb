@@ -51,4 +51,37 @@ RSpec.describe ListGeographicalAreasTool do
 
     expect { described_class.call(service: nil) }.to raise_error(StandardError, /API error 500/)
   end
+
+  it "filters areas by description when filter param is given" do
+    raw = { "data" => [
+      { "id" => "1", "type" => "geographical_area",
+        "attributes" => { "geographical_area_id" => "1011", "description" => "European Union" } },
+      { "id" => "2", "type" => "geographical_area",
+        "attributes" => { "geographical_area_id" => "US", "description" => "United States" } }
+    ] }.to_json
+
+    stub_request(:get, "#{base_url}/uk/api/v2/geographical_areas")
+      .to_return(status: 200, body: raw, headers: { "Content-Type" => "application/json" })
+
+    result = described_class.call(filter: "European", service: nil)
+    parsed = JSON.parse(result.content.first[:text])
+    expect(parsed.length).to eq(1)
+    expect(parsed.first["id"]).to eq("1011")
+  end
+
+  it "returns all areas when filter is omitted" do
+    raw = { "data" => [
+      { "id" => "1", "type" => "geographical_area",
+        "attributes" => { "geographical_area_id" => "1011", "description" => "European Union" } },
+      { "id" => "2", "type" => "geographical_area",
+        "attributes" => { "geographical_area_id" => "US", "description" => "United States" } }
+    ] }.to_json
+
+    stub_request(:get, "#{base_url}/uk/api/v2/geographical_areas")
+      .to_return(status: 200, body: raw, headers: { "Content-Type" => "application/json" })
+
+    result = described_class.call(service: nil)
+    parsed = JSON.parse(result.content.first[:text])
+    expect(parsed.length).to eq(2)
+  end
 end
