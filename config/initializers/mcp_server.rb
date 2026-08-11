@@ -13,7 +13,6 @@ Rails.application.config.after_initialize do
       ListSectionsTool,
       ClassificationSearchTool,
       NoteMentionsTool,
-      ShowChapterTool,
       ShowHeadingTool,
       LookupCommodityTool,
       NavigateHierarchyTool,
