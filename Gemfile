@@ -9,6 +9,7 @@ gem "puma"
 gem "mcp"
 gem "faraday"
 gem "redis"
+gem "aws-sdk-cloudwatch"
 gem "dotenv-rails", groups: %i[development test]
 
 group :development, :test do

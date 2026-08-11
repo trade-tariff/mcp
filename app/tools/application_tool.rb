@@ -1,6 +1,34 @@
 # frozen_string_literal: true
 
+module InstrumentationWrapper
+  def call(**kwargs)
+    start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+    result = super
+    duration_ms = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - start) * 1000).round
+    InstrumentationService.record(
+      tool_name: tool_name,
+      client_id: CurrentRequest.client_id || "anonymous",
+      duration_ms: duration_ms,
+      response: result
+    )
+    result
+  rescue StandardError => e
+    duration_ms = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - start) * 1000).round
+    InstrumentationService.record_exception(
+      tool_name: tool_name,
+      client_id: CurrentRequest.client_id || "anonymous",
+      duration_ms: duration_ms
+    )
+    raise e
+  end
+end
+
 class ApplicationTool < MCP::Tool
+  def self.inherited(subclass)
+    super
+    subclass.singleton_class.prepend(InstrumentationWrapper)
+  end
+
   annotations(
     read_only_hint: true,
     destructive_hint: false,
