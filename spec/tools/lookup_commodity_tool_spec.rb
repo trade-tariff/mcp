@@ -6,13 +6,12 @@ RSpec.describe LookupCommodityTool do
   let(:base_url) { "https://example.com" }
   let(:commodity_response) { File.read("spec/fixtures/api/commodity.json") }
 
-  it "advertises itself as a follow-up to classification search for product descriptions" do
+  it "advertises itself as a tool for looking up 10-digit commodity codes" do
     description = described_class.description
 
-    expect(description).to include("Use after classification_search")
-    expect(description).to include("commodity lookup")
+    expect(description).to include("10-digit commodity code")
     expect(description).to include("commodity code")
-    expect(description).to include("tariff measures")
+    expect(description).to include("measures")
   end
 
   before do
@@ -72,5 +71,34 @@ RSpec.describe LookupCommodityTool do
     expect {
       described_class.call(commodity_code: "0101210000", service: "germany")
     }.to raise_error(StandardError, /Unknown service/)
+  end
+
+  context "when measures_only: true" do
+    it "calls the commodity endpoint with measures include and uses CommodityMeasuresShaper" do
+      stub_request(:get, "#{base_url}/uk/api/v2/commodities/0101210000")
+        .with(query: hash_including("include" => a_string_including("import_measures")))
+        .to_return(status: 200, body: commodity_response, headers: { "Content-Type" => "application/json" })
+
+      result = described_class.call(commodity_code: "0101210000", measures_only: true)
+
+      expect(result.error?).to be false
+    end
+
+    it "passes country_code as filter when measures_only and country_code provided" do
+      stub = stub_request(:get, "#{base_url}/uk/api/v2/commodities/0101210000")
+        .with(query: hash_including("filter.geographical_area_id" => "CN"))
+        .to_return(status: 200, body: commodity_response, headers: { "Content-Type" => "application/json" })
+
+      described_class.call(commodity_code: "0101210000", measures_only: true, country_code: "CN")
+
+      expect(stub).to have_been_requested
+    end
+
+    it "returns an error for an invalid direction" do
+      result = described_class.call(commodity_code: "0101210000", measures_only: true, direction: "sideways")
+
+      expect(result.error?).to be true
+      expect(result.content.first[:text]).to include("Invalid direction")
+    end
   end
 end

@@ -38,7 +38,7 @@ class CommodityHistoryDiffTool < ApplicationTool
 
     resolved = ServiceNormaliser.call(service)
     with_error_handling do
-      params = { "include" => CommodityMeasuresTool::MEASURES_INCLUDE }
+      params = { "include" => LookupCommodityTool::MEASURES_INCLUDE }
       client  = client_for(service: resolved)
 
       from_raw = client.get("/#{resolved}/api/v2/commodities/#{commodity_code}", params: params, as_of: from_date)
