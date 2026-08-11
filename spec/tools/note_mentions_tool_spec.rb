@@ -84,7 +84,10 @@ RSpec.describe NoteMentionsTool do
     result = described_class.call(goods_nomenclature_item_ids: [ "0101210000" ], goods_nomenclature_sids: [ 123 ], service: nil)
 
     expect(stub).to have_been_requested
-    expect(JSON.parse(result.content.first[:text])).to include("data", "meta")
+    parsed = JSON.parse(result.content.first[:text], symbolize_names: true)
+    expect(parsed[:notes]).to be_an(Array)
+    expect(parsed[:notes].first[:content]).to eq("This chapter covers live animals.")
+    expect(parsed[:result_count]).to eq(1)
   end
 
   it "calls the XI endpoint when requested" do

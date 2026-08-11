@@ -1,0 +1,27 @@
+{
+  "data": [
+    {
+      "type": "knowledge_graph_node",
+      "id": "note_fragment:customs_tariff_chapter_note:01:0001",
+      "attributes": {
+        "node_type": "note_fragment",
+        "key": "note_fragment:customs_tariff_chapter_note:01:0001",
+        "source_type": "customs_tariff_chapter_note",
+        "source_id": "01",
+        "content": "This chapter covers live animals."
+      }
+    }
+  ],
+  "included": [
+    {
+      "type": "knowledge_graph_edge",
+      "id": "1",
+      "attributes": { "relationship_type": "applies_to" },
+      "relationships": {
+        "source": { "data": { "type": "knowledge_graph_node", "id": "note_fragment:customs_tariff_chapter_note:01:0001" } },
+        "target": { "data": { "type": "knowledge_graph_node", "id": "goods_nomenclature:123" } }
+      }
+    }
+  ],
+  "meta": { "subject_count": 1, "result_count": 1, "truncated": false }
+}

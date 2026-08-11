@@ -45,7 +45,8 @@ class NoteMentionsTool < ApplicationTool
     }
 
     with_error_handling do
-      text_response(client_for(service: resolved).post("/#{resolved}/api/v2/knowledge_graph/queries", body: body, as_of: validity_date))
+      raw = client_for(service: resolved).post("/#{resolved}/api/v2/knowledge_graph/queries", body: body, as_of: validity_date)
+      text_response(NoteMentionsShaper.call(raw))
     end
   end
 
