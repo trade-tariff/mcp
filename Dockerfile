@@ -56,12 +56,18 @@ RUN bundle config set without 'development test'
 
 # The base Ruby image bundles its own copies of some gems (json as a
 # default gem, net-imap as a regular pre-installed gem) that can lag
-# behind the versions pinned in Gemfile.lock and get flagged by the
-# Trivy scan even though the app never loads them: it always boots via
-# `bundle exec`, which activates the Bundler-installed gem instead.
+# behind the versions pinned in Gemfile.lock and get flagged by scanners
+# even though the app never loads them: it always boots via `bundle exec`,
+# which activates the Bundler-installed gem instead. json's default gem
+# also leaves an empty "gems/json-<version>" stub directory behind (a
+# RubyGems bookkeeping artifact for default gems) that some scanners key
+# off by directory name alone, independent of the gemspec, so it has to
+# be removed explicitly rather than relying on gem uninstall.
 RUN find /usr/local/lib/ruby/gems -path "*/specifications/default/json-*.gemspec" -delete && \
   find /usr/local/lib/ruby -maxdepth 2 -name "json.rb" -delete && \
   find /usr/local/lib/ruby -maxdepth 2 -type d -name "json" -exec rm -rf {} + && \
+  find /usr/local/lib/ruby/gems -maxdepth 3 -type d -name "json-*" -exec rm -rf {} + && \
+  find /usr/local/lib/ruby/gems -path "*/extensions/*/json-*" -exec rm -rf {} + && \
   gem uninstall net-imap --force --ignore-dependencies --executables --all \
     --install-dir /usr/local/lib/ruby/gems/4.0.0 2>/dev/null || true
 
