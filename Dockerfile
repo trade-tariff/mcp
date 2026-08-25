@@ -29,7 +29,9 @@ RUN rm -rf log tmp && \
   find /usr/local/bundle/gems -name "*.c" -delete && \
   find /usr/local/bundle/gems -name "*.h" -delete && \
   find /usr/local/bundle/gems -name "*.o" -delete && \
-  find /usr/local/bundle/gems -name "*.html" -delete
+  find /usr/local/bundle/gems -name "*.html" -delete && \
+  find /usr/local/bundle/gems -maxdepth 2 -name "Gemfile.lock" -delete && \
+  find /usr/local/bundle/gems -maxdepth 2 -name "Gemfile" -delete
 
 FROM ruby:${RUBY_VERSION}-alpine${ALPINE_VERSION} AS production
 
