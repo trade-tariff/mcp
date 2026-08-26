@@ -35,7 +35,9 @@ class SearchAdditionalCodesTool < ApplicationTool
     resolved = ServiceNormaliser.call(service)
     with_error_handling do
       raw = client_for(service: resolved).get("/#{resolved}/api/v2/additional_codes/search", params: params, as_of: validity_date)
-      text_response(AdditionalCodesShaper.call(raw))
+      shaped = AdditionalCodesShaper.call(raw)
+      notice = "No additional codes matched these filters. This does not mean none apply — do not guess or invent a code. Try broader filters." if shaped.empty?
+      text_response(shaped, notice: notice)
     end
   end
 end

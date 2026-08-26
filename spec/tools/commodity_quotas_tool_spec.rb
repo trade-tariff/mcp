@@ -78,6 +78,7 @@ RSpec.describe CommodityQuotasTool do
     result = described_class.call(commodity_code: "0101210000")
     parsed = JSON.parse(result.content.first[:text])
     expect(parsed["quotas"]).to eq([])
+    expect(result.content.last[:text]).to include("No quota measures were found")
   end
 
   it "passes filter.geographical_area_id to the backend when country_code is given" do

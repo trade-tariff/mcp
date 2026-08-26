@@ -32,7 +32,9 @@ class RulesOfOriginTool < ApplicationTool
     resolved = ServiceNormaliser.call(service)
     with_error_handling do
       raw = client_for(service: resolved).get("/#{resolved}/api/v2/rules_of_origin_schemes/#{subheading_code}/#{country_code}", as_of: validity_date)
-      text_response(RulesOfOriginShaper.call(raw))
+      shaped = RulesOfOriginShaper.call(raw)
+      notice = "No rules of origin schemes were found for this heading and country. This does not mean no preferential rate is available — do not guess or assume standard (non-preferential) treatment applies." if shaped.empty?
+      text_response(shaped, notice: notice)
     end
   end
 end

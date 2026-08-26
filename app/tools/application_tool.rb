@@ -66,8 +66,10 @@ class ApplicationTool < MCP::Tool
       raise StandardError, e.message
     end
 
-    def text_response(data)
-      MCP::Tool::Response.new([ { type: "text", text: data.to_json } ])
+    def text_response(data, notice: nil)
+      content = [ { type: "text", text: data.to_json } ]
+      content << { type: "text", text: notice } if notice
+      MCP::Tool::Response.new(content)
     end
 
     def validate_format(value, pattern, field_name)

@@ -49,7 +49,11 @@ class FullTextSearchTool < ApplicationTool
         params: { "q" => query },
         as_of: validity_date
       )
-      text_response(FullTextSearchShaper.call(raw, query: query, search_type: search_type))
+      shaped = FullTextSearchShaper.call(raw, query: query, search_type: search_type)
+      notice = if shaped[:results].empty?
+        "No keyword matches were found. This does not mean no matching commodity exists — do not guess or invent a code. Try different keywords or classification_search instead."
+      end
+      text_response(shaped, notice: notice)
     end
   end
 

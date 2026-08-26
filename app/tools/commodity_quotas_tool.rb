@@ -43,11 +43,8 @@ class CommodityQuotasTool < ApplicationTool
       order_numbers = discovery[:order_numbers]
 
       if order_numbers.empty?
-        return text_response({
-          commodity_code: commodity_code,
-          quotas: [],
-          message: "No quota measures found for this commodity#{country_code ? " and country" : ""}."
-        })
+        notice = "No quota measures were found for this commodity#{country_code ? " and country" : ""}. This does not mean no quota exists — do not guess a balance or order number."
+        return text_response({ commodity_code: commodity_code, quotas: [] }, notice: notice)
       end
 
       quotas = order_numbers.flat_map do |order_number|

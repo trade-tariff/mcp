@@ -51,15 +51,17 @@ class DutyVatCalculatorTool < ApplicationTool
         params: params,
         as_of: validity_date
       )
-      text_response(
-        DutyVatCalculatorShaper.call(
-          raw,
-          country_code: country_code,
-          customs_value: customs_value,
-          quantity: quantity,
-          unit: unit
-        )
+      shaped = DutyVatCalculatorShaper.call(
+        raw,
+        country_code: country_code,
+        customs_value: customs_value,
+        quantity: quantity,
+        unit: unit
       )
+      notice = if shaped[:applicable_measures].blank?
+        "No applicable duty measures were found for this commodity#{country_code ? " and country" : ""}. This does not mean the rate is zero — do not invent or assume a duty rate. Verify the commodity code and country_code, or check lookup_commodity directly."
+      end
+      text_response(shaped, notice: notice)
     end
   end
 

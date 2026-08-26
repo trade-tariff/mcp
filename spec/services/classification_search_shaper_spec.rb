@@ -24,13 +24,32 @@ RSpec.describe ClassificationSearchShaper do
     }
   end
 
-  it "extracts code, sid, description, declarable, and score from each result" do
+  it "extracts code, sid, description, declarable, score, and confidence from each result" do
     raw = api_response(results: [ result_item ])
     output = described_class.call(raw)
 
     expect(output[:results]).to eq([
-      { code: "8518300090", sid: 123, description: "Headphones", declarable: true, score: 0.03125 }
+      { code: "8518300090", sid: 123, description: "Headphones", declarable: true, score: 0.03125, confidence: "high" }
     ])
+  end
+
+  it "includes a confidence_note explaining what confidence means" do
+    raw = api_response(results: [ result_item ])
+    output = described_class.call(raw)
+
+    expect(output[:confidence_note]).to include("not a calibrated probability")
+  end
+
+  it "bands confidence relative to the top score in this result set" do
+    raw = api_response(results: [
+      result_item(item_id: "1111111111", sid: 1, score: 1.0),
+      result_item(item_id: "2222222222", sid: 2, score: 0.9),
+      result_item(item_id: "3333333333", sid: 3, score: 0.6),
+      result_item(item_id: "4444444444", sid: 4, score: 0.1)
+    ])
+    output = described_class.call(raw)
+
+    expect(output[:results].map { |r| r[:confidence] }).to eq(%w[high high medium low])
   end
 
   it "includes meta fields" do
