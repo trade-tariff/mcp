@@ -24,7 +24,8 @@ class ListGeographicalAreasTool < ApplicationTool
       raw = client_for(service: resolved).get("/#{resolved}/api/v2/geographical_areas", as_of: validity_date)
       shaped = GeographicalAreasShaper.call(raw)
       filtered = filter_areas(shaped, filter)
-      text_response(filtered)
+      notice = "No geographical areas matched filter '#{filter}'. This does not mean no such area exists — do not guess an ID. Try a different filter or omit it to list all areas." if filter.present? && filtered.empty?
+      text_response(filtered, notice: notice)
     end
   end
 

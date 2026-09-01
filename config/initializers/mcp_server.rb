@@ -9,6 +9,15 @@ Rails.application.config.after_initialize do
   server = MCP::Server.new(
     name: "trade-tariff",
     version: "0.1.0",
+    instructions: <<~INSTRUCTIONS.strip,
+      Never state, imply, or fill in a commodity code, duty rate, quota balance, figure, or any other
+      value that a trade-tariff tool call did not itself return. If a tool returns no data, an empty
+      result, or an explicit notice saying something was not found, treat that as "unknown" — say so
+      plainly and suggest the next tool to try — rather than guessing, estimating, or reconstructing
+      the answer from general knowledge. Confidence scores and calculation notes returned by these
+      tools describe real limitations in the underlying data; do not round them up or omit them when
+      reporting results to the user.
+    INSTRUCTIONS
     tools: [
       ListSectionsTool,
       ClassificationSearchTool,

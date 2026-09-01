@@ -46,7 +46,9 @@ class NoteMentionsTool < ApplicationTool
 
     with_error_handling do
       raw = client_for(service: resolved).post("/#{resolved}/api/v2/knowledge_graph/queries", body: body, as_of: validity_date)
-      text_response(NoteMentionsShaper.call(raw))
+      shaped = NoteMentionsShaper.call(raw)
+      notice = "No linked note fragments were found for these candidates. This does not mean no relevant chapter/section notes exist — do not assume there are none; check show_heading or lookup_commodity for notes directly." if shaped[:notes].empty?
+      text_response(shaped, notice: notice)
     end
   end
 

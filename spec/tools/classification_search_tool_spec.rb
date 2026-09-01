@@ -79,4 +79,16 @@ RSpec.describe ClassificationSearchTool do
     expect(result).to be_error
     expect(result.content.first[:text]).to include("Invalid limit")
   end
+
+  it "adds an explicit notice when no candidates are found" do
+    empty_body = { data: [], meta: { retrieval_method: "hybrid", result_count: 0 } }.to_json
+    stub_request(:get, "#{base_url}/uk/api/v2/classification_search")
+      .with(query: hash_including("q" => "an extremely obscure item"))
+      .to_return(status: 200, body: empty_body, headers: { "Content-Type" => "application/json" })
+
+    result = described_class.call(query: "an extremely obscure item", service: nil)
+
+    expect(result.content.last[:text]).to include("No candidate commodity codes were found")
+    expect(result.content.last[:text]).to include("do not guess")
+  end
 end

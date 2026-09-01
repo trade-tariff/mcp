@@ -51,7 +51,11 @@ class SearchQuotasTool < ApplicationTool
     resolved = ServiceNormaliser.call(service)
     with_error_handling do
       raw = client_for(service: resolved).get("/#{resolved}/api/v2/quotas/search", params: params, as_of: validity_date)
-      text_response(SearchQuotasShaper.call(raw))
+      shaped = SearchQuotasShaper.call(raw)
+      notice = if shaped[:quotas].empty?
+        "No quotas matched these filters. This does not mean no quota exists — do not guess a balance or order number. Try broader filters or commodity_quotas instead."
+      end
+      text_response(shaped, notice: notice)
     end
   end
 end
