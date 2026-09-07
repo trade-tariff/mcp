@@ -79,8 +79,10 @@ RUN find /usr/local/lib/ruby/gems -path "*/specifications/default/json-*.gemspec
   gem uninstall net-imap --force --ignore-dependencies --executables --all \
     --install-dir /usr/local/lib/ruby/gems/4.0.0 2>/dev/null || true
 
-RUN addgroup -S tariff && \
-  adduser -S tariff -G tariff && \
+# Pin uid/gid so the ecs-service module's writable-volume permissions init container
+# can chown the read-only-root-filesystem mounts to a known id (container_user).
+RUN addgroup -S -g 1000 tariff && \
+  adduser -S -u 1000 -G tariff tariff && \
   chown -R tariff:tariff /app && \
   chown -R tariff:tariff /usr/local/bundle
 

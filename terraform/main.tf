@@ -26,6 +26,13 @@ module "service" {
   task_role_policy_arns      = [aws_iam_policy.task.arn]
   enable_ecs_exec            = true
 
+  # mcp logs to stdout and caches in Redis, so /tmp is the only path it writes to.
+  # container_user matches the pinned uid/gid in the image; the module's init container
+  # chowns the writable mounts to it so the non-root process can write to them.
+  readonly_root_filesystem = true
+  writable_paths           = ["/tmp"]
+  container_user           = "1000:1000"
+
   has_autoscaler = local.has_autoscaler
   min_capacity   = var.min_capacity
   max_capacity   = var.max_capacity
