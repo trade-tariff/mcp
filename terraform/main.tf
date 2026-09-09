@@ -1,5 +1,5 @@
 module "service" {
-  source = "git@github.com:trade-tariff/trade-tariff-platform-terraform-modules.git//aws/ecs-service?ref=aws/ecs-service-v3.1.0"
+  source = "git@github.com:trade-tariff/trade-tariff-platform-terraform-modules.git//aws/ecs-service?ref=aws/ecs-service-v3.3.0"
 
   region = var.region
 
@@ -25,6 +25,13 @@ module "service" {
   execution_role_policy_arns = [aws_iam_policy.exec.arn]
   task_role_policy_arns      = [aws_iam_policy.task.arn]
   enable_ecs_exec            = true
+
+  # mcp logs to stdout and caches in Redis, so /tmp is the only path it writes to.
+  # container_user matches the pinned uid/gid in the image; the module's init container
+  # chowns the writable mounts to it so the non-root process can write to them.
+  readonly_root_filesystem = true
+  writable_paths           = ["/tmp"]
+  container_user           = "1000:1000"
 
   has_autoscaler = local.has_autoscaler
   min_capacity   = var.min_capacity
