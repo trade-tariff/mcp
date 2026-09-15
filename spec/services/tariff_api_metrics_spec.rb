@@ -28,7 +28,13 @@ RSpec.describe TariffApiMetrics do
       described_class.record_request(service: "xi")
 
       expect(emitted["Service"]).to eq("xi")
-      expect(emitted.dig("_aws", "CloudWatchMetrics", 0, "Dimensions")).to eq([ [ "Service" ] ])
+      expect(emitted.dig("_aws", "CloudWatchMetrics", 0, "Dimensions")).to include([ "Service" ])
+    end
+
+    it "also publishes a dimensionless series for the global rate limit alarms" do
+      described_class.record_request(service: "uk")
+
+      expect(emitted.dig("_aws", "CloudWatchMetrics", 0, "Dimensions")).to eq([ [ "Service" ], [] ])
     end
 
     it "emits into the TradeTariffMCP namespace" do
@@ -56,6 +62,12 @@ RSpec.describe TariffApiMetrics do
 
       expect(emitted["McpTariffApiThrottled"]).to eq(1)
       expect(emitted["McpTariffApiRequests"]).to be_nil
+    end
+
+    it "also publishes a dimensionless series for the global rate limit alarms" do
+      described_class.record_throttled(service: "uk")
+
+      expect(emitted.dig("_aws", "CloudWatchMetrics", 0, "Dimensions")).to eq([ [ "Service" ], [] ])
     end
   end
 

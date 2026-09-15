@@ -8,6 +8,15 @@
 # It deliberately does not use Rails.logger: production wraps that in
 # TaggedLogging, and the "[request-id] [client_id=...]" prefix would stop
 # CloudWatch parsing the line as JSON.
+#
+# Each metric declares two dimension sets: ["Service"] for the per-service
+# breakdown, and [] (no dimensions) so a true global, summed-across-services
+# series exists. The terraform/alarms.tf global rate limit alarms deliberately
+# omit a `dimensions` block, which makes CloudWatch watch the zero-dimension
+# series specifically -- it does NOT sum across an omitted dimension's values.
+# Without the empty set here those alarms would watch a series that is never
+# published and sit in OK/INSUFFICIENT_DATA forever. Do not remove the empty
+# dimension set without updating those alarms too.
 class TariffApiMetrics
   NAMESPACE = ENV.fetch("MCP_METRICS_NAMESPACE", "TradeTariffMCP")
   REQUESTS_METRIC = "McpTariffApiRequests"
@@ -45,7 +54,7 @@ class TariffApiMetrics
           "CloudWatchMetrics" => [
             {
               "Namespace" => NAMESPACE,
-              "Dimensions" => [ [ "Service" ] ],
+              "Dimensions" => [ [ "Service" ], [] ],
               "Metrics" => [ { "Name" => metric_name, "Unit" => "Count" } ]
             }
           ]

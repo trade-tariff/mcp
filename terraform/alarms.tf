@@ -1,6 +1,15 @@
 # MCP traffic shares one 3,000rpm API Gateway usage plan rather than consuming
 # each end user's per-key limit (HMRC-2699). Nothing else watches that ceiling,
 # so these alarms are how we find out it needs reviewing.
+#
+# Both alarms below deliberately omit a `dimensions` block so they watch the
+# metric globally, summed across services. CloudWatch does not aggregate
+# across an omitted dimension on its own -- it only watches the exact
+# zero-dimension series. That series exists only because
+# app/services/tariff_api_metrics.rb explicitly publishes a `[]` dimension
+# set alongside `["Service"]`. If that empty set is ever removed, these
+# alarms silently stop watching anything (treat_missing_data = "notBreaching"
+# keeps them in OK/INSUFFICIENT_DATA forever).
 locals {
   mcp_rate_limit_alarm_threshold = var.mcp_rate_limit_rpm * var.mcp_rate_limit_alarm_percentage / 100
 }
