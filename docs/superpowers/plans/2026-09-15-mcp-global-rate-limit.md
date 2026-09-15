@@ -1189,6 +1189,18 @@ The API key value must be 20–128 characters, which `openssl rand -hex 32` sati
 
 - [ ] **Step 2: Deploy in rollout order**
 
+**Before deploying anything**, confirm the MCP server is actually pointed at API Gateway. The whole
+mechanism only engages if `TARIFF_API_URL` resolves to `https://api.<env-domain>` (the API Gateway
+host). The `www.` host's `/uk/api/v2/*` CloudFront behaviours target the ALB directly, bypassing API
+Gateway, the authorizer, and every usage plan — and `mcp/.env.example` ships exactly that `www.` URL
+as an example. Check the deployed `mcp-configuration` secret's `TARIFF_API_URL` value for the
+development environment:
+
+- If it is `https://api.<env-domain>` — proceed, the header and usage plan will take effect.
+- If it is `https://www.<env-domain>` (or anything else that isn't the `api.` host) — **stop**. This
+  entire ticket is a no-op for rate limiting until `TARIFF_API_URL` is corrected to the `api.` host,
+  because requests never reach API Gateway to be swapped onto the MCP usage plan in the first place.
+
 1. terraform repo → development. Confirm `aws_api_gateway_api_key.mcp[0]`, `aws_api_gateway_usage_plan.mcp[0]` and `aws_api_gateway_usage_plan_key.mcp[0]` are created, and that the access log format now includes `clientId`.
 2. authenticator repo → development. Confirm the lambda's configuration shows both new environment variables set.
 3. mcp repo → development.
@@ -1233,5 +1245,7 @@ Put the Logs Insights output and the metric graphs into the PR descriptions, and
 ## Notes for the reviewer
 
 - **Rollback:** reverting the MCP deploy (Task 2) stops the header, and all traffic returns to per-user plans within one deploy. The usage plan and the authorizer change are both inert without it.
-- **Secret rotation:** the MCP secret must be changed in all three places together. During skew, MCP requests fall back to per-user limits — degraded, not broken.
+- **Secret rotation:** `MCP_SECRET_TOKEN` and `MCP_USAGE_KEY` behave differently under skew, and only one of them is safe to rotate casually.
+  - `MCP_SECRET_TOKEN` mismatched or missing: `isMcpRequest` returns `false`, so traffic falls back to the caller's own per-user plan. Degraded, not broken. Change it on either side independently.
+  - `MCP_USAGE_KEY` mismatched: once the token matches, the authorizer returns that key unconditionally — API Gateway does not fall back, it rejects the request with **403 Forbidden**. And because `aws_api_gateway_api_key.value` is `ForceNew`, rotating it destroys and recreates the key, so every MCP request 403s between the terraform apply and the authenticator redeploy. Rotate it by applying terraform and redeploying the authenticator back-to-back in the same change window (accepting that gap), or avoid the gap by adding a second accepted key first, cutting over, then removing the old one. See the design doc's "Rotating `MCP_USAGE_KEY`" section for the full procedure.
 - **The 3,000 rpm number is a guess** made without production data. Task 7 Step 6 captures the real rate, and `var.mcp_rate_limit` plus `var.mcp_rate_limit_rpm` exist so it can be changed without touching code.

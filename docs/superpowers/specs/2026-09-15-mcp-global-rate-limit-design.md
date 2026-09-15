@@ -156,12 +156,39 @@ line, and it is what makes a shared usage key safe.
   per-user plans. Fails closed, no error.
 - Missing `MCP_SECRET_TOKEN` in the MCP app: no header sent, traffic uses per-user plans. Same
   behaviour as today.
-- Mismatched secret (rotation skew): MCP requests fall back to the user's per-user plan until the two
-  sides agree. Degraded, not broken.
+- Mismatched `MCP_SECRET_TOKEN` (rotation skew): `isMcpRequest` returns `false`, so
+  `usageIdentifierKey` is the caller's own `client_id`. MCP requests fall back to the user's
+  per-user plan until the two sides agree. Degraded, not broken.
+- Mismatched `MCP_USAGE_KEY` (rotation skew): **this is not the same failure.** Once the token
+  matches, the authorizer returns `usageIdentifierKey: MCP_USAGE_KEY` unconditionally — it does not
+  check that the key exists. If `MCP_USAGE_KEY` does not match an existing, enabled API Gateway key
+  (e.g. terraform has rotated the key's value but the authorizer has not redeployed yet, or vice
+  versa), API Gateway rejects the request outright with `403 Forbidden` ("invalid API key"). There is
+  no fallback to the caller's own plan: every MCP request 403s until both sides agree. Because
+  `aws_api_gateway_api_key.value` is `ForceNew`, rotating this value destroys and recreates the key,
+  so the window between the terraform apply and the authenticator redeploy is a real outage, not a
+  theoretical one. See the rotation procedure below.
 - EMF log write failure: log emission is best-effort and must never surface to the caller, matching
   the existing `InstrumentationService.emit` rescue.
 - Gateway 429 despite the global plan: surfaces to the user as today's `RateLimited` message, and now
   also fires the `mcp-tariff-api-rate-limited-<env>` alarm.
+
+### Rotating `MCP_USAGE_KEY`
+
+Unlike `MCP_SECRET_TOKEN`, this value cannot be rotated casually — changing it is `ForceNew` in
+terraform (destroy and recreate the API key), and every MCP request 403s from the moment the old key
+stops existing until the authorizer is redeployed with the new value. Two ways to do it:
+
+1. **Accept a brief outage:** apply terraform and redeploy the authenticator in the same change
+   window, back to back. MCP requests 403 for the gap between the two deploys (typically the length
+   of one authenticator deploy). Do this outside peak hours and announce it.
+2. **Avoid the outage:** add a second API key to the usage plan with the new value first (terraform
+   apply, no `ForceNew` since it's an addition), deploy the authenticator pointing at the new key,
+   confirm traffic has moved, then remove the old key in a follow-up apply. More steps, no window
+   where every MCP request fails.
+
+`MCP_SECRET_TOKEN` has no such hazard: it can be changed on either side independently, with only a
+degraded (not broken) fallback during skew, as above.
 
 ## Testing
 
