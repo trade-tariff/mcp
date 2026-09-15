@@ -37,7 +37,7 @@ resource "aws_cloudwatch_metric_alarm" "rate_limited" {
   count = var.enable_mcp_rate_limit_alarms ? 1 : 0
 
   alarm_name          = "mcp-tariff-api-rate-limited-${var.environment}"
-  alarm_description   = "The tariff API returned 429 to the MCP server. The shared ${var.mcp_rate_limit_rpm}rpm MCP usage plan is exhausted and users are being refused."
+  alarm_description   = "The tariff API returned 429 to the MCP server. Most likely the shared ${var.mcp_rate_limit_rpm}rpm MCP usage plan is exhausted, but WAF, a per-user plan, or the backend can also produce this. Check the access logs to confirm which."
   namespace           = "TradeTariffMCP"
   metric_name         = "McpTariffApiThrottled"
   statistic           = "Sum"
