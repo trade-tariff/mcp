@@ -53,3 +53,27 @@ variable "enable_observability_alerts" {
   type    = bool
   default = false
 }
+
+variable "mcp_rate_limit_rpm" {
+  description = "The shared MCP usage plan's limit in requests per minute, as configured in the terraform repo's gateway.tf. Used only to derive the alarm threshold and to describe it."
+  type        = number
+  default     = 3000
+}
+
+variable "mcp_rate_limit_alarm_percentage" {
+  description = "Percentage of the global MCP rate limit at which the approaching-limit alarm fires."
+  type        = number
+  default     = 80
+}
+
+variable "mcp_rate_limit_alarm_periods" {
+  description = "Number of consecutive 60-second periods above the threshold before the approaching-limit alarm fires."
+  type        = number
+  default     = 5
+}
+
+variable "enable_mcp_rate_limit_alarms" {
+  description = "Whether to enable the MCP global rate limit alarms (approaching-limit and rate-limited). Deliberately separate from enable_alarms, which governs the ecs-service module's own unrelated alarms and defaults to false; these alarms should be on everywhere by default so the development verification step (triggering the 429 alarm) works out of the box."
+  type        = bool
+  default     = true
+}
