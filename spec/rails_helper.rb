@@ -16,4 +16,12 @@ RSpec.configure do |config|
     cw = instance_double(Aws::CloudWatch::Client, put_metric_data: nil)
     allow(Aws::CloudWatch::Client).to receive(:new).and_return(cw)
   end
+
+  # TariffApiMetrics writes EMF JSON straight to $stdout by default, which
+  # pollutes spec output every time a spec exercises TariffClient. Point it at
+  # /dev/null here; specs that assert on the emitted JSON (tariff_api_metrics_spec.rb)
+  # inject their own StringIO logger in a later before block, which overrides this.
+  config.before do
+    TariffApiMetrics.logger = Logger.new(File::NULL)
+  end
 end
