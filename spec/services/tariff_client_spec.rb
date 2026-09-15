@@ -28,6 +28,18 @@ RSpec.describe TariffClient do
 
         expect(result).to include("data")
       end
+
+      it "sends the MCP user agent" do
+        stub_request(:get, "#{base_url}/uk/api/v2/sections")
+          .with(headers: { "User-Agent" => %r{\ATradeTariffMcp/} })
+          .to_return(
+            status: 200,
+            body: File.read("spec/fixtures/api/sections.json"),
+            headers: { "Content-Type" => "application/json" }
+          )
+
+        described_class.new(service: "uk").get("/uk/api/v2/sections")
+      end
     end
 
     context "with service: xi" do
