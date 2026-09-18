@@ -13,10 +13,13 @@ class TariffClient
   def initialize(service:)
     raise ArgumentError, "Unknown service: #{service}" unless VALID_SERVICES.include?(service)
 
+    @service = service
     @base_url = ENV.fetch("TARIFF_API_URL_#{service.upcase}") { ENV.fetch("TARIFF_API_URL") }
   end
 
   def get(path, params: {}, as_of: nil)
+    TariffApiMetrics.record_request(service: @service)
+
     response = connection.get(path) do |req|
       req.params.merge!(params)
       req.params["as_of"] = as_of if as_of
@@ -27,6 +30,8 @@ class TariffClient
   end
 
   def post(path, body: {}, as_of: nil)
+    TariffApiMetrics.record_request(service: @service)
+
     response = connection.post(path) do |req|
       req.params["as_of"] = as_of if as_of
       req.headers["Content-Type"] = "application/json"
@@ -46,6 +51,7 @@ class TariffClient
     when 404
       raise NotFound, "Resource not found: #{path}"
     when 429
+      TariffApiMetrics.record_throttled(service: @service)
       raise RateLimited, "Rate limit exceeded — too many requests to the tariff API"
     else
       raise ApiError, "API error #{response.status}: #{path}"
@@ -59,6 +65,8 @@ class TariffClient
       f.headers["Accept"] = "application/vnd.hmrc.2.0+json"
       f.headers["User-Agent"] = user_agent
       f.headers["Authorization"] = "Bearer #{CurrentRequest.bearer_token}" if CurrentRequest.bearer_token
+      mcp_token = ENV["MCP_SECRET_TOKEN"].presence
+      f.headers["X-Mcp-Token"] = mcp_token if mcp_token
     end
   end
 

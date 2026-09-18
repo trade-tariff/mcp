@@ -103,4 +103,94 @@ RSpec.describe TariffClient do
       end
     end
   end
+
+  describe "the X-Mcp-Token header" do
+    around do |example|
+      original = ENV["MCP_SECRET_TOKEN"]
+      example.run
+      original.nil? ? ENV.delete("MCP_SECRET_TOKEN") : ENV["MCP_SECRET_TOKEN"] = original
+    end
+
+    it "is sent when MCP_SECRET_TOKEN is set" do
+      ENV["MCP_SECRET_TOKEN"] = "shared-secret"
+      request = stub_request(:get, "#{base_url}/uk/api/v2/sections")
+        .with(headers: { "X-Mcp-Token" => "shared-secret" })
+        .to_return(status: 200, body: "{}")
+
+      described_class.new(service: "uk").get("/uk/api/v2/sections")
+
+      expect(request).to have_been_requested
+    end
+
+    it "is not sent when MCP_SECRET_TOKEN is unset" do
+      ENV.delete("MCP_SECRET_TOKEN")
+      stub_request(:get, "#{base_url}/uk/api/v2/sections").to_return(status: 200, body: "{}")
+
+      described_class.new(service: "uk").get("/uk/api/v2/sections")
+
+      expect(a_request(:get, "#{base_url}/uk/api/v2/sections")
+        .with { |req| req.headers.key?("X-Mcp-Token") }).not_to have_been_made
+    end
+
+    it "is not sent when MCP_SECRET_TOKEN is empty" do
+      ENV["MCP_SECRET_TOKEN"] = ""
+      stub_request(:get, "#{base_url}/uk/api/v2/sections").to_return(status: 200, body: "{}")
+
+      described_class.new(service: "uk").get("/uk/api/v2/sections")
+
+      expect(a_request(:get, "#{base_url}/uk/api/v2/sections")
+        .with { |req| req.headers.key?("X-Mcp-Token") }).not_to have_been_made
+    end
+  end
+
+  describe "metrics" do
+    before do
+      allow(TariffApiMetrics).to receive(:record_request)
+      allow(TariffApiMetrics).to receive(:record_throttled)
+    end
+
+    it "records one request per get, dimensioned by service" do
+      stub_request(:get, "#{base_url}/xi/api/v2/sections").to_return(status: 200, body: "{}")
+
+      described_class.new(service: "xi").get("/xi/api/v2/sections")
+
+      expect(TariffApiMetrics).to have_received(:record_request).with(service: "xi").once
+    end
+
+    it "records one request per post" do
+      stub_request(:post, "#{base_url}/uk/api/v2/search").to_return(status: 200, body: "{}")
+
+      described_class.new(service: "uk").post("/uk/api/v2/search", body: { q: "test" })
+
+      expect(TariffApiMetrics).to have_received(:record_request).with(service: "uk").once
+    end
+
+    it "records a request even when the API errors" do
+      stub_request(:get, "#{base_url}/uk/api/v2/sections").to_return(status: 503, body: "{}")
+
+      expect {
+        described_class.new(service: "uk").get("/uk/api/v2/sections")
+      }.to raise_error(TariffClient::ApiError)
+
+      expect(TariffApiMetrics).to have_received(:record_request).with(service: "uk").once
+    end
+
+    it "records a throttle when the API returns 429" do
+      stub_request(:get, "#{base_url}/uk/api/v2/sections").to_return(status: 429, body: "{}")
+
+      expect {
+        described_class.new(service: "uk").get("/uk/api/v2/sections")
+      }.to raise_error(TariffClient::RateLimited)
+
+      expect(TariffApiMetrics).to have_received(:record_throttled).with(service: "uk").once
+    end
+
+    it "does not record a throttle on a successful response" do
+      stub_request(:get, "#{base_url}/uk/api/v2/sections").to_return(status: 200, body: "{}")
+
+      described_class.new(service: "uk").get("/uk/api/v2/sections")
+
+      expect(TariffApiMetrics).not_to have_received(:record_throttled)
+    end
+  end
 end
