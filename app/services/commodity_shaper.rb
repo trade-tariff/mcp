@@ -29,7 +29,8 @@ class CommodityShaper < ApplicationShaper
       supplementary_unit: find_supplementary_unit(rels),
       import_measures: shape_measures(rels.dig("import_measures", "data")),
       export_measures: shape_measures(rels.dig("export_measures", "data")),
-      footnotes: shape_footnotes(rels.dig("footnotes", "data"))
+      footnotes: shape_footnotes(rels.dig("footnotes", "data")),
+      measure_date_note: MEASURE_DATE_NOTE
     }.compact
   end
 

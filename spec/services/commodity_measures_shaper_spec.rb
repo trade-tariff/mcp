@@ -16,7 +16,11 @@ RSpec.describe CommodityMeasuresShaper do
     { "id" => id, "type" => "duty_expression", "attributes" => { "base" => base } }
   end
 
-  def measure(id, type_id, duty_id, geo_id, vat: false, excise: false)
+  def footnote(code, description)
+    { "id" => code, "type" => "footnote", "attributes" => { "code" => code, "description" => description } }
+  end
+
+  def measure(id, type_id, duty_id, geo_id, vat: false, excise: false, footnote_codes: [])
     {
       "id" => id, "type" => "measure",
       "attributes" => { "vat" => vat, "excise" => excise, "reduction_indicator" => nil,
@@ -26,7 +30,8 @@ RSpec.describe CommodityMeasuresShaper do
         "duty_expression"  => { "data" => { "id" => duty_id, "type" => "duty_expression" } },
         "geographical_area"=> { "data" => { "id" => geo_id,  "type" => "geographical_area" } },
         "order_number"     => { "data" => nil },
-        "measure_conditions" => { "data" => [] }
+        "measure_conditions" => { "data" => [] },
+        "footnotes" => { "data" => footnote_codes.map { |c| { "id" => c, "type" => "footnote" } } }
       }
     }
   end
@@ -85,5 +90,26 @@ RSpec.describe CommodityMeasuresShaper do
     result = described_class.call(response_with_only_erga, country_code: "JP", direction: "import")
     expect(result[:import_measures].length).to eq(1)
     expect(result[:import_measures].first[:geographical_area]).to eq("ERGA OMNES (1011)")
+  end
+
+  it "shapes the footnotes attached to a measure" do
+    m_with_footnote = measure("m3", "103", "d1", "1011", footnote_codes: %w[CD624])
+    response_with_footnote = api_response(
+      import_refs: [ { "id" => "m3", "type" => "measure" } ],
+      included: [ geo_erga, mtype, duty, m_with_footnote,
+                  footnote("CD624", "A health entry document is required.") ]
+    )
+
+    result = described_class.call(response_with_footnote, direction: "import")
+
+    expect(result[:import_measures].first[:footnotes]).to eq(
+      [ { code: "CD624", description: "A health entry document is required." } ]
+    )
+  end
+
+  it "omits the footnotes key when a measure has no footnotes" do
+    result = described_class.call(response, direction: "import")
+
+    expect(result[:import_measures].first).not_to have_key(:footnotes)
   end
 end

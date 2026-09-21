@@ -230,4 +230,13 @@ RSpec.describe CommodityShaper do
       expect(fn[:description]).to eq("Entry subject to conditions.")
     end
   end
+
+  describe "measure date guidance" do
+    it "warns that effective_start_date is the start of this measure record, not of the treatment" do
+      result = described_class.call(api_response)
+
+      expect(result[:measure_date_note]).to include("reissued")
+      expect(result[:measure_date_note]).to include("commodity_history_diff")
+    end
+  end
 end
