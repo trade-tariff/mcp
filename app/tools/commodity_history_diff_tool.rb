@@ -2,7 +2,7 @@
 
 class CommodityHistoryDiffTool < ApplicationTool
   tool_name "commodity_history_diff"
-  description "Show what changed for a specific commodity between two dates: measures added or removed, and duty rate changes. Provide from_date and optionally to_date (defaults to today). Useful for auditing tariff changes or understanding why duty rates differ from a previous period."
+  description "Show what changed for a specific commodity between two dates: measures added, removed or changed. Provide from_date and optionally to_date (defaults to today). Compares duty rates, supplementary units, measure conditions (such as mandatory document codes) and measure footnotes. Useful for auditing tariff changes or understanding why duty rates differ from a previous period."
 
   input_schema(
     properties: {

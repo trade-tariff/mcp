@@ -101,4 +101,24 @@ RSpec.describe LookupCommodityTool do
       expect(result.content.first[:text]).to include("Invalid direction")
     end
   end
+
+  describe "measure footnotes" do
+    it "requests import and export measure footnotes in the full lookup" do
+      expect(described_class::FULL_INCLUDE).to include("import_measures.footnotes")
+      expect(described_class::FULL_INCLUDE).to include("export_measures.footnotes")
+    end
+
+    it "requests import and export measure footnotes in the measures-only lookup" do
+      expect(described_class::MEASURES_INCLUDE).to include("import_measures.footnotes")
+      expect(described_class::MEASURES_INCLUDE).to include("export_measures.footnotes")
+    end
+
+    it "asks for the footnotes field on each measure in the full lookup" do
+      expect(described_class.send(:build_full_params)["fields[measure]"]).to include("footnotes")
+    end
+  end
+
+  it "tells the caller that effective_start_date may be a reissue date" do
+    expect(described_class.description).to include("reissued")
+  end
 end

@@ -1,6 +1,14 @@
 # frozen_string_literal: true
 
 class ApplicationShaper
+  # A measure's effective_start_date is the start date of that measure record, not the
+  # date the treatment first applied. DBT end-dates a measure and reissues it whenever it
+  # edits it, so a long-standing treatment can carry a recent start date.
+  MEASURE_DATE_NOTE = "effective_start_date is the start date of this measure record. " \
+    "A measure can be end-dated and reissued with new conditions, so the treatment can " \
+    "apply from an earlier date than the one shown. Use commodity_history_diff, or " \
+    "lookup_commodity with an earlier validity_date, to find when the treatment first applied.".freeze
+
   def self.call(api_response)
     new(api_response).call
   end
@@ -64,6 +72,7 @@ class ApplicationShaper
       geo_area          = resolve_relationship(mrels, "geographical_area")
       order_number      = resolve_relationship(mrels, "order_number")
       conditions        = shape_conditions(mrels.dig("measure_conditions", "data"))
+      footnotes         = shape_footnotes(mrels.dig("footnotes", "data"))
       type_description  = measure_type&.dig("attributes", "description")
       expression_value  = duty_expr&.dig("attributes", "base")
       supplementary     = type_description&.include?("Supplementary unit")
@@ -79,7 +88,8 @@ class ApplicationShaper
         quota_order_number: order_number&.dig("attributes", "number"),
         effective_start_date: mattrs["effective_start_date"]&.then { |d| d[0, 10] },
         effective_end_date: mattrs["effective_end_date"]&.then { |d| d[0, 10] },
-        conditions: conditions.empty? ? nil : conditions
+        conditions: conditions.empty? ? nil : conditions,
+        footnotes: footnotes.empty? ? nil : footnotes
       }.compact
     end
   end

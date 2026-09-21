@@ -23,7 +23,8 @@ class CommodityMeasuresShaper < ApplicationShaper
       country_filter: @country_code,
       direction: @direction,
       import_measures: import,
-      export_measures: export
+      export_measures: export,
+      measure_date_note: MEASURE_DATE_NOTE
     }.compact
   end
 end
