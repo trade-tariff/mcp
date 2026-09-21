@@ -32,6 +32,7 @@ Use "commodity code" — not "HS code". UK imports need a 10-digit code; exports
 | Find a country group area ID (e.g. EU bloc) | `list_geographical_areas` with `filter: "EU"` |
 | Search by keyword (exact/fuzzy match) | `full_text_search` |
 | Read chapter/section note fragments for candidates | `note_mentions` |
+| Shortlist candidates for several products at once | `classify_batch` (shortlists only — still classify each item one at a time) |
 
 ### Classification pivots to include in classification_search queries
 
@@ -45,6 +46,21 @@ Include in your query any legally significant product facts:
 
 When a pivot suggests an alternate chapter or heading that did not appear in the first results, run a follow-up query with `expanded_query` focused on that alternate route.
 
+## Several items at once
+
+Classify one item at a time. Do not classify a batch in one pass.
+
+1. **Do not start from a table.** A table has one cell per item and no room for the reasoning each item needs. Work through the items first. Build the table last, from finished work.
+2. **Finish an item before you start the next.** Complete all six steps above for item 1, then move to item 2. Do not run the searches for every item first and then answer them together.
+3. **Do not carry candidates across items.** A candidate code found for one item is evidence for that item only. Check the `query` field on every shortlist to confirm which item it answers.
+4. **Do not compare `relative_match` between items.** Each band is computed against the top result for its own item. A "high" band for item 1 and a "high" band for item 5 do not mean the same thing. A weak candidate set still produces a "high" band.
+5. **Do not drop steps to save effort.** The legal note check (step 4) and the hierarchy check (step 3) are the steps that get complex items right. A batch makes these steps feel expensive. Run them for every item.
+6. **Report what you did not verify.** If you could not complete the workflow for an item, say so for that item. Do not give the item a code with the same confidence as a verified item.
+
+Use `classify_batch` to collect a labelled shortlist per item. `classify_batch` is a retrieval helper. It does not classify, and its shortlists are not answers.
+
 ## Output
 
-Code, breakdown (chapter → heading → subheading → full code), duty rates, confidence (High / Medium / Low), and a note to verify on trade-tariff.service.gov.uk before use on any declaration. Mention BTI if classification is genuinely uncertain.
+Code, breakdown (chapter → heading → subheading → full code), duty rates, your own confidence (High / Medium / Low), and a note to verify on trade-tariff.service.gov.uk before use on any declaration. Mention BTI if classification is genuinely uncertain.
+
+Your confidence is your own judgement after you apply the notes and the GRI rules. It is not the `relative_match` band from a search. Never copy a `relative_match` band into the output as confidence.

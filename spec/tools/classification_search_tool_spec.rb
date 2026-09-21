@@ -56,6 +56,18 @@ RSpec.describe ClassificationSearchTool do
     expect(result_json[:retrieval_method]).to eq("hybrid")
   end
 
+  it "echoes the query in the response so a batch cannot mix up which item it answers" do
+    stub_request(:get, "#{base_url}/uk/api/v2/classification_search")
+      .with(query: { "q" => "wireless headphones", "expanded_query" => "bluetooth earphones" })
+      .to_return(status: 200, body: response_body, headers: { "Content-Type" => "application/json" })
+
+    result = described_class.call(query: "wireless headphones", expanded_query: "bluetooth earphones", service: nil)
+
+    result_json = JSON.parse(result.content.first[:text], symbolize_names: true)
+    expect(result_json[:query]).to eq("wireless headphones")
+    expect(result_json[:expanded_query]).to eq("bluetooth earphones")
+  end
+
   it "passes optional date and expanded query" do
     stub = stub_request(:get, "#{base_url}/uk/api/v2/classification_search")
       .with(query: { "q" => "wireless headphones", "expanded_query" => "bluetooth headphones", "as_of" => "2026-06-19" })

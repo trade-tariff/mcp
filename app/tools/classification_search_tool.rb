@@ -3,7 +3,14 @@
 class ClassificationSearchTool < ApplicationTool
   tool_name "classification_search"
   title "Find commodity code candidates"
-  description "First tool to call when classifying an unknown product from a natural-language description. Returns ranked candidate goods nomenclatures using hybrid semantic retrieval, each with a relative confidence band ('high'/'medium'/'low', or absent if no scored results exist). Confidence is relative to the top result in this search only, not a calibrated probability — treat all results as candidates, not a final classification, and never state or imply a confidence this tool did not return. See tariff://classification-workflow for the full classification process."
+  description "First tool to call when classifying an unknown product from a natural-language description. " \
+              "Returns ranked candidate goods nomenclatures using hybrid semantic retrieval, each with a " \
+              "relative_match band ('high'/'medium'/'low', or absent if no scored results exist) and its ratio to " \
+              "the top result. A band compares a candidate to the best candidate for THIS query only. It is not a " \
+              "calibrated probability and it is not comparable between queries — treat all results as candidates, " \
+              "not a final classification, and never report a relative_match band as your confidence in a code. " \
+              "Use classify_batch when the user gives you several products at once. " \
+              "See tariff://classification-workflow for the full classification process."
 
   input_schema(
     properties: {
@@ -38,7 +45,7 @@ class ClassificationSearchTool < ApplicationTool
 
     with_error_handling do
       raw = client_for(service: resolved).get("/#{resolved}/api/v2/classification_search", params: params, as_of: validity_date)
-      shaped = ClassificationSearchShaper.call(raw)
+      shaped = ClassificationSearchShaper.call(raw, query: query, expanded_query: expanded_query)
       notice = if shaped[:results].empty?
         "No candidate commodity codes were found for this query. This does not mean no valid classification exists — do not guess or invent a code. Try rephrasing the query, supply expanded_query, or use full_text_search / navigate_hierarchy instead."
       end
