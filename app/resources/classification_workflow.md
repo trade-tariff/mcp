@@ -32,6 +32,8 @@ Use "commodity code" — not "HS code". UK imports need a 10-digit code; exports
 | Find a country group area ID (e.g. EU bloc) | `list_geographical_areas` with `filter: "EU"` |
 | Search by keyword (exact/fuzzy match) | `full_text_search` |
 | Read chapter/section note fragments for candidates | `note_mentions` |
+| Search inside a heading you have already confirmed | `classification_search` with `filter_prefixes` |
+| Get headings and chapters back, not only 10-digit codes | `classification_search` with `search_non_declarables: true` |
 
 ### Classification pivots to include in classification_search queries
 
@@ -44,6 +46,19 @@ Include in your query any legally significant product facts:
 - Whether a fact is confirmed or inferred — flag uncertainty with "not confirmed"
 
 When a pivot suggests an alternate chapter or heading that did not appear in the first results, run a follow-up query with `expanded_query` focused on that alternate route.
+
+## Search twice: once to find the heading, once to find the code
+
+One flat shortlist often reaches the correct heading without ever reaching the correct 10-digit code. The subdivisions below a heading are where the legal thresholds sit — percentage by weight, pack size, presentation — and a single description rarely ranks them well.
+
+So treat retrieval as two steps, not one:
+
+1. **Find the heading.** Search on the product description. Add `search_non_declarables: true` when you want headings and chapters in the results, so you can pick a heading deliberately instead of inferring one from a leaf.
+2. **Find the code inside it.** Search again with `filter_prefixes` set to the heading you confirmed, e.g. `["6307"]`. Put the deciding fact in this second query — the fibre percentage, the cocoa content, the pack size — because that is what separates the subdivisions.
+
+Do the second search whenever the first one returns the right heading but no subdivision you can justify. Do not pick the best-looking leaf from the first shortlist and stop.
+
+If you do not yet know the deciding fact, ask the user for it before the second search. The chapter and section notes from `note_mentions` tell you which fact matters.
 
 ## Several items at once
 

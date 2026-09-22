@@ -82,6 +82,19 @@ Call `classification_search` once per product, as you reach that product. Each r
 
 Do not search every product first and answer them together. Answers degrade when a client pools the shortlists: it shortcuts the per-item workflow, reuses a candidate from one product on another, or compares `relative_match` bands between products. Each item needs the full workflow above, run one item at a time.
 
+### Searching twice
+
+A single shortlist often reaches the correct heading without reaching the correct 10-digit code, because the subdivisions below a heading are separated by legal thresholds (percentage by weight, pack size, presentation) rather than by description.
+
+`classification_search` therefore takes two optional parameters for a second, narrower search:
+
+| Parameter | Use |
+|-----------|-----|
+| `filter_prefixes` | Restrict the search to given code prefixes (2 to 10 digits, at most 10). Set this to a heading you have confirmed, then put the deciding fact in the query. |
+| `search_non_declarables` | Return headings and chapters as well as declarable commodities, so a heading can be chosen deliberately and drilled into. |
+
+Both require backend support (`trade-tariff-backend` PR #3788).
+
 ## Authentication
 
 Register at the [Trade Tariff developer portal (Hub)](https://hub.trade-tariff.service.gov.uk/) and create an application. You will receive a **client_id** and **client_secret**.

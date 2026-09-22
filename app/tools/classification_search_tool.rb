@@ -2,6 +2,9 @@
 
 class ClassificationSearchTool < ApplicationTool
   tool_name "classification_search"
+  MAX_FILTER_PREFIXES = 10
+  FILTER_PREFIX_FORMAT = /\A\d{2,10}\z/
+
   title "Find commodity code candidates"
   description "First tool to call when classifying an unknown product from a natural-language description. " \
               "Returns ranked candidate goods nomenclatures using hybrid semantic retrieval, each with a " \
@@ -11,6 +14,10 @@ class ClassificationSearchTool < ApplicationTool
               "not a final classification, and never report a relative_match band as your confidence in a code. " \
               "For several products, call this tool once per product, as you reach it. Each response echoes the " \
               "query it answers. Do not search every product first and then answer them together. " \
+              "Call it a second time with filter_prefixes when you have established a heading but not the right " \
+              "subdivision within it: one flat shortlist often reaches the correct heading without ever reaching the " \
+              "correct 10-digit code. Add search_non_declarables to get headings and chapters back, so you can drill " \
+              "into a heading instead of choosing between leaves. " \
               "See tariff://classification-workflow for the full classification process."
 
   input_schema(
@@ -29,20 +36,36 @@ class ClassificationSearchTool < ApplicationTool
         type: "string",
         description: "Optional expanded query text to use for retrieval. Use this to test alternate routes suggested by product pivots, e.g. 'food preparation containing cocoa protein powder retail pack under 1kg'."
       },
+      filter_prefixes: {
+        type: "array",
+        description: "Restrict the search to these goods nomenclature code prefixes, from 2 to 10 digits each. Use this for a second, narrower search once you have established the chapter or heading, e.g. ['6307'] to find the right subdivision within a heading you have already confirmed. Leave this out for the first, broad search.",
+        maxItems: MAX_FILTER_PREFIXES,
+        items: {
+          type: "string",
+          pattern: "^\\d{2,10}$"
+        }
+      },
+      search_non_declarables: {
+        type: "boolean",
+        description: "Include non-declarable entries such as headings and chapters in the results. Use this when you want to find the right heading first and drill into it, rather than choose between 10-digit commodities straight away. Leave this out to use the backend default."
+      },
       service: SERVICE_SCHEMA,
       validity_date: VALIDITY_DATE_SCHEMA
     },
     required: [ "query" ]
   )
 
-  def self.call(query:, limit: nil, expanded_query: nil, service: nil, validity_date: nil, server_context: nil)
-    error = validate_date(validity_date) || validate_limit(limit)
+  def self.call(query:, limit: nil, expanded_query: nil, filter_prefixes: nil, search_non_declarables: nil, service: nil, validity_date: nil, server_context: nil)
+    prefixes = Array(filter_prefixes).map { |prefix| prefix.to_s.strip }.compact_blank.uniq
+    error = validate_date(validity_date) || validate_limit(limit) || validate_filter_prefixes(prefixes)
     return error if error
 
     resolved = ServiceNormaliser.call(service)
     params = { "q" => query }
     params["limit"] = limit if limit
     params["expanded_query"] = expanded_query if expanded_query.present?
+    params["filter_prefixes"] = prefixes.join(",") if prefixes.any?
+    params["search_non_declarables"] = search_non_declarables.to_s unless search_non_declarables.nil?
 
     with_error_handling do
       raw = client_for(service: resolved).get("/#{resolved}/api/v2/classification_search", params: params, as_of: validity_date)
@@ -53,6 +76,26 @@ class ClassificationSearchTool < ApplicationTool
       text_response(shaped, notice: notice)
     end
   end
+
+  def self.validate_filter_prefixes(prefixes)
+    return nil if prefixes.empty?
+
+    if prefixes.length > MAX_FILTER_PREFIXES
+      return MCP::Tool::Response.new(
+        [ { type: "text", text: "Invalid filter_prefixes: supply at most #{MAX_FILTER_PREFIXES} prefixes" } ],
+        error: true
+      )
+    end
+
+    invalid = prefixes.reject { |prefix| prefix.match?(FILTER_PREFIX_FORMAT) }
+    return nil if invalid.empty?
+
+    MCP::Tool::Response.new(
+      [ { type: "text", text: "Invalid filter_prefixes: '#{invalid.join(', ')}' must be 2 to 10 digit codes" } ],
+      error: true
+    )
+  end
+  private_class_method :validate_filter_prefixes
 
   def self.validate_limit(limit)
     return nil if limit.nil?
