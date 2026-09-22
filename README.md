@@ -72,6 +72,16 @@ Use the classification tools as an evidence-gathering workflow, not as a single 
 4. Use the note mentions to decide which product facts are still needed, ask or answer those classification questions, and apply the relevant section notes, chapter notes, and General Interpretative Rules.
 5. Treat semantic shortlist scores as search evidence only. A final classification still needs to be grounded in the tariff hierarchy, notes, commodity text, measures, and any missing product facts.
 
+### Relative match bands
+
+`classification_search` returns a `relative_match` band and ratio for each candidate. The band compares that candidate to the best candidate **for that one query**. It is not a probability that the code is correct, and it is not comparable between queries. The best candidate of a weak set still bands as `high`.
+
+### Several products at once
+
+Call `classification_search` once per product, as you reach that product. Each response echoes the `query` it answers, so a shortlist always ties back to the product it belongs to.
+
+Do not search every product first and answer them together. Answers degrade when a client pools the shortlists: it shortcuts the per-item workflow, reuses a candidate from one product on another, or compares `relative_match` bands between products. Each item needs the full workflow above, run one item at a time.
+
 ## Authentication
 
 Register at the [Trade Tariff developer portal (Hub)](https://hub.trade-tariff.service.gov.uk/) and create an application. You will receive a **client_id** and **client_secret**.
