@@ -12,12 +12,13 @@ class ClassificationSearchTool < ApplicationTool
               "the top result. A band compares a candidate to the best candidate for THIS query only. It is not a " \
               "calibrated probability and it is not comparable between queries — treat all results as candidates, " \
               "not a final classification, and never report a relative_match band as your confidence in a code. " \
-              "For several products, call this tool once per product, as you reach it. Each response echoes the " \
-              "query it answers. Do not search every product first and then answer them together. " \
-              "Call it a second time with filter_prefixes when you have established a heading but not the right " \
-              "subdivision within it: one flat shortlist often reaches the correct heading without ever reaching the " \
-              "correct 10-digit code. Add search_non_declarables to get headings and chapters back, so you can drill " \
-              "into a heading instead of choosing between leaves. " \
+              "Work one product at a time. Do not search every product first and then answer them together. " \
+              "Each response echoes the query it answers. " \
+              "One product can need two searches. Search the same product again with filter_prefixes when you have " \
+              "established a heading but not the right subdivision within it: one flat shortlist often reaches the " \
+              "correct heading without ever reaching the correct 10-digit code. In that second search, keep the " \
+              "product description and add the fact that separates the subdivisions. Add search_non_declarables to " \
+              "get headings and chapters back, so you can drill into a heading instead of choosing between leaves. " \
               "See tariff://classification-workflow for the full classification process."
 
   input_schema(

@@ -54,7 +54,7 @@ One flat shortlist often reaches the correct heading without ever reaching the c
 So treat retrieval as two steps, not one:
 
 1. **Find the heading.** Search on the product description. Add `search_non_declarables: true` when you want headings and chapters in the results, so you can pick a heading deliberately instead of inferring one from a leaf.
-2. **Find the code inside it.** Search again with `filter_prefixes` set to the heading you confirmed, e.g. `["6307"]`. Put the deciding fact in this second query — the fibre percentage, the cocoa content, the pack size — because that is what separates the subdivisions.
+2. **Find the code inside it.** Search again with `filter_prefixes` set to the heading you confirmed, e.g. `["6307"]`. Keep the product description in this second query and add the deciding fact to it — the fibre percentage, the cocoa content, the pack size — because that is what separates the subdivisions. Do not replace the description with the fact on its own: inside one heading, a query of "80% cotton" ranks on the threshold and loses the product.
 
 Do the second search whenever the first one returns the right heading but no subdivision you can justify. Do not pick the best-looking leaf from the first shortlist and stop.
 
@@ -71,7 +71,7 @@ Classify one item at a time. Do not classify a batch in one pass.
 5. **Do not drop steps to save effort.** The legal note check (step 4) and the hierarchy check (step 3) are the steps that get complex items right. A batch makes these steps feel expensive. Run them for every item.
 6. **Report what you did not verify.** If you could not complete the workflow for an item, say so for that item. Do not give the item a code with the same confidence as a verified item.
 
-Call `classification_search` once per item, when you reach that item. Every shortlist echoes the `query` it answers, so you can always confirm which item a candidate belongs to.
+Search for one item at a time, when you reach that item. One item can still need two searches: the second one narrows inside a heading, as in the section above. What this rule forbids is searching several items together, not searching one item twice. Every shortlist echoes the `query` it answers, so you can always confirm which item a candidate belongs to.
 
 ## Output
 
