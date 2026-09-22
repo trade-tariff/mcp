@@ -153,6 +153,47 @@ RSpec.describe CommodityHistoryDiffShaper do
     expect(result[:unchanged_measure_count]).to eq(1)
   end
 
+  # A footnote arriving without a code must not stop the whole comparison. Sorting a list
+  # that holds a nil raises, and the tool would then report nothing at all for the
+  # commodity rather than the one measure it could not describe.
+  it "does not raise when a footnote has no code" do
+    from = measure(type: "Third country duty", geo: "ERGA OMNES (1011)", duty: "12.00 %",
+                   footnotes: [ { code: nil, description: "Unknown" },
+                                { code: "CD624", description: "Health entry document required" } ])
+    to   = measure(type: "Third country duty", geo: "ERGA OMNES (1011)", duty: "12.00 %",
+                   footnotes: [ { code: "CD624", description: "Health entry document required" } ])
+
+    expect { diff([ from ], [ to ]) }.not_to raise_error
+  end
+
+  it "reports a footnote that has no code as a difference rather than hiding it" do
+    from = measure(type: "Third country duty", geo: "ERGA OMNES (1011)", duty: "12.00 %",
+                   footnotes: [ { code: nil, description: "Unknown" },
+                                { code: "CD624", description: "Health entry document required" } ])
+    to   = measure(type: "Third country duty", geo: "ERGA OMNES (1011)", duty: "12.00 %",
+                   footnotes: [ { code: "CD624", description: "Health entry document required" } ])
+
+    result = diff([ from ], [ to ])
+
+    expect(result[:identical]).to be_nil
+    expect(result[:changes][:measures_changed].first[:changed_fields]).to have_key(:footnotes)
+  end
+
+  # Conditions are compared on their own fields, not on a string of the whole hash. Two
+  # conditions that hold the same values are the same condition, whatever order the keys
+  # were built in.
+  it "treats two conditions with the same values as unchanged" do
+    from = measure(type: "Third country duty", geo: "ERGA OMNES (1011)", duty: "12.00 %",
+                   conditions: [ { condition: "B", document_code: "9Y12", action: "apply" } ])
+    to   = measure(type: "Third country duty", geo: "ERGA OMNES (1011)", duty: "12.00 %",
+                   conditions: [ { action: "apply", document_code: "9Y12", condition: "B" } ])
+
+    result = diff([ from ], [ to ])
+
+    expect(result[:identical]).to be true
+    expect(result[:unchanged_measure_count]).to eq(1)
+  end
+
   it "detects a supplementary unit change" do
     from = measure(type: "Supplementary unit", geo: "ERGA OMNES (1011)", unit: "100 p/st")
     to   = measure(type: "Supplementary unit", geo: "ERGA OMNES (1011)", unit: "1000 p/st")

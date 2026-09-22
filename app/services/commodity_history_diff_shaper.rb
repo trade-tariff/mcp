@@ -11,6 +11,10 @@ class CommodityHistoryDiffShaper
   # their treatment is compared.
   KEY_FIELDS = %i[type geographical_area quota_order_number].freeze
 
+  # The fields a measure condition is built from, in ApplicationShaper#shape_conditions.
+  # Two conditions holding the same values are the same condition.
+  CONDITION_FIELDS = %i[condition document_code certificate_description requirement action].freeze
+
   def self.call(commodity_code:, from_date:, to_date:, from_measures:, to_measures:)
     new(commodity_code: commodity_code, from_date: from_date, to_date: to_date,
         from_measures: from_measures, to_measures: to_measures).call
@@ -84,12 +88,23 @@ class CommodityHistoryDiffShaper
   def comparable(field, value)
     return value unless value.is_a?(Array)
     return footnote_codes(value) if field == :footnotes
+    return condition_values(value) if field == :conditions
 
     value.map(&:to_s).sort
   end
 
+  # Compare each condition on its own fields. Comparing the whole hash as a string would
+  # tie this to the order the keys were built in, and to how Ruby prints a hash.
+  # Every value becomes a string so that a list holding a nil still sorts.
+  def condition_values(conditions)
+    conditions.map { |condition| CONDITION_FIELDS.map { |field| condition[field].to_s } }.sort
+  end
+
+  # A missing code becomes an empty string rather than being dropped. A footnote we cannot
+  # name is still a footnote, so the two sides must still differ by one entry. Dropping it
+  # would hide that difference, and a nil would stop the sort.
   def footnote_codes(footnotes)
-    footnotes.map { |f| f[:code] }.sort
+    footnotes.map { |footnote| footnote[:code].to_s }.sort
   end
 
   # Pair measures that share a key by exact treatment.
