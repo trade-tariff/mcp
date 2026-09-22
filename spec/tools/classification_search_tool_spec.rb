@@ -78,6 +78,71 @@ RSpec.describe ClassificationSearchTool do
     expect(stub).to have_been_requested
   end
 
+  it "passes filter prefixes so a caller can search inside a known heading" do
+    stub = stub_request(:get, "#{base_url}/uk/api/v2/classification_search")
+      .with(query: { "q" => "dog bed", "filter_prefixes" => "6307,6301" })
+      .to_return(status: 200, body: response_body, headers: { "Content-Type" => "application/json" })
+
+    described_class.call(query: "dog bed", filter_prefixes: %w[6307 6301], service: nil)
+
+    expect(stub).to have_been_requested
+  end
+
+  it "omits filter prefixes when none are given" do
+    stub = stub_request(:get, "#{base_url}/uk/api/v2/classification_search")
+      .with(query: { "q" => "dog bed" })
+      .to_return(status: 200, body: response_body, headers: { "Content-Type" => "application/json" })
+
+    described_class.call(query: "dog bed", service: nil)
+
+    expect(stub).to have_been_requested
+  end
+
+  it "returns an error for a filter prefix that is not 2 to 10 digits" do
+    result = described_class.call(query: "dog bed", filter_prefixes: %w[63AB])
+
+    expect(result).to be_error
+    expect(result.content.first[:text]).to include("Invalid filter_prefixes")
+    expect(result.content.first[:text]).to include("63AB")
+  end
+
+  it "returns an error for more filter prefixes than the backend accepts" do
+    result = described_class.call(query: "dog bed", filter_prefixes: (1..11).map { |n| format("%04d", n) })
+
+    expect(result).to be_error
+    expect(result.content.first[:text]).to include("at most 10")
+  end
+
+  it "passes the non-declarable opt in so headings can be returned" do
+    stub = stub_request(:get, "#{base_url}/uk/api/v2/classification_search")
+      .with(query: { "q" => "dog bed", "search_non_declarables" => "true" })
+      .to_return(status: 200, body: response_body, headers: { "Content-Type" => "application/json" })
+
+    described_class.call(query: "dog bed", search_non_declarables: true, service: nil)
+
+    expect(stub).to have_been_requested
+  end
+
+  it "omits the non-declarable parameter when the caller says nothing" do
+    stub = stub_request(:get, "#{base_url}/uk/api/v2/classification_search")
+      .with(query: { "q" => "dog bed" })
+      .to_return(status: 200, body: response_body, headers: { "Content-Type" => "application/json" })
+
+    described_class.call(query: "dog bed", service: nil)
+
+    expect(stub).to have_been_requested
+  end
+
+  it "passes false when the caller explicitly opts out" do
+    stub = stub_request(:get, "#{base_url}/uk/api/v2/classification_search")
+      .with(query: { "q" => "dog bed", "search_non_declarables" => "false" })
+      .to_return(status: 200, body: response_body, headers: { "Content-Type" => "application/json" })
+
+    described_class.call(query: "dog bed", search_non_declarables: false, service: nil)
+
+    expect(stub).to have_been_requested
+  end
+
   it "returns an error for an invalid date" do
     result = described_class.call(query: "wireless headphones", validity_date: "19-06-2026")
 
