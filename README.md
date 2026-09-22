@@ -90,10 +90,8 @@ A single shortlist often reaches the correct heading without reaching the correc
 
 | Parameter | Use |
 |-----------|-----|
-| `filter_prefixes` | Restrict the search to given code prefixes (2 to 10 digits, at most 10). Set this to a heading you have confirmed, then put the deciding fact in the query. |
+| `filter_prefixes` | Restrict the search to given code prefixes (2 to 10 digits, at most 10). Set this to a heading you have confirmed, then keep the product description in the query and add the deciding fact to it. |
 | `search_non_declarables` | Return headings and chapters as well as declarable commodities, so a heading can be chosen deliberately and drilled into. |
-
-Both require backend support (`trade-tariff-backend` PR #3788).
 
 ## Authentication
 
