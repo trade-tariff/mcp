@@ -16,7 +16,7 @@ gem "dotenv-rails", groups: %i[development test]
 # image ships resolv 0.7.0 as a bundled default gem; without this pin a bare
 # `require "resolv"` anywhere in the dependency chain loads that vulnerable
 # copy with no Bundler-managed override.
-gem "resolv", "~> 0.7.2"
+gem "resolv", "~> 0.8.0"
 
 group :development, :test do
   gem "rspec-rails"
