@@ -24,7 +24,6 @@ Rails.application.config.after_initialize do
     tools: [
       ListSectionsTool,
       ClassificationSearchTool,
-      ClassifyBatchTool,
       NoteMentionsTool,
       ShowHeadingTool,
       LookupCommodityTool,

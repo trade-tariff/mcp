@@ -33,7 +33,6 @@ Restart Claude Desktop after saving. It will prompt for your Hub **client_id** a
 | `show_heading` | Show a heading by 4-digit code (e.g. `0101`) |
 | `lookup_commodity` | Look up a commodity by 10-digit code (e.g. `0101210000`); also returns import/export measures |
 | `classification_search` | First tool for natural-language product classification, commodity lookup, commodity code lookup, HS code lookup, and tariff classification requests |
-| `classify_batch` | Return a separate, labelled candidate shortlist for each of up to 10 product descriptions. A retrieval helper, not a bulk classifier |
 | `note_mentions` | Return chapter and section note fragments linked to shortlisted candidate goods nomenclatures |
 | `navigate_hierarchy` | Look up any goods nomenclature entry by 2–10 digit code |
 | `list_exchange_rates` | List GBP monetary exchange rates used in duty calculations |
@@ -75,11 +74,13 @@ Use the classification tools as an evidence-gathering workflow, not as a single 
 
 ### Relative match bands
 
-`classification_search` and `classify_batch` return a `relative_match` band and ratio for each candidate. The band compares that candidate to the best candidate **for that one query**. It is not a probability that the code is correct, and it is not comparable between queries. The best candidate of a weak set still bands as `high`.
+`classification_search` returns a `relative_match` band and ratio for each candidate. The band compares that candidate to the best candidate **for that one query**. It is not a probability that the code is correct, and it is not comparable between queries. The best candidate of a weak set still bands as `high`.
 
 ### Several products at once
 
-`classify_batch` runs one search per item and labels each shortlist with the item it answers. It does not classify. Each item still needs the full workflow above, run one item at a time. Batch answers degrade when a client shortcuts the per-item workflow, reuses a candidate from one item on another, or compares `relative_match` bands between items.
+Call `classification_search` once per product, as you reach that product. Each response echoes the `query` it answers, so a shortlist always ties back to the product it belongs to.
+
+Do not search every product first and answer them together. Answers degrade when a client pools the shortlists: it shortcuts the per-item workflow, reuses a candidate from one product on another, or compares `relative_match` bands between products. Each item needs the full workflow above, run one item at a time.
 
 ## Authentication
 

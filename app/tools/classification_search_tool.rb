@@ -9,7 +9,8 @@ class ClassificationSearchTool < ApplicationTool
               "the top result. A band compares a candidate to the best candidate for THIS query only. It is not a " \
               "calibrated probability and it is not comparable between queries — treat all results as candidates, " \
               "not a final classification, and never report a relative_match band as your confidence in a code. " \
-              "Use classify_batch when the user gives you several products at once. " \
+              "For several products, call this tool once per product, as you reach it. Each response echoes the " \
+              "query it answers. Do not search every product first and then answer them together. " \
               "See tariff://classification-workflow for the full classification process."
 
   input_schema(

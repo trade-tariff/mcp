@@ -32,7 +32,6 @@ Use "commodity code" — not "HS code". UK imports need a 10-digit code; exports
 | Find a country group area ID (e.g. EU bloc) | `list_geographical_areas` with `filter: "EU"` |
 | Search by keyword (exact/fuzzy match) | `full_text_search` |
 | Read chapter/section note fragments for candidates | `note_mentions` |
-| Shortlist candidates for several products at once | `classify_batch` (shortlists only — still classify each item one at a time) |
 
 ### Classification pivots to include in classification_search queries
 
@@ -57,7 +56,7 @@ Classify one item at a time. Do not classify a batch in one pass.
 5. **Do not drop steps to save effort.** The legal note check (step 4) and the hierarchy check (step 3) are the steps that get complex items right. A batch makes these steps feel expensive. Run them for every item.
 6. **Report what you did not verify.** If you could not complete the workflow for an item, say so for that item. Do not give the item a code with the same confidence as a verified item.
 
-Use `classify_batch` to collect a labelled shortlist per item. `classify_batch` is a retrieval helper. It does not classify, and its shortlists are not answers.
+Call `classification_search` once per item, when you reach that item. Every shortlist echoes the `query` it answers, so you can always confirm which item a candidate belongs to.
 
 ## Output
 
