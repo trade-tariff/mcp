@@ -9,11 +9,17 @@ class CommodityHistoryDiffShaper
 
   # Fields that identify which measure is which. Measures are paired on these before
   # their treatment is compared.
-  KEY_FIELDS = %i[type geographical_area quota_order_number].freeze
+  # Additional code is part of the identity, not the treatment. Commodity 2203000100 has
+  # seven type 306 measures for one area that are told apart only by it. Without it here,
+  # a change on one measure can be paired with another and disappear.
+  KEY_FIELDS = %i[type geographical_area quota_order_number additional_code].freeze
 
   # The fields a measure condition is built from, in ApplicationShaper#shape_conditions.
   # Two conditions holding the same values are the same condition.
-  CONDITION_FIELDS = %i[condition document_code certificate_description requirement action].freeze
+  # duty_expression is the rate that applies when the condition is met. On the excise bands
+  # of 2203000100 the action text is identical for every band and the rate is the only
+  # thing that separates them, so leaving it out hides a rate change.
+  CONDITION_FIELDS = %i[condition document_code certificate_description requirement action duty_expression].freeze
 
   def self.call(commodity_code:, from_date:, to_date:, from_measures:, to_measures:)
     new(commodity_code: commodity_code, from_date: from_date, to_date: to_date,
@@ -142,6 +148,7 @@ class CommodityHistoryDiffShaper
       type: from_m[:type],
       geographical_area: from_m[:geographical_area],
       quota_order_number: from_m[:quota_order_number],
+      additional_code: from_m[:additional_code],
       from_effective_start_date: from_m[:effective_start_date],
       to_effective_start_date: to_m[:effective_start_date],
       changed_fields: changed_fields

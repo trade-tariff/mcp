@@ -3,13 +3,14 @@
 require "rails_helper"
 
 RSpec.describe CommodityHistoryDiffShaper do
-  def measure(type:, geo:, duty: nil, quota: nil, conditions: nil, footnotes: nil, unit: nil, start_date: nil, end_date: nil)
+  def measure(type:, geo:, duty: nil, quota: nil, conditions: nil, footnotes: nil, unit: nil, start_date: nil, end_date: nil, additional_code: nil)
     {
       type: type,
       geographical_area: geo,
       duty: duty,
       unit: unit,
       quota_order_number: quota,
+      additional_code: additional_code,
       conditions: conditions,
       footnotes: footnotes,
       effective_start_date: start_date,
@@ -192,6 +193,54 @@ RSpec.describe CommodityHistoryDiffShaper do
 
     expect(result[:identical]).to be true
     expect(result[:unchanged_measure_count]).to eq(1)
+  end
+
+  # Observed on commodity 2203000100. The action text is the same for every excise band
+  # ("Apply the amount of the action (see components)") and the rate that applies when the
+  # condition is met sits only in duty_expression. A reissue that changes that rate and
+  # nothing else must not compare equal.
+  it "detects a change to the duty that applies under a condition" do
+    from = measure(type: "Excise", geo: "ERGA OMNES (1011)",
+                   conditions: [ { condition: "V", action: "Apply the amount of the action (see components)",
+                                   duty_expression: "9.96 GBP / % vol/hl" } ])
+    to   = measure(type: "Excise", geo: "ERGA OMNES (1011)",
+                   conditions: [ { condition: "V", action: "Apply the amount of the action (see components)",
+                                   duty_expression: "10.50 GBP / % vol/hl" } ])
+
+    result = diff([ from ], [ to ])
+
+    expect(result[:identical]).to be_nil
+    expect(result[:changes][:measures_changed].length).to eq(1)
+    expect(result[:changes][:measures_changed].first[:changed_fields]).to have_key(:conditions)
+  end
+
+  # Observed on commodity 2203000100, which has seven type 306 measures for area 1400 that
+  # are told apart only by additional code. Without it, a change on one can be paired with
+  # another and disappear.
+  it "does not match two measures that differ only by additional code" do
+    from = [ measure(type: "Excise", geo: "United Kingdom (1400)", duty: "9.96 GBP", additional_code: "X411"),
+             measure(type: "Excise", geo: "United Kingdom (1400)", duty: "19.08 GBP", additional_code: "X431") ]
+    to   = [ measure(type: "Excise", geo: "United Kingdom (1400)", duty: "10.50 GBP", additional_code: "X411"),
+             measure(type: "Excise", geo: "United Kingdom (1400)", duty: "19.08 GBP", additional_code: "X431") ]
+
+    result = diff(from, to)
+
+    expect(result[:unchanged_measure_count]).to eq(1)
+    expect(result[:changes][:measures_changed].length).to eq(1)
+    expect(result[:changes][:measures_changed].first[:additional_code]).to eq("X411")
+    expect(result[:changes][:measures_changed].first[:changed_fields][:duty]).to eq(
+      from: "9.96 GBP", to: "10.50 GBP"
+    )
+  end
+
+  it "reports the additional code on a measure that was added or removed" do
+    from = [ measure(type: "Excise", geo: "United Kingdom (1400)", duty: "9.96 GBP", additional_code: "X411") ]
+    to   = [ measure(type: "Excise", geo: "United Kingdom (1400)", duty: "9.96 GBP", additional_code: "X412") ]
+
+    result = diff(from, to)
+
+    expect(result[:changes][:measures_removed].first[:additional_code]).to eq("X411")
+    expect(result[:changes][:measures_added].first[:additional_code]).to eq("X412")
   end
 
   it "detects a supplementary unit change" do

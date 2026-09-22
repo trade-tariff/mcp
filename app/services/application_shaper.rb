@@ -52,7 +52,10 @@ class ApplicationShaper
         document_code: cattrs["document_code"].then { |v| v.nil? || v.empty? ? nil : v },
         certificate_description: cattrs["certificate_description"].then { |v| v.nil? || v.empty? ? nil : v },
         requirement: cattrs["requirement"].then { |v| v.nil? || v.empty? ? nil : v },
-        action: cattrs["action"]
+        action: cattrs["action"],
+        # The rate that applies when this condition is met. The action text can be the same
+        # for every band of a measure, so this is the only thing that tells them apart.
+        duty_expression: cattrs["duty_expression"].then { |v| v.nil? || v.empty? ? nil : v }
       }.compact
     end
   end
@@ -71,6 +74,7 @@ class ApplicationShaper
       duty_expr         = resolve_relationship(mrels, "duty_expression")
       geo_area          = resolve_relationship(mrels, "geographical_area")
       order_number      = resolve_relationship(mrels, "order_number")
+      additional_code   = resolve_relationship(mrels, "additional_code")
       conditions        = shape_conditions(mrels.dig("measure_conditions", "data"))
       footnotes         = shape_footnotes(mrels.dig("footnotes", "data"))
       type_description  = measure_type&.dig("attributes", "description")
@@ -86,6 +90,7 @@ class ApplicationShaper
         vat: mattrs["vat"] || nil,
         reduction_indicator: mattrs["reduction_indicator"],
         quota_order_number: order_number&.dig("attributes", "number"),
+        additional_code: additional_code&.dig("attributes", "code"),
         effective_start_date: mattrs["effective_start_date"]&.then { |d| d[0, 10] },
         effective_end_date: mattrs["effective_end_date"]&.then { |d| d[0, 10] },
         conditions: conditions.empty? ? nil : conditions,

@@ -121,4 +121,25 @@ RSpec.describe LookupCommodityTool do
   it "tells the caller that effective_start_date may be a reissue date" do
     expect(described_class.description).to include("reissued")
   end
+
+  describe "measure additional codes and conditional duties" do
+    it "requests the additional code on import and export measures" do
+      expect(described_class::FULL_INCLUDE).to include("import_measures.additional_code")
+      expect(described_class::FULL_INCLUDE).to include("export_measures.additional_code")
+      expect(described_class::MEASURES_INCLUDE).to include("import_measures.additional_code")
+      expect(described_class::MEASURES_INCLUDE).to include("export_measures.additional_code")
+    end
+
+    it "asks for the additional code field on each measure in the full lookup" do
+      expect(described_class.send(:build_full_params)["fields[measure]"]).to include("additional_code")
+    end
+
+    it "asks for the code on each additional code in the full lookup" do
+      expect(described_class.send(:build_full_params)["fields[additional_code]"]).to include("code")
+    end
+
+    it "asks for the duty expression on each measure condition in the full lookup" do
+      expect(described_class.send(:build_full_params)["fields[measure_condition]"]).to include("duty_expression")
+    end
+  end
 end
