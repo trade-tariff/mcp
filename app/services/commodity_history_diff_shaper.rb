@@ -2,9 +2,14 @@
 
 class CommodityHistoryDiffShaper
   # Fields that describe the treatment a measure applies. A change to any of them is a
-  # change a trader must see. The effective dates are deliberately absent: DBT end-dates
-  # and reissues a measure whenever it edits it, so the dates always differ across a
-  # reissue even when the treatment itself is unchanged.
+  # change a trader must see. The effective dates are deliberately absent. Once a measure
+  # has started, DBT changes it only by end-dating it and reissuing it, so the dates differ
+  # across a reissue even when the treatment itself is unchanged.
+  #
+  # Before a measure starts, DBT can also edit it in place or delete it. The backend keeps
+  # only the latest version, so neither snapshot holds the earlier version. That is
+  # correct: the earlier version never applied. Measures are paired by KEY_FIELDS, not by
+  # measure SID, so an in-place edit and a reissue give the same result.
   COMPARED_FIELDS = %i[duty unit excise vat reduction_indicator conditions footnotes].freeze
 
   # Fields that identify which measure is which. Measures are paired on these before

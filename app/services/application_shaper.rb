@@ -2,12 +2,21 @@
 
 class ApplicationShaper
   # A measure's effective_start_date is the start date of that measure record, not the
-  # date the treatment first applied. DBT end-dates a measure and reissues it whenever it
-  # edits it, so a long-standing treatment can carry a recent start date.
+  # date the treatment first applied. DBT changes a measure in one of three ways:
+  #
+  # - It end-dates the measure and reissues it. It must do this once the measure has
+  #   started, so a long-standing treatment can carry a recent start date.
+  # - It edits the measure in place, before the measure starts.
+  # - It deletes the measure, before the measure starts.
+  #
+  # The backend keeps only the latest version of each measure. A measure that has not
+  # started can still be edited or deleted, and the earlier version then leaves no trace.
   MEASURE_DATE_NOTE = "effective_start_date is the start date of this measure record. " \
     "A measure can be end-dated and reissued with new conditions, so the treatment can " \
     "apply from an earlier date than the one shown. Use commodity_history_diff, or " \
-    "lookup_commodity with an earlier validity_date, to find when the treatment first applied.".freeze
+    "lookup_commodity with an earlier validity_date, to find when the treatment first applied. " \
+    "A measure that has not started yet is provisional: it can still be changed or deleted " \
+    "before its start date.".freeze
 
   def self.call(api_response)
     new(api_response).call
