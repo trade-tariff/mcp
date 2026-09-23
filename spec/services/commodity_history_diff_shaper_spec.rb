@@ -264,6 +264,21 @@ RSpec.describe CommodityHistoryDiffShaper do
     expect(result[:unchanged_measure_count]).to eq(1)
   end
 
+  # The effective dates are not compared, so a measure with the same key and the same
+  # start date is still reported when its duty differs. This is not an in-place edit: the
+  # backend keeps only the latest version, so both date queries would return the new terms.
+  it "reports different duties with the same start date as changed" do
+    from = measure(type: "Third country duty", geo: "ERGA OMNES (1011)", duty: "12.00 %",
+                   start_date: "2021-01-01")
+    to   = measure(type: "Third country duty", geo: "ERGA OMNES (1011)", duty: "8.00 %",
+                   start_date: "2021-01-01")
+
+    change = diff([ from ], [ to ])[:changes][:measures_changed].first
+
+    expect(change[:changed_fields]).to eq(duty: { from: "12.00 %", to: "8.00 %" })
+    expect(change[:from_effective_start_date]).to eq(change[:to_effective_start_date])
+  end
+
   it "reports a condition change alongside a duty change on the same measure" do
     from = measure(type: "Third country duty", geo: "ERGA OMNES (1011)", duty: "12.00 %")
     to   = measure(type: "Third country duty", geo: "ERGA OMNES (1011)", duty: "8.00 %",
