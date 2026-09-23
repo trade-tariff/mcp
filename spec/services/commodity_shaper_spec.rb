@@ -239,12 +239,14 @@ RSpec.describe CommodityShaper do
       expect(result[:measure_date_note]).to include("commodity_history_diff")
     end
 
-    # DBT changes or deletes a measure in place until it starts, so what the API returns
-    # for a future date can still change.
-    it "warns that a measure which has not started yet is provisional" do
+    # DBT can edit or delete a measure in place until it starts, so a measure that starts
+    # after today can still change. "Provisional" already means a provisional duty or
+    # regulation in the tariff, so the note must not use that word.
+    it "warns that a measure starting after today can still change" do
       result = described_class.call(api_response)
 
-      expect(result[:measure_date_note]).to include("provisional")
+      expect(result[:measure_date_note]).to include("after today")
+      expect(result[:measure_date_note]).not_to include("provisional")
     end
   end
 end
