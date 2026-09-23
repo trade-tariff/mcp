@@ -9,6 +9,10 @@ RSpec.describe CommodityHistoryDiffTool do
   before { ENV["TARIFF_API_URL"] = base_url }
   after  { ENV.delete("TARIFF_API_URL") }
 
+  it "tells the caller that a to_date in the future gives a provisional result" do
+    expect(described_class.description).to include("provisional")
+  end
+
   it "makes two commodity requests (one per date)" do
     stub_from = stub_request(:get, /uk\/api\/v2\/commodities\/0101210000/)
                   .with(query: hash_including("as_of" => "2024-01-01"))

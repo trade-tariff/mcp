@@ -264,6 +264,36 @@ RSpec.describe CommodityHistoryDiffShaper do
     expect(result[:unchanged_measure_count]).to eq(1)
   end
 
+  # Before a measure starts, DBT can edit it in place: the measure keeps its SID and its
+  # start date and takes new terms. The backend keeps only the latest version, so the two
+  # snapshots hold the same record with different terms. Measures are paired by key, not
+  # by SID or date, so this shows the same way as a reissue.
+  it "reports a measure edited in place, with the same start date, as changed" do
+    from = measure(type: "Third country duty", geo: "ERGA OMNES (1011)", duty: "12.00 %",
+                   start_date: "2021-01-01")
+    to   = measure(type: "Third country duty", geo: "ERGA OMNES (1011)", duty: "8.00 %",
+                   start_date: "2021-01-01")
+
+    change = diff([ from ], [ to ])[:changes][:measures_changed].first
+
+    expect(change[:changed_fields]).to eq(duty: { from: "12.00 %", to: "8.00 %" })
+    expect(change[:from_effective_start_date]).to eq(change[:to_effective_start_date])
+  end
+
+  # Before a measure starts, DBT can also delete it. A deleted measure is in neither
+  # snapshot. If DBT end-dated the old measure and then deleted the replacement, only the
+  # end-dated measure is left, and it shows as removed.
+  it "reports an end-dated measure whose replacement was deleted as removed" do
+    old_measure = measure(type: "Third country duty", geo: "ERGA OMNES (1011)", duty: "12.00 %",
+                          start_date: "2021-01-01", end_date: "2025-07-17")
+
+    result = diff([ old_measure, m_pref_eu ], [ m_pref_eu ])
+
+    expect(result[:changes][:measures_removed]).to eq([ old_measure ])
+    expect(result[:changes][:measures_added]).to be_empty
+    expect(result[:changes][:measures_changed]).to be_empty
+  end
+
   it "reports a condition change alongside a duty change on the same measure" do
     from = measure(type: "Third country duty", geo: "ERGA OMNES (1011)", duty: "12.00 %")
     to   = measure(type: "Third country duty", geo: "ERGA OMNES (1011)", duty: "8.00 %",

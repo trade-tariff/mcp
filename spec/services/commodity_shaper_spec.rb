@@ -238,5 +238,13 @@ RSpec.describe CommodityShaper do
       expect(result[:measure_date_note]).to include("reissued")
       expect(result[:measure_date_note]).to include("commodity_history_diff")
     end
+
+    # DBT changes or deletes a measure in place until it starts, so what the API returns
+    # for a future date can still change.
+    it "warns that a measure which has not started yet is provisional" do
+      result = described_class.call(api_response)
+
+      expect(result[:measure_date_note]).to include("provisional")
+    end
   end
 end

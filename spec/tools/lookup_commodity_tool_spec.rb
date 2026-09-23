@@ -122,6 +122,10 @@ RSpec.describe LookupCommodityTool do
     expect(described_class.description).to include("reissued")
   end
 
+  it "tells the caller that a measure which has not started yet is provisional" do
+    expect(described_class.description).to include("provisional")
+  end
+
   describe "measure additional codes and conditional duties" do
     it "requests the additional code on import and export measures" do
       expect(described_class::FULL_INCLUDE).to include("import_measures.additional_code")

@@ -2,7 +2,7 @@
 
 class LookupCommodityTool < ApplicationTool
   tool_name "lookup_commodity"
-  description "Look up a 10-digit commodity code. Returns the full commodity record including hierarchy (section, chapter, heading), footnotes, and all tariff measures. Use measures_only: true with an optional country_code and direction to get just the applicable duty rates without the hierarchy — equivalent to the former commodity_measures tool. Do not guess or construct commodity codes; use classification_search or navigate_hierarchy first. A measure's effective_start_date is the start date of that measure record. A measure can be end-dated and reissued with new conditions, so a treatment can have applied from an earlier date than the one shown. Use commodity_history_diff to check."
+  description "Look up a 10-digit commodity code. Returns the full commodity record including hierarchy (section, chapter, heading), footnotes, and all tariff measures. Use measures_only: true with an optional country_code and direction to get just the applicable duty rates without the hierarchy — equivalent to the former commodity_measures tool. Do not guess or construct commodity codes; use classification_search or navigate_hierarchy first. A measure's effective_start_date is the start date of that measure record. A measure can be end-dated and reissued with new conditions, so a treatment can have applied from an earlier date than the one shown. Use commodity_history_diff to check. A measure that has not started yet is provisional: it can still be changed or deleted before its start date."
 
   FULL_INCLUDE = [
     "section,chapter,heading,footnotes",
