@@ -7,9 +7,10 @@ class CommodityHistoryDiffShaper
   # across a reissue even when the treatment itself is unchanged.
   #
   # Before a measure starts, DBT can also edit it in place or delete it. The backend keeps
-  # only the latest version, so neither snapshot holds the earlier version. That is
-  # correct: the earlier version never applied. Measures are paired by KEY_FIELDS, not by
-  # measure SID, so an in-place edit and a reissue give the same result.
+  # only the latest version, so neither snapshot holds the earlier version: both hold the
+  # new terms, or the measure is absent. The diff then shows no trace of the edit or the
+  # delete. That is correct, because the earlier version never applied. It also means a
+  # snapshot for a date after today can still change.
   COMPARED_FIELDS = %i[duty unit excise vat reduction_indicator conditions footnotes].freeze
 
   # Fields that identify which measure is which. Measures are paired on these before

@@ -9,14 +9,18 @@ class ApplicationShaper
   # - It edits the measure in place, before the measure starts.
   # - It deletes the measure, before the measure starts.
   #
-  # The backend keeps only the latest version of each measure. A measure that has not
-  # started can still be edited or deleted, and the earlier version then leaves no trace.
+  # The backend keeps only the latest version of each measure. A measure that starts
+  # after today can still be edited or deleted, and the earlier version then leaves no trace.
+  #
+  # Do not call such a measure "provisional". In the tariff that word means a provisional
+  # duty or a provisional regulation. Compare the start date with today, not with the
+  # validity_date asked for: every measure in a response starts on or before that date.
   MEASURE_DATE_NOTE = "effective_start_date is the start date of this measure record. " \
     "A measure can be end-dated and reissued with new conditions, so the treatment can " \
     "apply from an earlier date than the one shown. Use commodity_history_diff, or " \
     "lookup_commodity with an earlier validity_date, to find when the treatment first applied. " \
-    "A measure that has not started yet is provisional: it can still be changed or deleted " \
-    "before its start date.".freeze
+    "A measure whose effective_start_date is after today can still be changed or deleted " \
+    "before that date, so do not treat its terms as fixed.".freeze
 
   def self.call(api_response)
     new(api_response).call
