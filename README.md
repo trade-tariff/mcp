@@ -76,6 +76,12 @@ Use the classification tools as an evidence-gathering workflow, not as a single 
 
 `classification_search` returns a `relative_match` band and ratio for each candidate. The band compares that candidate to the best candidate **for that one query**. It is not a probability that the code is correct, and it is not comparable between queries. The best candidate of a weak set still bands as `high`.
 
+### Heading groups
+
+`classification_search` also returns a `headings` list. It groups the results by 4-digit heading, with the number of results in each heading and the best rank. The list is ordered by best rank. Chapter entries are not included.
+
+Use the list to choose which headings to check. The top result is often in the wrong heading on complex products, so compare several headings before you choose one. The number of results in a heading is not evidence that the heading is correct.
+
 ### Several products at once
 
 Work one product at a time, and search for a product when you reach it. One product can need two searches: the second one narrows inside a heading, as described in [Searching twice](#searching-twice). What this rule forbids is searching several products together, not searching one product twice. Each response echoes the `query` it answers, so a shortlist always ties back to the product it belongs to.
