@@ -111,6 +111,46 @@ RSpec.describe ClassificationSearchShaper do
     expect(output[:results]).to eq([])
   end
 
+  it "groups the results by 4-digit heading, ordered by the best rank in each heading" do
+    raw = api_response(results: [
+      result_item(item_id: "6302229000", sid: 1),
+      result_item(item_id: "6307909899", sid: 2),
+      result_item(item_id: "6302600000", sid: 3),
+      result_item(item_id: "9404908000", sid: 4),
+      result_item(item_id: "6307901000", sid: 5)
+    ])
+    output = described_class.call(raw, query: "polyester pet bed")
+
+    expect(output[:headings]).to eq([
+      { heading: "6302", result_count: 2, best_rank: 1 },
+      { heading: "6307", result_count: 2, best_rank: 2 },
+      { heading: "9404", result_count: 1, best_rank: 4 }
+    ])
+  end
+
+  it "leaves chapter entries out of the heading groups" do
+    raw = api_response(results: [
+      result_item(item_id: "6300000000", sid: 1, declarable: false),
+      result_item(item_id: "6307000000", sid: 2, declarable: false)
+    ])
+    output = described_class.call(raw, query: "polyester pet bed")
+
+    expect(output[:headings]).to eq([ { heading: "6307", result_count: 1, best_rank: 2 } ])
+  end
+
+  it "includes a headings_note that says a result count is not evidence" do
+    raw = api_response(results: [ result_item ])
+    output = described_class.call(raw, query: "headphones")
+
+    expect(output[:headings_note]).to include("not evidence")
+  end
+
+  it "returns an empty heading list when there are no results" do
+    output = described_class.call({})
+
+    expect(output[:headings]).to eq([])
+  end
+
   it "omits score and relative match when the score is nil" do
     raw = api_response(results: [ result_item(score: nil) ])
     output = described_class.call(raw, query: "headphones")

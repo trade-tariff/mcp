@@ -14,6 +14,9 @@ class ClassificationSearchTool < ApplicationTool
               "not a final classification, and never report a relative_match band as your confidence in a code. " \
               "Work one product at a time. Do not search every product first and then answer them together. " \
               "Each response echoes the query it answers. " \
+              "Each response also groups the results by heading. The top result is often in the wrong heading: " \
+              "compare several of these headings before you choose one, and do not take the heading of the top " \
+              "result on trust. " \
               "One product can need two searches. Search the same product again with filter_prefixes when you have " \
               "established a heading but not the right subdivision within it: one flat shortlist often reaches the " \
               "correct heading without ever reaching the correct 10-digit code. In that second search, keep the " \

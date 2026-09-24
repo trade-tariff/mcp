@@ -28,6 +28,11 @@ class ClassificationSearchShaper
                         "produces a 'high' band. Verify every code through navigate_hierarchy, show_heading, and " \
                         "the chapter and section notes before you report it."
 
+  HEADINGS_NOTE = "headings groups the results by 4-digit heading, ordered by the best rank in each heading. " \
+                  "It is a list of headings to check, not an answer. The top result is often in the wrong heading, " \
+                  "so compare several headings with show_heading and note_mentions before you choose one. " \
+                  "A result_count is not evidence: a heading with many results is not more likely to be correct."
+
   def call
     results = @data.map { |item| shape_result(item) }
 
@@ -37,7 +42,9 @@ class ClassificationSearchShaper
       retrieval_method: @meta["retrieval_method"],
       result_count: @meta["result_count"],
       results: with_relative_match(results),
-      relative_match_note: RELATIVE_MATCH_NOTE
+      relative_match_note: RELATIVE_MATCH_NOTE,
+      headings: heading_groups(results),
+      headings_note: HEADINGS_NOTE
     }.compact
   end
 
@@ -52,6 +59,19 @@ class ClassificationSearchShaper
       declarable: attrs["declarable"],
       score: attrs["score"]
     }.compact
+  end
+
+  # A code whose 3rd and 4th digits are "00" is a chapter entry, not a heading.
+  def heading_groups(results)
+    groups = {}
+    results.each_with_index do |result, index|
+      heading = result[:code].to_s[0, 4]
+      next unless heading.match?(/\A\d{2}(?!00)\d{2}\z/)
+
+      group = groups[heading] ||= { heading: heading, result_count: 0, best_rank: index + 1 }
+      group[:result_count] += 1
+    end
+    groups.values
   end
 
   def with_relative_match(results)
