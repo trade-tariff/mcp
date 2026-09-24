@@ -143,5 +143,6 @@ npx @modelcontextprotocol/inspector https://mcp.trade-tariff.service.gov.uk/
 | Variable | Description | Example |
 |----------|-------------|---------|
 | `TARIFF_API_URL` | Base URL for the tariff backend | `https://www.trade-tariff.service.gov.uk` |
+| `MCP_SECRET_TOKEN` | Shared secret sent to the tariff API in `X-Mcp-Token`. Identifies traffic as coming from the MCP server, so API Gateway bills it to the shared MCP usage plan (3,000 rpm) rather than the end user's own. Optional: when unset, requests fall back to the user's per-key limit. | `<from mcp-configuration secret>` |
 
-Required at startup in non-test environments.
+Required at startup in non-test environments: `TARIFF_API_URL`.
