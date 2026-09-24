@@ -143,7 +143,7 @@ npx @modelcontextprotocol/inspector https://mcp.trade-tariff.service.gov.uk/
 | Variable | Description | Example |
 |----------|-------------|---------|
 | `TARIFF_API_URL` | Base URL for the tariff backend | `https://www.trade-tariff.service.gov.uk` |
-| `COGNITO_USER_POOL_ID` | Cognito user pool that issues bearer tokens. Tokens are verified against its signing keys. | `eu-west-2_AbCdEfGhI` |
+| `COGNITO_USER_POOL_ID` | Cognito user pool that issues bearer tokens. Tokens are verified against its signing keys. In deployed environments, Terraform finds `trade-tariff-identity-user-pool` and sets this. | `eu-west-2_AbCdEfGhI` |
 | `COGNITO_REGION` | Region of the Cognito user pool (optional) | `eu-west-2` (default) |
 | `SECRET_KEY_BASE` | Rails secret. OAuth refresh tokens are encrypted with a key derived from it, so it must be the same on every task and stay the same across deploys. Changing it makes all refresh tokens invalid. | output of `bin/rails secret` |
 

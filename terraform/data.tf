@@ -54,3 +54,16 @@ data "aws_secretsmanager_secret_version" "valkey_frontend" {
 data "aws_sns_topic" "slack_topic" {
   name = "slack-topic"
 }
+
+# The identity service's pool issues the bearer tokens that the MCP verifies.
+# It lives in the same account as the MCP in each environment.
+data "aws_cognito_user_pools" "identity" {
+  name = "trade-tariff-identity-user-pool"
+
+  lifecycle {
+    postcondition {
+      condition     = length(self.ids) == 1
+      error_message = "Expected exactly one Cognito user pool named trade-tariff-identity-user-pool, found ${length(self.ids)}."
+    }
+  }
+}

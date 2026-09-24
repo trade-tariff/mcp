@@ -21,11 +21,13 @@ locals {
 
   secret_value = try(data.aws_secretsmanager_secret_version.this.secret_string, "{}")
   secret_map   = jsondecode(local.secret_value)
+  # COGNITO_USER_POOL_ID comes from the pool lookup, so a copy in the secret
+  # is ignored. This stops the two values from disagreeing.
   secret_env_vars = [
     for key, value in local.secret_map : {
       name  = key
       value = value
-    }
+    } if key != "COGNITO_USER_POOL_ID"
   ]
 
   redis_env_var = [{
@@ -33,5 +35,10 @@ locals {
     value = data.aws_secretsmanager_secret_version.valkey_frontend.secret_string
   }]
 
-  service_env_vars = concat(local.secret_env_vars, local.tls_env_vars, local.redis_env_var)
+  cognito_env_var = [{
+    name  = "COGNITO_USER_POOL_ID"
+    value = one(data.aws_cognito_user_pools.identity.ids)
+  }]
+
+  service_env_vars = concat(local.secret_env_vars, local.tls_env_vars, local.redis_env_var, local.cognito_env_var)
 }
