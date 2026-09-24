@@ -8,6 +8,7 @@ gem "rails", require: false
 gem "puma"
 gem "mcp"
 gem "faraday"
+gem "jwt"
 gem "redis"
 gem "aws-sdk-cloudwatch"
 gem "dotenv-rails", groups: %i[development test]

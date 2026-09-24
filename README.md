@@ -143,5 +143,13 @@ npx @modelcontextprotocol/inspector https://mcp.trade-tariff.service.gov.uk/
 | Variable | Description | Example |
 |----------|-------------|---------|
 | `TARIFF_API_URL` | Base URL for the tariff backend | `https://www.trade-tariff.service.gov.uk` |
+| `COGNITO_USER_POOL_ID` | Cognito user pool that issues bearer tokens. Tokens are verified against its signing keys. | `eu-west-2_AbCdEfGhI` |
+| `COGNITO_REGION` | Region of the Cognito user pool (optional) | `eu-west-2` (default) |
 
-Required at startup in non-test environments.
+`TARIFF_API_URL` is required at startup in non-test environments. `COGNITO_USER_POOL_ID` is required at startup outside development and test.
+
+## Authentication
+
+Every request except the OAuth and healthcheck paths must carry a bearer token. The server verifies the token is a Cognito access token from `COGNITO_USER_POOL_ID`: the RS256 signature against the pool's JWKS, the issuer, expiry, `token_use` of `access`, and the `tariff/read` scope. A token that fails gets a `401` with `error="invalid_token"`. If the JWKS cannot be fetched, the server returns `503`.
+
+Local development (`RAILS_ENV=development`) does not verify tokens.
