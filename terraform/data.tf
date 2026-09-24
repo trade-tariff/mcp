@@ -55,15 +55,27 @@ data "aws_sns_topic" "slack_topic" {
   name = "slack-topic"
 }
 
-# The identity service's pool issues the bearer tokens that the MCP verifies.
-# It lives in the same account as the MCP in each environment.
-data "aws_cognito_user_pools" "identity" {
-  name = "trade-tariff-identity-user-pool"
+# The identity service creates the hub's API clients in its own Cognito
+# pool, and that pool issues the bearer tokens that the MCP verifies. Read
+# the pool ID from the identity service's secret, so both services use the
+# same value. The deploy role can read secrets and describe a pool, but it
+# cannot list pools, so a lookup by name is not possible.
+data "aws_secretsmanager_secret" "identity" {
+  name = "identity-configuration"
+}
+
+data "aws_secretsmanager_secret_version" "identity" {
+  secret_id = data.aws_secretsmanager_secret.identity.id
+}
+
+# Fails the plan if the ID does not name a real pool, or names the wrong one.
+data "aws_cognito_user_pool" "identity" {
+  user_pool_id = jsondecode(data.aws_secretsmanager_secret_version.identity.secret_string)["COGNITO_USER_POOL_ID"]
 
   lifecycle {
     postcondition {
-      condition     = length(self.ids) == 1
-      error_message = "Expected exactly one Cognito user pool named trade-tariff-identity-user-pool, found ${length(self.ids)}."
+      condition     = self.name == "trade-tariff-identity-user-pool"
+      error_message = "COGNITO_USER_POOL_ID in identity-configuration names the pool ${self.name}, not trade-tariff-identity-user-pool."
     }
   }
 }
