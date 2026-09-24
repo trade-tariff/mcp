@@ -22,7 +22,7 @@ RSpec.describe "OAuth endpoints" do
       body = JSON.parse(response.body)
       expect(body["authorization_endpoint"]).to end_with("/authorize")
       expect(body["token_endpoint"]).to end_with("/token")
-      expect(body["grant_types_supported"]).to include("authorization_code")
+      expect(body["grant_types_supported"]).to include("authorization_code", "refresh_token")
       expect(body["code_challenge_methods_supported"]).to include("S256")
     end
   end
@@ -91,7 +91,7 @@ RSpec.describe "OAuth endpoints" do
     context "with a valid code and credentials" do
       before do
         stub_request(:post, hub_token_url)
-          .to_return(status: 200, body: { access_token: jwt }.to_json, headers: { "Content-Type" => "application/json" })
+          .to_return(status: 200, body: { access_token: jwt, expires_in: 3600 }.to_json, headers: { "Content-Type" => "application/json" })
       end
 
       it "returns the JWT as the access_token" do
@@ -107,6 +107,33 @@ RSpec.describe "OAuth endpoints" do
         body = JSON.parse(response.body)
         expect(body["access_token"]).to eq(jwt)
         expect(body["token_type"]).to eq("bearer")
+      end
+
+      it "returns expires_in from Cognito so the client knows when to refresh" do
+        post "/token", params: {
+          grant_type: "authorization_code",
+          code: code,
+          client_id: "my-client-id",
+          client_secret: "my-client-secret",
+          code_verifier: code_verifier
+        }
+
+        expect(JSON.parse(response.body)["expires_in"]).to eq(3600)
+      end
+
+      it "returns a refresh_token that does not show the client_secret" do
+        post "/token", params: {
+          grant_type: "authorization_code",
+          code: code,
+          client_id: "my-client-id",
+          client_secret: "my-client-secret",
+          code_verifier: code_verifier
+        }
+
+        refresh_token = JSON.parse(response.body)["refresh_token"]
+        expect(refresh_token).to be_present
+        expect(refresh_token).not_to include("my-client-secret")
+        expect(Base64.decode64(refresh_token.split("--").first)).not_to include("my-client-secret")
       end
 
       it "consumes the code so it cannot be reused" do
@@ -205,6 +232,123 @@ RSpec.describe "OAuth endpoints" do
       post "/token", params: { grant_type: "authorization_code", code: code, client_id: "my-client-id" }
       expect(response).to have_http_status(:bad_request)
       expect(JSON.parse(response.body)["error"]).to eq("invalid_request")
+    end
+  end
+
+  describe "POST /token with grant_type=refresh_token" do
+    let(:hub_token_url) { OauthController::HUB_TOKEN_URL }
+    let(:refresh_token) { OauthRefreshToken.issue(client_id: "my-client-id", client_secret: "my-client-secret") }
+
+    def refresh(params = {})
+      post "/token", params: { grant_type: "refresh_token", refresh_token: refresh_token }.merge(params)
+    end
+
+    context "when Cognito accepts the stored credentials" do
+      before do
+        stub_request(:post, hub_token_url)
+          .with(body: hash_including("grant_type" => "client_credentials", "client_id" => "my-client-id",
+                                     "client_secret" => "my-client-secret", "scope" => "tariff/read"))
+          .to_return(status: 200, body: { access_token: "new.access.token", expires_in: 3600 }.to_json,
+                     headers: { "Content-Type" => "application/json" })
+      end
+
+      it "returns a new access_token" do
+        refresh
+
+        expect(response).to have_http_status(:ok)
+        body = JSON.parse(response.body)
+        expect(body["access_token"]).to eq("new.access.token")
+        expect(body["token_type"]).to eq("bearer")
+        expect(body["expires_in"]).to eq(3600)
+      end
+
+      it "returns a new refresh_token that can be used again" do
+        refresh
+        next_refresh_token = JSON.parse(response.body)["refresh_token"]
+
+        post "/token", params: { grant_type: "refresh_token", refresh_token: next_refresh_token }
+
+        expect(response).to have_http_status(:ok)
+      end
+
+      it "accepts a client_id that matches the refresh token" do
+        refresh(client_id: "my-client-id", client_secret: "my-client-secret")
+
+        expect(response).to have_http_status(:ok)
+      end
+
+      it "accepts a refresh token up to 30 days old" do
+        token = refresh_token
+
+        travel_to(29.days.from_now) do
+          post "/token", params: { grant_type: "refresh_token", refresh_token: token }
+        end
+
+        expect(response).to have_http_status(:ok)
+      end
+    end
+
+    it "returns invalid_grant when the client_id does not match the refresh token" do
+      refresh(client_id: "other-client-id")
+
+      expect(response).to have_http_status(:bad_request)
+      expect(JSON.parse(response.body)["error"]).to eq("invalid_grant")
+    end
+
+    it "returns invalid_grant for a refresh token that has been changed" do
+      post "/token", params: { grant_type: "refresh_token", refresh_token: "#{refresh_token}x" }
+
+      expect(response).to have_http_status(:bad_request)
+      expect(JSON.parse(response.body)["error"]).to eq("invalid_grant")
+    end
+
+    it "returns invalid_grant for a string that is not a refresh token" do
+      post "/token", params: { grant_type: "refresh_token", refresh_token: "not-a-refresh-token" }
+
+      expect(response).to have_http_status(:bad_request)
+      expect(JSON.parse(response.body)["error"]).to eq("invalid_grant")
+    end
+
+    it "returns invalid_grant for a refresh token older than 30 days" do
+      token = refresh_token
+
+      travel_to(31.days.from_now) do
+        post "/token", params: { grant_type: "refresh_token", refresh_token: token }
+      end
+
+      expect(response).to have_http_status(:bad_request)
+      expect(JSON.parse(response.body)["error"]).to eq("invalid_grant")
+    end
+
+    it "returns invalid_request when refresh_token is missing" do
+      post "/token", params: { grant_type: "refresh_token" }
+
+      expect(response).to have_http_status(:bad_request)
+      expect(JSON.parse(response.body)["error"]).to eq("invalid_request")
+    end
+
+    context "when Cognito rejects the credentials because the client was deleted in the hub" do
+      before do
+        stub_request(:post, hub_token_url).to_return(status: 400, body: { error: "invalid_client" }.to_json)
+      end
+
+      it "returns invalid_grant so the client starts the OAuth flow again" do
+        refresh
+
+        expect(response).to have_http_status(:bad_request)
+        expect(JSON.parse(response.body)["error"]).to eq("invalid_grant")
+      end
+    end
+
+    context "when the Cognito token request times out" do
+      before { stub_request(:post, hub_token_url).to_timeout }
+
+      it "returns 503 so the client keeps its refresh token and tries again" do
+        refresh
+
+        expect(response).to have_http_status(:service_unavailable)
+        expect(JSON.parse(response.body)["error"]).to eq("temporarily_unavailable")
+      end
     end
   end
 end
