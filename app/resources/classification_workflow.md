@@ -47,13 +47,25 @@ Include in your query any legally significant product facts:
 
 When a pivot suggests an alternate chapter or heading that did not appear in the first results, run a follow-up query with `expanded_query` focused on that alternate route.
 
+### Write the query about the article, not the material
+
+Start the query with what the product *is* and what it does. Put the material after it. The search matches strongly on material words, so a query that starts with the material can rank the fabric, the plastic, or the ingredient above the finished article. For example, write "pet bed, woven polyester cover, polyester stuffing", not "polyester pet bed". Write "beef lasagne ready meal, 380g", not "beef lasagne".
+
+### Replace brand and model names
+
+A brand or model name tells the search nothing about the goods. Before you search, replace it with a plain description of the product: what it is, what it does, what it is made of. For example, "Calpol SixPlus Suspension" becomes "paracetamol oral suspension medicine for children, retail pack". If you do not know what a branded product is, ask the user. Do not guess.
+
+### Sets and kits
+
+A set or kit (a travel set of toiletries, a gel nail kit with a lamp, a poker set in a case) can have parts from several chapters. Apply GRI 3(b): a set put up for retail sale is classified by the part that gives it its essential character. Decide which part that is first, and ask the user if it is not clear. Then search for that part, not the set as a whole. A search for the whole set usually ranks the separate parts, and none of them may be the correct heading. If the goods are not a set put up for retail sale under GRI 3(b), classify each part separately.
+
 ## Search twice: once to find the heading, once to find the code
 
 One flat shortlist often reaches the correct heading without ever reaching the correct 10-digit code. The subdivisions below a heading are where the legal thresholds sit — percentage by weight, pack size, presentation — and a single description rarely ranks them well.
 
 So treat retrieval as two steps, not one:
 
-1. **Find the heading.** Search on the product description. Add `search_non_declarables: true` when you want headings and chapters in the results, so you can pick a heading deliberately instead of inferring one from a leaf.
+1. **Find the heading.** Search on the product description. Add `search_non_declarables: true` when you want headings and chapters in the results, so you can pick a heading deliberately instead of inferring one from a leaf. Do not take the heading of the top result on trust: on complex products, the top result is in the wrong heading more often than not. Every response has a `headings` list that groups the results by heading. Take the first 5 to 10 headings from it, check each one with `show_heading` and `note_mentions`, and apply the GRI rules to choose between them. The number of results in a heading is not evidence that it is correct.
 2. **Find the code inside it.** Search again with `filter_prefixes` set to the heading you confirmed, e.g. `["6307"]`. Keep the product description in this second query and add the deciding fact to it — the fibre percentage, the cocoa content, the pack size — because that is what separates the subdivisions. Do not replace the description with the fact on its own: inside one heading, a query of "80% cotton" ranks on the threshold and loses the product.
 
 Do the second search whenever the first one returns the right heading but no subdivision you can justify. Do not pick the best-looking leaf from the first shortlist and stop.
