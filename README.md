@@ -78,7 +78,7 @@ Use the classification tools as an evidence-gathering workflow, not as a single 
 
 ### Several products at once
 
-Call `classification_search` once per product, as you reach that product. Each response echoes the `query` it answers, so a shortlist always ties back to the product it belongs to.
+Work one product at a time, and search for a product when you reach it. One product can need two searches: the second one narrows inside a heading, as described in [Searching twice](#searching-twice). What this rule forbids is searching several products together, not searching one product twice. Each response echoes the `query` it answers, so a shortlist always ties back to the product it belongs to.
 
 Do not search every product first and answer them together. Answers degrade when a client pools the shortlists: it shortcuts the per-item workflow, reuses a candidate from one product on another, or compares `relative_match` bands between products. Each item needs the full workflow above, run one item at a time.
 
