@@ -149,5 +149,16 @@ npx @modelcontextprotocol/inspector https://mcp.trade-tariff.service.gov.uk/
 | Variable | Description | Example |
 |----------|-------------|---------|
 | `TARIFF_API_URL` | Base URL for the tariff backend | `https://www.trade-tariff.service.gov.uk` |
+| `COGNITO_USER_POOL_ID` | Cognito user pool that issues bearer tokens. Tokens are verified against its signing keys. In deployed environments, Terraform reads it from the identity service's `identity-configuration` secret and sets it. | `eu-west-2_AbCdEfGhI` |
+| `COGNITO_REGION` | Region of the Cognito user pool (optional) | `eu-west-2` (default) |
+| `SECRET_KEY_BASE` | Rails secret. OAuth refresh tokens are encrypted with a key derived from it, so it must be the same on every task and stay the same across deploys. Changing it makes all refresh tokens invalid. In deployed environments, Terraform generates it (`random_password.secret_key_base`) and keeps it in state. | output of `bin/rails secret` |
 
-Required at startup in non-test environments.
+`TARIFF_API_URL` is required at startup in non-test environments. `COGNITO_USER_POOL_ID` and `SECRET_KEY_BASE` are required at startup outside development and test.
+
+## Authentication
+
+Every request except the OAuth and healthcheck paths must carry a bearer token. The server verifies the token is a Cognito access token from `COGNITO_USER_POOL_ID`: the RS256 signature against the pool's JWKS, the issuer, expiry, `token_use` of `access`, and the `tariff/read` scope. A token that fails gets a `401` with `error="invalid_token"`. If the JWKS cannot be fetched, the server returns `503`.
+
+Cognito access tokens last about an hour. `/token` returns `expires_in` and a `refresh_token`, so MCP clients can get a new access token without the user connecting again. The refresh token is the client's own `client_id` and `client_secret`, encrypted and signed by this server. It lasts 30 days, and each refresh returns a new one. On refresh, the server exchanges the credentials with Cognito again. If the client has been deleted in the developer hub, the refresh fails with `invalid_grant` and the user must connect again.
+
+Local development (`RAILS_ENV=development`) does not verify tokens.
