@@ -189,7 +189,7 @@ RSpec.describe "OAuth endpoints" do
         stub_request(:post, hub_token_url).to_timeout
       end
 
-      it "returns invalid_client rather than hanging" do
+      it "returns 503 temporarily_unavailable rather than invalid_client" do
         post "/token", params: {
           grant_type: "authorization_code",
           code: code,
@@ -198,8 +198,27 @@ RSpec.describe "OAuth endpoints" do
           code_verifier: code_verifier
         }
 
-        expect(response).to have_http_status(:unauthorized)
-        expect(JSON.parse(response.body)["error"]).to eq("invalid_client")
+        expect(response).to have_http_status(:service_unavailable)
+        expect(JSON.parse(response.body)["error"]).to eq("temporarily_unavailable")
+      end
+    end
+
+    context "when Hub throttles the token request" do
+      before do
+        stub_request(:post, hub_token_url).to_return(status: 429, body: { error: "TooManyRequestsException" }.to_json)
+      end
+
+      it "returns 503 temporarily_unavailable rather than invalid_client" do
+        post "/token", params: {
+          grant_type: "authorization_code",
+          code: code,
+          client_id: "my-client-id",
+          client_secret: "my-client-secret",
+          code_verifier: code_verifier
+        }
+
+        expect(response).to have_http_status(:service_unavailable)
+        expect(JSON.parse(response.body)["error"]).to eq("temporarily_unavailable")
       end
     end
 
@@ -237,13 +256,18 @@ RSpec.describe "OAuth endpoints" do
 
   describe "POST /token with grant_type=refresh_token" do
     let(:hub_token_url) { OauthController::HUB_TOKEN_URL }
-    let(:refresh_token) { OauthRefreshToken.issue(client_id: "my-client-id", client_secret: "my-client-secret") }
+    let(:refresh_token) { OauthRefreshToken.issue(client_id: "my-client-id") }
 
     def refresh(params = {})
-      post "/token", params: { grant_type: "refresh_token", refresh_token: refresh_token }.merge(params)
+      post "/token", params: {
+        grant_type: "refresh_token",
+        refresh_token: refresh_token,
+        client_id: "my-client-id",
+        client_secret: "my-client-secret"
+      }.merge(params)
     end
 
-    context "when Cognito accepts the stored credentials" do
+    context "when Cognito accepts the credentials" do
       before do
         stub_request(:post, hub_token_url)
           .with(body: hash_including("grant_type" => "client_credentials", "client_id" => "my-client-id",
@@ -266,13 +290,7 @@ RSpec.describe "OAuth endpoints" do
         refresh
         next_refresh_token = JSON.parse(response.body)["refresh_token"]
 
-        post "/token", params: { grant_type: "refresh_token", refresh_token: next_refresh_token }
-
-        expect(response).to have_http_status(:ok)
-      end
-
-      it "accepts a client_id that matches the refresh token" do
-        refresh(client_id: "my-client-id", client_secret: "my-client-secret")
+        refresh(refresh_token: next_refresh_token)
 
         expect(response).to have_http_status(:ok)
       end
@@ -281,29 +299,57 @@ RSpec.describe "OAuth endpoints" do
         token = refresh_token
 
         travel_to(29.days.from_now) do
-          post "/token", params: { grant_type: "refresh_token", refresh_token: token }
+          refresh(refresh_token: token)
         end
 
         expect(response).to have_http_status(:ok)
       end
     end
 
-    it "returns invalid_grant when the client_id does not match the refresh token" do
+    it "returns invalid_client without calling Cognito when client_secret is missing" do
+      refresh(client_secret: nil)
+
+      expect(response).to have_http_status(:unauthorized)
+      expect(JSON.parse(response.body)["error"]).to eq("invalid_client")
+      expect(a_request(:post, hub_token_url)).not_to have_been_made
+    end
+
+    it "returns invalid_client without calling Cognito when client_id is missing" do
+      refresh(client_id: nil)
+
+      expect(response).to have_http_status(:unauthorized)
+      expect(JSON.parse(response.body)["error"]).to eq("invalid_client")
+      expect(a_request(:post, hub_token_url)).not_to have_been_made
+    end
+
+    it "returns invalid_grant without calling Cognito when the client_id does not match the refresh token" do
       refresh(client_id: "other-client-id")
 
       expect(response).to have_http_status(:bad_request)
       expect(JSON.parse(response.body)["error"]).to eq("invalid_grant")
+      expect(a_request(:post, hub_token_url)).not_to have_been_made
+    end
+
+    it "sends the client_secret from the request to Cognito, not one from the refresh token" do
+      stub_request(:post, hub_token_url)
+        .with(body: hash_including("client_secret" => "a-guessed-secret"))
+        .to_return(status: 400, body: { error: "invalid_client" }.to_json)
+
+      refresh(client_secret: "a-guessed-secret")
+
+      expect(response).to have_http_status(:unauthorized)
+      expect(JSON.parse(response.body)["error"]).to eq("invalid_client")
     end
 
     it "returns invalid_grant for a refresh token that has been changed" do
-      post "/token", params: { grant_type: "refresh_token", refresh_token: "#{refresh_token}x" }
+      refresh(refresh_token: "#{refresh_token}x")
 
       expect(response).to have_http_status(:bad_request)
       expect(JSON.parse(response.body)["error"]).to eq("invalid_grant")
     end
 
     it "returns invalid_grant for a string that is not a refresh token" do
-      post "/token", params: { grant_type: "refresh_token", refresh_token: "not-a-refresh-token" }
+      refresh(refresh_token: "not-a-refresh-token")
 
       expect(response).to have_http_status(:bad_request)
       expect(JSON.parse(response.body)["error"]).to eq("invalid_grant")
@@ -313,7 +359,7 @@ RSpec.describe "OAuth endpoints" do
       token = refresh_token
 
       travel_to(31.days.from_now) do
-        post "/token", params: { grant_type: "refresh_token", refresh_token: token }
+        refresh(refresh_token: token)
       end
 
       expect(response).to have_http_status(:bad_request)
@@ -321,27 +367,40 @@ RSpec.describe "OAuth endpoints" do
     end
 
     it "returns invalid_request when refresh_token is missing" do
-      post "/token", params: { grant_type: "refresh_token" }
+      refresh(refresh_token: nil)
 
       expect(response).to have_http_status(:bad_request)
       expect(JSON.parse(response.body)["error"]).to eq("invalid_request")
     end
 
-    context "when Cognito rejects the credentials because the client was deleted in the hub" do
+    context "when Cognito rejects the credentials, for example because the client was deleted in the hub" do
       before do
         stub_request(:post, hub_token_url).to_return(status: 400, body: { error: "invalid_client" }.to_json)
       end
 
-      it "returns invalid_grant so the client starts the OAuth flow again" do
+      it "returns invalid_client so the client starts the OAuth flow again" do
         refresh
 
-        expect(response).to have_http_status(:bad_request)
-        expect(JSON.parse(response.body)["error"]).to eq("invalid_grant")
+        expect(response).to have_http_status(:unauthorized)
+        expect(JSON.parse(response.body)["error"]).to eq("invalid_client")
       end
     end
 
     context "when the Cognito token request times out" do
       before { stub_request(:post, hub_token_url).to_timeout }
+
+      it "returns 503 so the client keeps its refresh token and tries again" do
+        refresh
+
+        expect(response).to have_http_status(:service_unavailable)
+        expect(JSON.parse(response.body)["error"]).to eq("temporarily_unavailable")
+      end
+    end
+
+    context "when Cognito throttles the token request" do
+      before do
+        stub_request(:post, hub_token_url).to_return(status: 429, body: { error: "TooManyRequestsException" }.to_json)
+      end
 
       it "returns 503 so the client keeps its refresh token and tries again" do
         refresh

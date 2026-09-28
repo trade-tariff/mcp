@@ -10,7 +10,8 @@ class OauthController < ApplicationController
   # Result of a client_credentials exchange with Hub:
   #   :issued      - Cognito gave an access token
   #   :rejected    - Cognito refused the credentials
-  #   :unavailable - Cognito could not be reached or gave an unreadable reply
+  #   :unavailable - Cognito could not be reached, throttled the request, or
+  #                  gave an unreadable reply
   HubTokenResult = Data.define(:status, :access_token, :expires_in)
 
   # GET /.well-known/oauth-protected-resource
@@ -120,44 +121,45 @@ class OauthController < ApplicationController
     return render json: { error: "invalid_grant" }, status: :bad_request unless pkce_valid?(code_verifier, stored[:code_challenge])
 
     result = exchange_credentials(client_id, client_secret)
-    return render json: { error: "invalid_client" }, status: :unauthorized unless result.status == :issued
-
-    render_token_response(result, client_id, client_secret)
+    render_exchange_result(result, client_id)
   end
 
-  # Decrypts the credentials held in the refresh token and exchanges them
-  # again. A rejected exchange is invalid_grant, so the client starts the
-  # OAuth flow again. An outage is a 503, so the client keeps its refresh
-  # token and tries later.
+  # The client authenticates again with its client_id and client_secret
+  # (RFC 6749 section 6). The refresh token holds only the client_id, so a
+  # refresh token without the secret cannot get an access token.
   def refresh_token_grant
     refresh_token = params[:refresh_token].presence
+    client_id = params[:client_id].presence
+    client_secret = params[:client_secret].presence
+
     return render json: { error: "invalid_request" }, status: :bad_request unless refresh_token
+    return render json: { error: "invalid_client" }, status: :unauthorized unless client_id && client_secret
 
-    credentials = OauthRefreshToken.read(refresh_token)
-    return render json: { error: "invalid_grant" }, status: :bad_request unless credentials
+    token_client_id = OauthRefreshToken.read(refresh_token)
+    return render json: { error: "invalid_grant" }, status: :bad_request unless token_client_id
+    return render json: { error: "invalid_grant" }, status: :bad_request unless token_client_id == client_id
 
-    if params[:client_id].present? && params[:client_id] != credentials.client_id
-      return render json: { error: "invalid_grant" }, status: :bad_request
-    end
+    result = exchange_credentials(client_id, client_secret)
+    render_exchange_result(result, client_id)
+  end
 
-    result = exchange_credentials(credentials.client_id, credentials.client_secret)
+  # A rejected exchange is invalid_client, so the client starts the OAuth
+  # flow again. An outage or a throttle is a 503, so the client keeps its
+  # refresh token and tries later.
+  def render_exchange_result(result, client_id)
     case result.status
     when :issued
-      render_token_response(result, credentials.client_id, credentials.client_secret)
+      render json: {
+        access_token: result.access_token,
+        token_type: "bearer",
+        expires_in: result.expires_in,
+        refresh_token: OauthRefreshToken.issue(client_id: client_id)
+      }.compact
     when :rejected
-      render json: { error: "invalid_grant" }, status: :bad_request
+      render json: { error: "invalid_client" }, status: :unauthorized
     else
       render json: { error: "temporarily_unavailable" }, status: :service_unavailable
     end
-  end
-
-  def render_token_response(result, client_id, client_secret)
-    render json: {
-      access_token: result.access_token,
-      token_type: "bearer",
-      expires_in: result.expires_in,
-      refresh_token: OauthRefreshToken.issue(client_id: client_id, client_secret: client_secret)
-    }.compact
   end
 
   def pkce_valid?(code_verifier, code_challenge)
@@ -178,7 +180,8 @@ class OauthController < ApplicationController
       )
     end
 
-    if response.status >= 500
+    # 408 and 429 say "try again later", not "these credentials are wrong".
+    if response.status >= 500 || response.status == 408 || response.status == 429
       Rails.logger.warn("Hub token exchange unavailable: status=#{response.status}")
       return HubTokenResult.new(status: :unavailable, access_token: nil, expires_in: nil)
     end
