@@ -289,4 +289,142 @@ RSpec.describe CommodityHistoryDiffShaper do
     expect(change[:changed_fields][:duty]).to eq(from: "12.00 %", to: "8.00 %")
     expect(change[:changed_fields][:conditions][:to].first[:document_code]).to eq("9Y12")
   end
+  # Observed on commodity 1702609500. The backend names area PS "Occupied Palestinian
+  # Territories" on 1 January 2025 and "Palestine" in 2026, and names area 2051 "CPTPP All
+  # Members excluding Canada" on 22 June 2026 only. The area ID does not change, so the
+  # measure does not change.
+  describe "an area that has a different name on each date" do
+    let(:pref_old_name) { measure(type: "Tariff preference", geo: "Occupied Palestinian Territories (PS)", duty: "0.00 %", start_date: "2021-01-01") }
+    let(:pref_new_name) { measure(type: "Tariff preference", geo: "Palestine (PS)", duty: "0.00 %", start_date: "2021-01-01") }
+
+    it "treats the measure as unchanged" do
+      result = diff([ pref_old_name ], [ pref_new_name ])
+
+      expect(result[:identical]).to be true
+      expect(result[:unchanged_measure_count]).to eq(1)
+    end
+
+    it "does not report the measure as in force only between the dates" do
+      result = described_class.call(
+        commodity_code: "1702609500", from_date: "2025-01-01", to_date: "2026-09-28",
+        from_measures: [ pref_old_name ], to_measures: [ pref_new_name ],
+        measures_between_dates: [ pref_old_name.merge(geographical_area: "Palestine, State of (PS)") ],
+        dates_checked: %w[2025-01-01 2026-06-22 2026-09-28], date_limit_reached: false
+      )
+
+      expect(result[:changes][:measures_in_force_only_between_dates]).to be_empty
+    end
+
+    it "still tells apart two areas that have no name" do
+      result = diff([ measure(type: "Tariff preference", geo: "PS", duty: "0.00 %") ],
+                    [ measure(type: "Tariff preference", geo: "IL", duty: "0.00 %") ])
+
+      expect(result[:changes][:measures_removed].length).to eq(1)
+      expect(result[:changes][:measures_added].length).to eq(1)
+    end
+  end
+
+  # Commodity 1702609500, 1 January 2025 to today. Suspension 20261631 applied from
+  # 27 April to 17 July 2025 only. It is in neither end snapshot, so a diff of the two
+  # ends cannot see it. The tool finds it on a date between the ends and passes it in.
+  describe "a measure in force only between the two dates" do
+    let(:april_suspension) do
+      measure(type: "Autonomous tariff suspension", geo: "ERGA OMNES (1011)", duty: "0.00 %",
+              start_date: "2025-04-27", end_date: "2025-07-17")
+    end
+
+    let(:july_suspension) do
+      measure(type: "Autonomous tariff suspension", geo: "ERGA OMNES (1011)", duty: "0.00 %",
+              conditions: [ { condition: "B", document_code: "9Y12" } ],
+              start_date: "2025-07-18", end_date: "2027-06-30")
+    end
+
+    def diff_with_dates_between(from_measures, to_measures, measures_between)
+      described_class.call(
+        commodity_code: "1702609500",
+        from_date: "2025-01-01", to_date: "2026-09-28",
+        from_measures: from_measures, to_measures: to_measures,
+        measures_between_dates: measures_between,
+        dates_checked: %w[2025-01-01 2025-07-17 2026-09-28],
+        date_limit_reached: false
+      )
+    end
+
+    it "reports the measure that is in neither end snapshot" do
+      result = diff_with_dates_between([ m_third_erga_12 ], [ m_third_erga_12, july_suspension ],
+                                       [ m_third_erga_12, april_suspension ])
+
+      in_between = result[:changes][:measures_in_force_only_between_dates]
+      expect(in_between.length).to eq(1)
+      expect(in_between.first[:effective_start_date]).to eq("2025-04-27")
+      expect(in_between.first[:effective_end_date]).to eq("2025-07-17")
+    end
+
+    it "still reports the later measure as added" do
+      result = diff_with_dates_between([ m_third_erga_12 ], [ m_third_erga_12, july_suspension ],
+                                       [ m_third_erga_12, april_suspension ])
+
+      expect(result[:changes][:measures_added]).to eq([ july_suspension ])
+    end
+
+    it "does not report a measure between the dates that is also in an end snapshot" do
+      result = diff_with_dates_between([ m_third_erga_12 ], [ m_third_erga_12, july_suspension ],
+                                       [ m_third_erga_12, july_suspension ])
+
+      expect(result[:changes][:measures_in_force_only_between_dates]).to be_empty
+    end
+
+    it "reports a measure seen on several dates between the ends only once" do
+      result = diff_with_dates_between([ m_third_erga_12 ], [ m_third_erga_12 ],
+                                       [ april_suspension, april_suspension ])
+
+      expect(result[:changes][:measures_in_force_only_between_dates].length).to eq(1)
+    end
+
+    # A reissue with new dates is a different measure, even when its terms are the same.
+    it "reports a measure between the dates that has the same terms but different dates" do
+      same_terms_later = april_suspension.merge(effective_start_date: "2025-07-18", effective_end_date: nil)
+
+      result = diff_with_dates_between([ m_third_erga_12 ], [ m_third_erga_12, same_terms_later ],
+                                       [ april_suspension ])
+
+      expect(result[:changes][:measures_in_force_only_between_dates]).to eq([ april_suspension ])
+    end
+
+    it "is not identical when the only change is a measure between the dates" do
+      result = diff_with_dates_between([ m_third_erga_12 ], [ m_third_erga_12 ], [ april_suspension ])
+
+      expect(result[:identical]).to be_nil
+    end
+
+    it "lists the dates the tool checked" do
+      result = diff_with_dates_between([], [], [])
+
+      expect(result[:dates_checked]).to eq(%w[2025-01-01 2025-07-17 2026-09-28])
+    end
+
+    it "tells the client that a short measure between checked dates can be missing" do
+      result = diff_with_dates_between([], [], [])
+
+      expect(result[:coverage_note]).to include("can be missing")
+      expect(result[:coverage_note]).to include("lookup_commodity")
+    end
+
+    it "tells the client when the tool stopped at the date limit" do
+      result = described_class.call(
+        commodity_code: "1702609500", from_date: "2025-01-01", to_date: "2026-09-28",
+        from_measures: [], to_measures: [], measures_between_dates: [],
+        dates_checked: %w[2025-01-01 2026-09-28], date_limit_reached: true
+      )
+
+      expect(result[:date_limit_reached]).to be true
+      expect(result[:coverage_note]).to include("shorter period")
+    end
+
+    it "does not include date_limit_reached when the limit was not reached" do
+      result = diff_with_dates_between([], [], [])
+
+      expect(result).not_to have_key(:date_limit_reached)
+    end
+  end
 end
