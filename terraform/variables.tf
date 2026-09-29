@@ -54,6 +54,12 @@ variable "enable_observability_alerts" {
   default = false
 }
 
+variable "metrics_namespace" {
+  description = "CloudWatch namespace for the MCP server's metrics. Terraform passes it to the container as MCP_METRICS_NAMESPACE and uses it in alarms.tf, so the alarms always watch the namespace that the server writes to."
+  type        = string
+  default     = "TradeTariffMCP"
+}
+
 variable "mcp_rate_limit_rpm" {
   description = "The shared MCP usage plan's limit in requests per minute, as configured in the terraform repo's gateway.tf. Used only to derive the alarm threshold and to describe it."
   type        = number

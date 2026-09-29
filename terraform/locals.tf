@@ -21,17 +21,24 @@ locals {
 
   secret_value = try(data.aws_secretsmanager_secret_version.this.secret_string, "{}")
   secret_map   = jsondecode(local.secret_value)
+  # MCP_METRICS_NAMESPACE comes from var.metrics_namespace, not from the
+  # secret, because alarms.tf must watch the same namespace.
   secret_env_vars = [
     for key, value in local.secret_map : {
       name  = key
       value = value
-    }
+    } if key != "MCP_METRICS_NAMESPACE"
   ]
+
+  metrics_env_var = [{
+    name  = "MCP_METRICS_NAMESPACE"
+    value = var.metrics_namespace
+  }]
 
   redis_env_var = [{
     name  = "REDIS_URL"
     value = data.aws_secretsmanager_secret_version.valkey_frontend.secret_string
   }]
 
-  service_env_vars = concat(local.secret_env_vars, local.tls_env_vars, local.redis_env_var)
+  service_env_vars = concat(local.secret_env_vars, local.tls_env_vars, local.redis_env_var, local.metrics_env_var)
 }

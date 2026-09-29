@@ -19,7 +19,7 @@ resource "aws_cloudwatch_metric_alarm" "approaching_rate_limit" {
 
   alarm_name          = "mcp-tariff-api-approaching-rate-limit-${var.environment}"
   alarm_description   = "MCP tariff API requests have exceeded ${var.mcp_rate_limit_alarm_percentage}% of the shared ${var.mcp_rate_limit_rpm}rpm MCP usage plan for ${var.mcp_rate_limit_alarm_periods} consecutive minutes. Review the limit in the terraform repo (environments/${var.environment}/common/gateway.tf, var.mcp_rate_limit)."
-  namespace           = "TradeTariffMCP"
+  namespace           = var.metrics_namespace
   metric_name         = "McpTariffApiRequests"
   statistic           = "Sum"
   period              = 60
@@ -38,7 +38,7 @@ resource "aws_cloudwatch_metric_alarm" "rate_limited" {
 
   alarm_name          = "mcp-tariff-api-rate-limited-${var.environment}"
   alarm_description   = "The tariff API returned 429 to the MCP server. Most likely the shared ${var.mcp_rate_limit_rpm}rpm MCP usage plan is exhausted, but WAF, a per-user plan, or the backend can also produce this. Check the access logs to confirm which."
-  namespace           = "TradeTariffMCP"
+  namespace           = var.metrics_namespace
   metric_name         = "McpTariffApiThrottled"
   statistic           = "Sum"
   period              = 60
