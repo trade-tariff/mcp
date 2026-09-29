@@ -111,7 +111,7 @@ Requests without a valid token receive a `401 Unauthorized` response. In the dev
 
 ### Requirements
 
-- Ruby 4.0.5
+- Ruby at the version in [.ruby-version](.ruby-version), and Bundler
 - `TARIFF_API_URL` — base URL for the tariff API (both UK and XI services are served from the same host)
 
 ### Setup
@@ -143,6 +143,19 @@ npx @modelcontextprotocol/inspector https://mcp.trade-tariff.service.gov.uk/
 ```
 
 <img width="801" height="615" alt="Screenshot 2026-06-16 at 16 22 51" src="https://github.com/user-attachments/assets/91a770e6-ca18-4260-afd7-28112c27233b" />
+
+## Contribute
+
+Read [CONTRIBUTING.md](CONTRIBUTING.md) for the fork workflow, checks and private
+security reporting. The unit tests and a live MCP client session are different
+checks: a live session contacts the configured tariff API and can use real
+credentials. Use an approved target and keep tokens out of logs and screenshots.
+
+## Licence
+
+The code and associated documentation use the [MIT licence](LICENCE.md), with
+Crown copyright (HM Revenue & Customs). API data and third-party dependencies
+retain their own terms.
 
 ## Environment Variables
 
