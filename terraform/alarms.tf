@@ -12,14 +12,18 @@
 # keeps them in OK/INSUFFICIENT_DATA forever).
 #
 # The approaching-limit alarm fires when MCP traffic stays above 80% of the
-# shared limit for 5 consecutive minutes.
+# shared limit for 5 consecutive minutes. The limit comes from
+# mcp-shared-credentials, which the terraform repo writes from the same value
+# as the usage plan, so the alarms cannot watch a different limit. It is not a
+# secret, so nonsensitive() lets the plan show it.
 locals {
-  mcp_rate_limit_alarm_threshold = var.mcp_rate_limit_rpm * 80 / 100
+  mcp_rate_limit_rpm             = nonsensitive(local.mcp_shared_credentials.MCP_RATE_LIMIT_RPM)
+  mcp_rate_limit_alarm_threshold = local.mcp_rate_limit_rpm * 80 / 100
 }
 
 resource "aws_cloudwatch_metric_alarm" "approaching_rate_limit" {
   alarm_name          = "mcp-tariff-api-approaching-rate-limit-${var.environment}"
-  alarm_description   = "MCP tariff API requests have exceeded 80% of the shared ${var.mcp_rate_limit_rpm}rpm MCP usage plan for 5 consecutive minutes. Review the limit in the terraform repo (environments/${var.environment}/common/gateway.tf, var.mcp_rate_limit)."
+  alarm_description   = "MCP tariff API requests have exceeded 80% of the shared ${local.mcp_rate_limit_rpm}rpm MCP usage plan for 5 consecutive minutes. Review the limit in the terraform repo (environments/${var.environment}/common/gateway.tf, var.mcp_rate_limit)."
   namespace           = var.metrics_namespace
   metric_name         = "McpTariffApiRequests"
   statistic           = "Sum"
@@ -36,7 +40,7 @@ resource "aws_cloudwatch_metric_alarm" "approaching_rate_limit" {
 
 resource "aws_cloudwatch_metric_alarm" "rate_limited" {
   alarm_name          = "mcp-tariff-api-rate-limited-${var.environment}"
-  alarm_description   = "The tariff API returned 429 to the MCP server. Most likely the shared ${var.mcp_rate_limit_rpm}rpm MCP usage plan is exhausted, but WAF, a per-user plan, or the backend can also produce this. Check the access logs to confirm which."
+  alarm_description   = "The tariff API returned 429 to the MCP server. Most likely the shared ${local.mcp_rate_limit_rpm}rpm MCP usage plan is exhausted, but WAF, a per-user plan, or the backend can also produce this. Check the access logs to confirm which."
   namespace           = var.metrics_namespace
   metric_name         = "McpTariffApiThrottled"
   statistic           = "Sum"

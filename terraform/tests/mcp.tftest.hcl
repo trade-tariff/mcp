@@ -21,7 +21,7 @@ mock_provider "aws" {
   override_data {
     target = data.aws_secretsmanager_secret_version.mcp_shared_credentials
     values = {
-      secret_string = "{\"MCP_SECRET_TOKEN\":\"token-from-terraform\",\"MCP_USAGE_KEY\":\"usage-key\"}"
+      secret_string = "{\"MCP_SECRET_TOKEN\":\"token-from-terraform\",\"MCP_USAGE_KEY\":\"usage-key\",\"MCP_RATE_LIMIT_RPM\":1000}"
     }
   }
 
@@ -73,20 +73,23 @@ run "token_comes_from_mcp_shared_credentials" {
   }
 
   assert {
+    condition     = length([for env_var in local.service_env_vars : env_var if env_var.name == "MCP_RATE_LIMIT_RPM"]) == 0
+    error_message = "MCP_RATE_LIMIT_RPM is for the alarms only, so the container must not get it."
+  }
+
+  assert {
     condition     = length([for env_var in local.service_env_vars : env_var if env_var.name == "TARIFF_API_URL"]) == 1
     error_message = "Other values from mcp-configuration must still be passed."
   }
 }
 
+# The limit (1,000 rpm in the mock secret) comes from mcp-shared-credentials,
+# so the alarms always watch the limit that the usage plan enforces.
 run "rate_limit_alarms_fire_at_80_percent_for_5_minutes" {
   command = plan
 
-  variables {
-    mcp_rate_limit_rpm = 3000
-  }
-
   assert {
-    condition     = aws_cloudwatch_metric_alarm.approaching_rate_limit.threshold == 2400
+    condition     = aws_cloudwatch_metric_alarm.approaching_rate_limit.threshold == 800
     error_message = "The approaching-limit alarm must fire at 80% of the shared MCP limit."
   }
 

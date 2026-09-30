@@ -59,9 +59,3 @@ variable "metrics_namespace" {
   type        = string
   default     = "TradeTariffMCP"
 }
-
-variable "mcp_rate_limit_rpm" {
-  description = "The shared MCP usage plan's limit in requests per minute, as configured in the terraform repo's gateway.tf. Used only to derive the alarm threshold and to describe it."
-  type        = number
-  default     = 3000
-}
