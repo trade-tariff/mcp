@@ -1,6 +1,8 @@
 # The MCP token comes from mcp-shared-credentials, which the terraform repo
 # (trade-tariff-platform-aws-terraform) generates. It must win over any stale
 # MCP_SECRET_TOKEN still in the hand-filled mcp-configuration secret.
+#
+# The rate limit alarms watch the shared MCP usage plan.
 
 mock_provider "aws" {
   mock_data "aws_iam_policy_document" {
@@ -73,5 +75,28 @@ run "token_comes_from_mcp_shared_credentials" {
   assert {
     condition     = length([for env_var in local.service_env_vars : env_var if env_var.name == "TARIFF_API_URL"]) == 1
     error_message = "Other values from mcp-configuration must still be passed."
+  }
+}
+
+run "rate_limit_alarms_fire_at_80_percent_for_5_minutes" {
+  command = plan
+
+  variables {
+    mcp_rate_limit_rpm = 3000
+  }
+
+  assert {
+    condition     = aws_cloudwatch_metric_alarm.approaching_rate_limit.threshold == 2400
+    error_message = "The approaching-limit alarm must fire at 80% of the shared MCP limit."
+  }
+
+  assert {
+    condition     = aws_cloudwatch_metric_alarm.approaching_rate_limit.evaluation_periods == 5
+    error_message = "The approaching-limit alarm must need 5 consecutive minutes above the threshold."
+  }
+
+  assert {
+    condition     = aws_cloudwatch_metric_alarm.rate_limited.threshold == 0
+    error_message = "The rate-limited alarm must fire on the first 429."
   }
 }

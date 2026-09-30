@@ -10,21 +10,22 @@
 # set alongside `["Service"]`. If that empty set is ever removed, these
 # alarms silently stop watching anything (treat_missing_data = "notBreaching"
 # keeps them in OK/INSUFFICIENT_DATA forever).
+#
+# The approaching-limit alarm fires when MCP traffic stays above 80% of the
+# shared limit for 5 consecutive minutes.
 locals {
-  mcp_rate_limit_alarm_threshold = var.mcp_rate_limit_rpm * var.mcp_rate_limit_alarm_percentage / 100
+  mcp_rate_limit_alarm_threshold = var.mcp_rate_limit_rpm * 80 / 100
 }
 
 resource "aws_cloudwatch_metric_alarm" "approaching_rate_limit" {
-  count = var.enable_mcp_rate_limit_alarms ? 1 : 0
-
   alarm_name          = "mcp-tariff-api-approaching-rate-limit-${var.environment}"
-  alarm_description   = "MCP tariff API requests have exceeded ${var.mcp_rate_limit_alarm_percentage}% of the shared ${var.mcp_rate_limit_rpm}rpm MCP usage plan for ${var.mcp_rate_limit_alarm_periods} consecutive minutes. Review the limit in the terraform repo (environments/${var.environment}/common/gateway.tf, var.mcp_rate_limit)."
+  alarm_description   = "MCP tariff API requests have exceeded 80% of the shared ${var.mcp_rate_limit_rpm}rpm MCP usage plan for 5 consecutive minutes. Review the limit in the terraform repo (environments/${var.environment}/common/gateway.tf, var.mcp_rate_limit)."
   namespace           = var.metrics_namespace
   metric_name         = "McpTariffApiRequests"
   statistic           = "Sum"
   period              = 60
-  evaluation_periods  = var.mcp_rate_limit_alarm_periods
-  datapoints_to_alarm = var.mcp_rate_limit_alarm_periods
+  evaluation_periods  = 5
+  datapoints_to_alarm = 5
   threshold           = local.mcp_rate_limit_alarm_threshold
   comparison_operator = "GreaterThanThreshold"
   treat_missing_data  = "notBreaching"
@@ -34,8 +35,6 @@ resource "aws_cloudwatch_metric_alarm" "approaching_rate_limit" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "rate_limited" {
-  count = var.enable_mcp_rate_limit_alarms ? 1 : 0
-
   alarm_name          = "mcp-tariff-api-rate-limited-${var.environment}"
   alarm_description   = "The tariff API returned 429 to the MCP server. Most likely the shared ${var.mcp_rate_limit_rpm}rpm MCP usage plan is exhausted, but WAF, a per-user plan, or the backend can also produce this. Check the access logs to confirm which."
   namespace           = var.metrics_namespace
@@ -49,4 +48,17 @@ resource "aws_cloudwatch_metric_alarm" "rate_limited" {
 
   alarm_actions = [data.aws_sns_topic.slack_topic.arn]
   ok_actions    = [data.aws_sns_topic.slack_topic.arn]
+}
+
+# The alarms had count = var.enable_mcp_rate_limit_alarms ? 1 : 0 before.
+# These blocks keep an alarm that development already has, and do not
+# replace it. Delete them after each environment has applied this change.
+moved {
+  from = aws_cloudwatch_metric_alarm.approaching_rate_limit[0]
+  to   = aws_cloudwatch_metric_alarm.approaching_rate_limit
+}
+
+moved {
+  from = aws_cloudwatch_metric_alarm.rate_limited[0]
+  to   = aws_cloudwatch_metric_alarm.rate_limited
 }
