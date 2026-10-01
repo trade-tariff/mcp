@@ -53,3 +53,9 @@ variable "enable_observability_alerts" {
   type    = bool
   default = false
 }
+
+variable "metrics_namespace" {
+  description = "CloudWatch namespace for the MCP server's metrics. Terraform passes it to the container as MCP_METRICS_NAMESPACE and uses it in alarms.tf, so the alarms always watch the namespace that the server writes to."
+  type        = string
+  default     = "TradeTariffMCP"
+}
