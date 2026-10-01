@@ -1,6 +1,27 @@
 # frozen_string_literal: true
 
 class ApplicationShaper
+  # A measure's effective_start_date is the start date of that measure record, not the
+  # date the treatment first applied. DBT changes a measure in one of three ways:
+  #
+  # - It end-dates the measure and reissues it. It must do this once the measure has
+  #   started, so a long-standing treatment can carry a recent start date.
+  # - It edits the measure in place, before the measure starts.
+  # - It deletes the measure, before the measure starts.
+  #
+  # The backend keeps only the latest version of each measure. A measure that starts
+  # after today can still be edited or deleted, and the earlier version then leaves no trace.
+  #
+  # Do not call such a measure "provisional". In the tariff that word means a provisional
+  # duty or a provisional regulation. Compare the start date with today, not with the
+  # validity_date asked for: every measure in a response starts on or before that date.
+  MEASURE_DATE_NOTE = "effective_start_date is the start date of this measure record. " \
+    "A measure can be end-dated and reissued with new conditions, so the treatment can " \
+    "apply from an earlier date than the one shown. Use commodity_history_diff, or " \
+    "lookup_commodity with an earlier validity_date, to find when the treatment first applied. " \
+    "A measure whose effective_start_date is after today can still be changed or deleted " \
+    "before that date, so do not treat its terms as fixed.".freeze
+
   def self.call(api_response)
     new(api_response).call
   end
@@ -44,7 +65,10 @@ class ApplicationShaper
         document_code: cattrs["document_code"].then { |v| v.nil? || v.empty? ? nil : v },
         certificate_description: cattrs["certificate_description"].then { |v| v.nil? || v.empty? ? nil : v },
         requirement: cattrs["requirement"].then { |v| v.nil? || v.empty? ? nil : v },
-        action: cattrs["action"]
+        action: cattrs["action"],
+        # The rate that applies when this condition is met. The action text can be the same
+        # for every band of a measure, so this is the only thing that tells them apart.
+        duty_expression: cattrs["duty_expression"].then { |v| v.nil? || v.empty? ? nil : v }
       }.compact
     end
   end
@@ -63,7 +87,9 @@ class ApplicationShaper
       duty_expr         = resolve_relationship(mrels, "duty_expression")
       geo_area          = resolve_relationship(mrels, "geographical_area")
       order_number      = resolve_relationship(mrels, "order_number")
+      additional_code   = resolve_relationship(mrels, "additional_code")
       conditions        = shape_conditions(mrels.dig("measure_conditions", "data"))
+      footnotes         = shape_footnotes(mrels.dig("footnotes", "data"))
       type_description  = measure_type&.dig("attributes", "description")
       expression_value  = duty_expr&.dig("attributes", "base")
       supplementary     = type_description&.include?("Supplementary unit")
@@ -77,9 +103,11 @@ class ApplicationShaper
         vat: mattrs["vat"] || nil,
         reduction_indicator: mattrs["reduction_indicator"],
         quota_order_number: order_number&.dig("attributes", "number"),
+        additional_code: additional_code&.dig("attributes", "code"),
         effective_start_date: mattrs["effective_start_date"]&.then { |d| d[0, 10] },
         effective_end_date: mattrs["effective_end_date"]&.then { |d| d[0, 10] },
-        conditions: conditions.empty? ? nil : conditions
+        conditions: conditions.empty? ? nil : conditions,
+        footnotes: footnotes.empty? ? nil : footnotes
       }.compact
     end
   end

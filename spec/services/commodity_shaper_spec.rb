@@ -230,4 +230,23 @@ RSpec.describe CommodityShaper do
       expect(fn[:description]).to eq("Entry subject to conditions.")
     end
   end
+
+  describe "measure date guidance" do
+    it "warns that effective_start_date is the start of this measure record, not of the treatment" do
+      result = described_class.call(api_response)
+
+      expect(result[:measure_date_note]).to include("reissued")
+      expect(result[:measure_date_note]).to include("commodity_history_diff")
+    end
+
+    # DBT can edit or delete a measure in place until it starts, so a measure that starts
+    # after today can still change. "Provisional" already means a provisional duty or
+    # regulation in the tariff, so the note must not use that word.
+    it "warns that a measure starting after today can still change" do
+      result = described_class.call(api_response)
+
+      expect(result[:measure_date_note]).to include("after today")
+      expect(result[:measure_date_note]).not_to include("provisional")
+    end
+  end
 end

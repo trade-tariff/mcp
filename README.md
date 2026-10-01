@@ -43,7 +43,7 @@ Restart Claude Desktop after saving. It will prompt for your Hub **client_id** a
 | `rules_of_origin` | Get rules of origin schemes for a heading and country combination |
 | `duty_vat_calculator` | Return duty rates for a commodity+country; optionally calculate amounts from a customs value |
 | `commodity_quotas` | Look up live quota balances by commodity code, without needing quota order numbers in advance |
-| `commodity_history_diff` | Show what changed for a commodity between two dates: measures added/removed, duty rate changes |
+| `commodity_history_diff` | Show what changed for a commodity between two dates: measures added, removed or changed (duty, supplementary unit, conditions, footnotes), and measures in force only between the two dates |
 | `full_text_search` | Keyword search across commodity, heading and chapter descriptions |
 
 All tools accept these optional parameters:
@@ -72,6 +72,33 @@ Use the classification tools as an evidence-gathering workflow, not as a single 
 4. Use the note mentions to decide which product facts are still needed, ask or answer those classification questions, and apply the relevant section notes, chapter notes, and General Interpretative Rules.
 5. Treat semantic shortlist scores as search evidence only. A final classification still needs to be grounded in the tariff hierarchy, notes, commodity text, measures, and any missing product facts.
 
+### Relative match bands
+
+`classification_search` returns a `relative_match` band and ratio for each candidate. The band compares that candidate to the best candidate **for that one query**. It is not a probability that the code is correct, and it is not comparable between queries. The best candidate of a weak set still bands as `high`.
+
+### Heading groups
+
+`classification_search` also returns a `headings` list. It groups the results by 4-digit heading, with the number of results in each heading and the best rank. The list is ordered by best rank. Chapter entries are not included.
+
+Use the list to choose which headings to check. The top result is often in the wrong heading on complex products, so compare several headings before you choose one. The number of results in a heading is not evidence that the heading is correct.
+
+### Several products at once
+
+Work one product at a time, and search for a product when you reach it. One product can need two searches: the second one narrows inside a heading, as described in [Searching twice](#searching-twice). What this rule forbids is searching several products together, not searching one product twice. Each response echoes the `query` it answers, so a shortlist always ties back to the product it belongs to.
+
+Do not search every product first and answer them together. Answers degrade when a client pools the shortlists: it shortcuts the per-item workflow, reuses a candidate from one product on another, or compares `relative_match` bands between products. Each item needs the full workflow above, run one item at a time.
+
+### Searching twice
+
+A single shortlist often reaches the correct heading without reaching the correct 10-digit code, because the subdivisions below a heading are separated by legal thresholds (percentage by weight, pack size, presentation) rather than by description.
+
+`classification_search` therefore takes two optional parameters for a second, narrower search:
+
+| Parameter | Use |
+|-----------|-----|
+| `filter_prefixes` | Restrict the search to given code prefixes (2 to 10 digits, at most 10). Set this to a heading you have confirmed, then keep the product description in the query and add the deciding fact to it. |
+| `search_non_declarables` | Return headings and chapters as well as declarable commodities, so a heading can be chosen deliberately and drilled into. |
+
 ## Authentication
 
 Register at the [Trade Tariff developer portal (Hub)](https://hub.trade-tariff.service.gov.uk/) and create an application. You will receive a **client_id** and **client_secret**.
@@ -84,7 +111,7 @@ Requests without a valid token receive a `401 Unauthorized` response. In the dev
 
 ### Requirements
 
-- Ruby 4.0.5
+- Ruby at the version in [.ruby-version](.ruby-version), and Bundler
 - `TARIFF_API_URL` — base URL for the tariff API (both UK and XI services are served from the same host)
 
 ### Setup
@@ -116,6 +143,19 @@ npx @modelcontextprotocol/inspector https://mcp.trade-tariff.service.gov.uk/
 ```
 
 <img width="801" height="615" alt="Screenshot 2026-06-16 at 16 22 51" src="https://github.com/user-attachments/assets/91a770e6-ca18-4260-afd7-28112c27233b" />
+
+## Contribute
+
+Read [CONTRIBUTING.md](CONTRIBUTING.md) for the fork workflow, checks and private
+security reporting. The unit tests and a live MCP client session are different
+checks: a live session contacts the configured tariff API and can use real
+credentials. Use an approved target and keep tokens out of logs and screenshots.
+
+## Licence
+
+The code and associated documentation use the [MIT licence](LICENCE.md), with
+Crown copyright (HM Revenue & Customs). API data and third-party dependencies
+retain their own terms.
 
 ## Environment Variables
 

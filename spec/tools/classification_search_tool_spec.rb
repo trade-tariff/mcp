@@ -42,6 +42,18 @@ RSpec.describe ClassificationSearchTool do
     expect(described_class.description).to include("natural-language")
   end
 
+  it "tells the client to write the query in tariff terms, not as a retailer listing" do
+    expect(described_class.description).to include("Write the query as a plain description of the goods")
+    expect(described_class.description).to include("Do not paste a retailer product title")
+  end
+
+  it "tells the client to leave brand and model names out of the query" do
+    query_description = described_class.input_schema.to_h.dig(:properties, :query, :description)
+
+    expect(query_description).to include("what the product is, what it does, and what it is made of")
+    expect(query_description).to include("Leave out brand names, model names and retailer names")
+  end
+
   it "calls the UK classification search endpoint" do
     stub_request(:get, "#{base_url}/uk/api/v2/classification_search")
       .with(query: { "q" => "wireless headphones", "limit" => "5" })
@@ -56,12 +68,89 @@ RSpec.describe ClassificationSearchTool do
     expect(result_json[:retrieval_method]).to eq("hybrid")
   end
 
+  it "echoes the query in the response so a batch cannot mix up which item it answers" do
+    stub_request(:get, "#{base_url}/uk/api/v2/classification_search")
+      .with(query: { "q" => "wireless headphones", "expanded_query" => "bluetooth earphones" })
+      .to_return(status: 200, body: response_body, headers: { "Content-Type" => "application/json" })
+
+    result = described_class.call(query: "wireless headphones", expanded_query: "bluetooth earphones", service: nil)
+
+    result_json = JSON.parse(result.content.first[:text], symbolize_names: true)
+    expect(result_json[:query]).to eq("wireless headphones")
+    expect(result_json[:expanded_query]).to eq("bluetooth earphones")
+  end
+
   it "passes optional date and expanded query" do
     stub = stub_request(:get, "#{base_url}/uk/api/v2/classification_search")
       .with(query: { "q" => "wireless headphones", "expanded_query" => "bluetooth headphones", "as_of" => "2026-06-19" })
       .to_return(status: 200, body: response_body, headers: { "Content-Type" => "application/json" })
 
     described_class.call(query: "wireless headphones", expanded_query: "bluetooth headphones", validity_date: "2026-06-19", service: "uk")
+
+    expect(stub).to have_been_requested
+  end
+
+  it "passes filter prefixes so a caller can search inside a known heading" do
+    stub = stub_request(:get, "#{base_url}/uk/api/v2/classification_search")
+      .with(query: { "q" => "dog bed", "filter_prefixes" => "6307,6301" })
+      .to_return(status: 200, body: response_body, headers: { "Content-Type" => "application/json" })
+
+    described_class.call(query: "dog bed", filter_prefixes: %w[6307 6301], service: nil)
+
+    expect(stub).to have_been_requested
+  end
+
+  it "omits filter prefixes when none are given" do
+    stub = stub_request(:get, "#{base_url}/uk/api/v2/classification_search")
+      .with(query: { "q" => "dog bed" })
+      .to_return(status: 200, body: response_body, headers: { "Content-Type" => "application/json" })
+
+    described_class.call(query: "dog bed", service: nil)
+
+    expect(stub).to have_been_requested
+  end
+
+  it "returns an error for a filter prefix that is not 2 to 10 digits" do
+    result = described_class.call(query: "dog bed", filter_prefixes: %w[63AB])
+
+    expect(result).to be_error
+    expect(result.content.first[:text]).to include("Invalid filter_prefixes")
+    expect(result.content.first[:text]).to include("63AB")
+  end
+
+  it "returns an error for more filter prefixes than the backend accepts" do
+    result = described_class.call(query: "dog bed", filter_prefixes: (1..11).map { |n| format("%04d", n) })
+
+    expect(result).to be_error
+    expect(result.content.first[:text]).to include("at most 10")
+  end
+
+  it "passes the non-declarable opt in so headings can be returned" do
+    stub = stub_request(:get, "#{base_url}/uk/api/v2/classification_search")
+      .with(query: { "q" => "dog bed", "search_non_declarables" => "true" })
+      .to_return(status: 200, body: response_body, headers: { "Content-Type" => "application/json" })
+
+    described_class.call(query: "dog bed", search_non_declarables: true, service: nil)
+
+    expect(stub).to have_been_requested
+  end
+
+  it "omits the non-declarable parameter when the caller says nothing" do
+    stub = stub_request(:get, "#{base_url}/uk/api/v2/classification_search")
+      .with(query: { "q" => "dog bed" })
+      .to_return(status: 200, body: response_body, headers: { "Content-Type" => "application/json" })
+
+    described_class.call(query: "dog bed", service: nil)
+
+    expect(stub).to have_been_requested
+  end
+
+  it "passes false when the caller explicitly opts out" do
+    stub = stub_request(:get, "#{base_url}/uk/api/v2/classification_search")
+      .with(query: { "q" => "dog bed", "search_non_declarables" => "false" })
+      .to_return(status: 200, body: response_body, headers: { "Content-Type" => "application/json" })
+
+    described_class.call(query: "dog bed", search_non_declarables: false, service: nil)
 
     expect(stub).to have_been_requested
   end

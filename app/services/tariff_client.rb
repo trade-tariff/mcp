@@ -63,10 +63,20 @@ class TariffClient
       f.options.open_timeout = 5
       f.options.timeout = 30
       f.headers["Accept"] = "application/vnd.hmrc.2.0+json"
+      f.headers["User-Agent"] = user_agent
       f.headers["Authorization"] = "Bearer #{CurrentRequest.bearer_token}" if CurrentRequest.bearer_token
       mcp_token = ENV["MCP_SECRET_TOKEN"].presence
       f.headers["X-Mcp-Token"] = mcp_token if mcp_token
     end
+  end
+
+  def user_agent
+    "TradeTariffMcp/#{revision}"
+  end
+
+  def revision
+    path = Rails.root.join("REVISION")
+    File.exist?(path) ? File.read(path).strip : "development"
   end
 
   def ssl_options

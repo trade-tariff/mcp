@@ -32,6 +32,8 @@ Use "commodity code" — not "HS code". UK imports need a 10-digit code; exports
 | Find a country group area ID (e.g. EU bloc) | `list_geographical_areas` with `filter: "EU"` |
 | Search by keyword (exact/fuzzy match) | `full_text_search` |
 | Read chapter/section note fragments for candidates | `note_mentions` |
+| Search inside a heading you have already confirmed | `classification_search` with `filter_prefixes` |
+| Get headings and chapters back, not only 10-digit codes | `classification_search` with `search_non_declarables: true` |
 
 ### Classification pivots to include in classification_search queries
 
@@ -45,6 +47,46 @@ Include in your query any legally significant product facts:
 
 When a pivot suggests an alternate chapter or heading that did not appear in the first results, run a follow-up query with `expanded_query` focused on that alternate route.
 
+### Write the query about the article, not the material
+
+Start the query with what the product *is* and what it does. Put the material after it. The search matches strongly on material words, so a query that starts with the material can rank the fabric, the plastic, or the ingredient above the finished article. For example, write "pet bed, woven polyester cover, polyester stuffing", not "polyester pet bed". Write "beef lasagne ready meal, 380g", not "beef lasagne".
+
+### Replace brand and model names
+
+A brand or model name tells the search nothing about the goods. Before you search, replace it with a plain description of the product: what it is, what it does, what it is made of. For example, "Calpol SixPlus Suspension" becomes "paracetamol oral suspension medicine for children, retail pack". If you do not know what a branded product is, ask the user. Do not guess.
+
+### Sets and kits
+
+A set or kit (a travel set of toiletries, a gel nail kit with a lamp, a poker set in a case) can have parts from several chapters. Apply GRI 3(b): a set put up for retail sale is classified by the part that gives it its essential character. Decide which part that is first, and ask the user if it is not clear. Then search for that part, not the set as a whole. A search for the whole set usually ranks the separate parts, and none of them may be the correct heading. If the goods are not a set put up for retail sale under GRI 3(b), classify each part separately.
+
+## Search twice: once to find the heading, once to find the code
+
+One flat shortlist often reaches the correct heading without ever reaching the correct 10-digit code. The subdivisions below a heading are where the legal thresholds sit — percentage by weight, pack size, presentation — and a single description rarely ranks them well.
+
+So treat retrieval as two steps, not one:
+
+1. **Find the heading.** Search on the product description. Add `search_non_declarables: true` when you want headings and chapters in the results, so you can pick a heading deliberately instead of inferring one from a leaf. Do not take the heading of the top result on trust: on complex products, the top result is in the wrong heading more often than not. Every response has a `headings` list that groups the results by heading. Take the first 5 to 10 headings from it, check each one with `show_heading` and `note_mentions`, and apply the GRI rules to choose between them. The number of results in a heading is not evidence that it is correct.
+2. **Find the code inside it.** Search again with `filter_prefixes` set to the heading you confirmed, e.g. `["6307"]`. Keep the product description in this second query and add the deciding fact to it — the fibre percentage, the cocoa content, the pack size — because that is what separates the subdivisions. Do not replace the description with the fact on its own: inside one heading, a query of "80% cotton" ranks on the threshold and loses the product.
+
+Do the second search whenever the first one returns the right heading but no subdivision you can justify. Do not pick the best-looking leaf from the first shortlist and stop.
+
+If you do not yet know the deciding fact, ask the user for it before the second search. The chapter and section notes from `note_mentions` tell you which fact matters.
+
+## Several items at once
+
+Classify one item at a time. Do not classify a batch in one pass.
+
+1. **Do not start from a table.** A table has one cell per item and no room for the reasoning each item needs. Work through the items first. Build the table last, from finished work.
+2. **Finish an item before you start the next.** Complete all six steps above for item 1, then move to item 2. Do not run the searches for every item first and then answer them together.
+3. **Do not carry candidates across items.** A candidate code found for one item is evidence for that item only. Check the `query` field on every shortlist to confirm which item it answers.
+4. **Do not compare `relative_match` between items.** Each band is computed against the top result for its own item. A "high" band for item 1 and a "high" band for item 5 do not mean the same thing. A weak candidate set still produces a "high" band.
+5. **Do not drop steps to save effort.** The legal note check (step 4) and the hierarchy check (step 3) are the steps that get complex items right. A batch makes these steps feel expensive. Run them for every item.
+6. **Report what you did not verify.** If you could not complete the workflow for an item, say so for that item. Do not give the item a code with the same confidence as a verified item.
+
+Search for one item at a time, when you reach that item. One item can still need two searches: the second one narrows inside a heading, as in the section above. What this rule forbids is searching several items together, not searching one item twice. Every shortlist echoes the `query` it answers, so you can always confirm which item a candidate belongs to.
+
 ## Output
 
-Code, breakdown (chapter → heading → subheading → full code), duty rates, confidence (High / Medium / Low), and a note to verify on trade-tariff.service.gov.uk before use on any declaration. Mention BTI if classification is genuinely uncertain.
+Code, breakdown (chapter → heading → subheading → full code), duty rates, your own confidence (High / Medium / Low), and a note to verify on trade-tariff.service.gov.uk before use on any declaration. Mention BTI if classification is genuinely uncertain.
+
+Your confidence is your own judgement after you apply the notes and the GRI rules. It is not the `relative_match` band from a search. Never copy a `relative_match` band into the output as confidence.
