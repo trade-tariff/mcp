@@ -115,5 +115,36 @@ RSpec.describe CognitoTokenVerifier do
       expect(result.status).to eq(:invalid)
       expect(a_request(:get, CognitoTokenHelper::TEST_JWKS_URL)).to have_been_made.once
     end
+
+    it "does not refetch on every unknown kid while the JWKS endpoint keeps failing" do
+      verifier.verify(signed_cognito_token)
+      stub_request(:get, CognitoTokenHelper::TEST_JWKS_URL).to_return(status: 500)
+      unknown_key = JWT::JWK.new(OpenSSL::PKey::RSA.new(2048), kid: "attacker-kid")
+
+      travel_to(10.minutes.from_now) do
+        3.times { expect(verifier.verify(signed_cognito_token(signing_key: unknown_key)).status).to eq(:invalid) }
+        expect(verifier.verify(signed_cognito_token(exp: 1.hour.from_now.to_i)).status).to eq(:valid)
+      end
+
+      expect(a_request(:get, CognitoTokenHelper::TEST_JWKS_URL)).to have_been_made.twice
+    end
+
+    it "does not refetch on every request while the JWKS endpoint is down and nothing is cached" do
+      stub_request(:get, CognitoTokenHelper::TEST_JWKS_URL).to_return(status: 500)
+
+      3.times { expect(verifier.verify(signed_cognito_token).status).to eq(:unavailable) }
+
+      expect(a_request(:get, CognitoTokenHelper::TEST_JWKS_URL)).to have_been_made.once
+    end
+
+    it "retries the JWKS fetch after the retry interval when nothing is cached" do
+      stub_request(:get, CognitoTokenHelper::TEST_JWKS_URL).to_return(status: 500)
+      verifier.verify(signed_cognito_token)
+      stub_cognito_jwks
+
+      travel_to(1.minute.from_now) do
+        expect(verifier.verify(signed_cognito_token(exp: 2.hours.from_now.to_i)).status).to eq(:valid)
+      end
+    end
   end
 end

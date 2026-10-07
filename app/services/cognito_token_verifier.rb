@@ -21,6 +21,10 @@ class CognitoTokenVerifier
   # let anyone force a JWKS request per call, so only refetch a cached copy
   # that is at least this old.
   JWKS_MIN_REFETCH_INTERVAL = 5.minutes
+  # The same limit applies to failed fetches, which do not update fetched_at.
+  # With no cached keys at all, retry sooner so a short outage clears quickly.
+  JWKS_ATTEMPT_KEY = "cognito_token_verifier:jwks_attempt"
+  JWKS_EMPTY_CACHE_RETRY_INTERVAL = 30.seconds
 
   INVALID = Result.new(status: :invalid, client_id: nil)
   UNAVAILABLE = Result.new(status: :unavailable, client_id: nil)
@@ -60,16 +64,25 @@ class CognitoTokenVerifier
     fetched_long_enough_ago = cached && cached["fetched_at"] <= JWKS_MIN_REFETCH_INTERVAL.ago.to_i
     return cached["jwks"] if cached && !(options[:kid_not_found] && fetched_long_enough_ago)
 
-    jwks = fetch_jwks
-    if jwks.nil?
-      # Keep verifying with the old keys if a rotation refetch fails.
-      return cached["jwks"] if cached
-
-      raise JwksUnavailable
+    if fetch_allowed?(cached)
+      jwks = fetch_jwks
+      if jwks
+        Rails.cache.write(JWKS_CACHE_KEY, { "jwks" => jwks, "fetched_at" => Time.current.to_i }, expires_in: JWKS_CACHE_TTL)
+        return jwks
+      end
     end
 
-    Rails.cache.write(JWKS_CACHE_KEY, { "jwks" => jwks, "fetched_at" => Time.current.to_i }, expires_in: JWKS_CACHE_TTL)
-    jwks
+    # Keep verifying with the old keys if a rotation refetch fails or is throttled.
+    return cached["jwks"] if cached
+
+    raise JwksUnavailable
+  end
+
+  # Allows one fetch attempt per interval, whether or not it succeeds. The
+  # cache is shared between tasks, so this limit is shared too.
+  def fetch_allowed?(cached)
+    interval = cached ? JWKS_MIN_REFETCH_INTERVAL : JWKS_EMPTY_CACHE_RETRY_INTERVAL
+    Rails.cache.write(JWKS_ATTEMPT_KEY, true, unless_exist: true, expires_in: interval)
   end
 
   def fetch_jwks

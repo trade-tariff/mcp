@@ -21,6 +21,7 @@ RSpec.configure do |config|
 
   config.before do
     Rails.cache.delete(CognitoTokenVerifier::JWKS_CACHE_KEY)
+    Rails.cache.delete(CognitoTokenVerifier::JWKS_ATTEMPT_KEY)
 
     cw = instance_double(Aws::CloudWatch::Client, put_metric_data: nil)
     allow(Aws::CloudWatch::Client).to receive(:new).and_return(cw)
