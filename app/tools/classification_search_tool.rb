@@ -12,8 +12,15 @@ class ClassificationSearchTool < ApplicationTool
               "the top result. A band compares a candidate to the best candidate for THIS query only. It is not a " \
               "calibrated probability and it is not comparable between queries — treat all results as candidates, " \
               "not a final classification, and never report a relative_match band as your confidence in a code. " \
+              "Write the query as a plain description of the goods: what the product is, what it does, and what " \
+              "it is made of. Do not paste a retailer product title. The search matches the words of the tariff, " \
+              "and a brand name, a model name, or a word such as 'ice cream' in 'ice cream play dough' pulls the " \
+              "search to the wrong heading. " \
               "Work one product at a time. Do not search every product first and then answer them together. " \
               "Each response echoes the query it answers. " \
+              "Each response also groups the results by heading. The top result is often in the wrong heading: " \
+              "compare several of these headings before you choose one, and do not take the heading of the top " \
+              "result on trust. " \
               "One product can need two searches. Search the same product again with filter_prefixes when you have " \
               "established a heading but not the right subdivision within it: one flat shortlist often reaches the " \
               "correct heading without ever reaching the correct 10-digit code. In that second search, keep the " \
@@ -25,7 +32,7 @@ class ClassificationSearchTool < ApplicationTool
     properties: {
       query: {
         type: "string",
-        description: "Natural-language product description to classify or find commodity code candidates for, including legally significant product facts and unresolved pivots, e.g. 'wireless bluetooth noise cancelling headphones' or 'chocolate-flavoured whey protein powder; cocoa content not confirmed; 600g retail pack'."
+        description: "Plain description of the goods in tariff terms: what the product is, what it does, and what it is made of, followed by legally significant product facts and unresolved pivots. Leave out brand names, model names and retailer names, and do not copy a retailer product title. For example, write 'paracetamol oral suspension medicine for children, retail pack' for 'Calpol SixPlus Suspension', 'wireless bluetooth noise cancelling headphones', or 'chocolate-flavoured whey protein powder; cocoa content not confirmed; 600g retail pack'."
       },
       limit: {
         type: "integer",

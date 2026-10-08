@@ -42,6 +42,18 @@ RSpec.describe ClassificationSearchTool do
     expect(described_class.description).to include("natural-language")
   end
 
+  it "tells the client to write the query in tariff terms, not as a retailer listing" do
+    expect(described_class.description).to include("Write the query as a plain description of the goods")
+    expect(described_class.description).to include("Do not paste a retailer product title")
+  end
+
+  it "tells the client to leave brand and model names out of the query" do
+    query_description = described_class.input_schema.to_h.dig(:properties, :query, :description)
+
+    expect(query_description).to include("what the product is, what it does, and what it is made of")
+    expect(query_description).to include("Leave out brand names, model names and retailer names")
+  end
+
   it "calls the UK classification search endpoint" do
     stub_request(:get, "#{base_url}/uk/api/v2/classification_search")
       .with(query: { "q" => "wireless headphones", "limit" => "5" })

@@ -27,17 +27,37 @@ class CommodityHistoryDiffShaper
   # thing that separates them, so leaving it out hides a rate change.
   CONDITION_FIELDS = %i[condition document_code certificate_description requirement action duty_expression].freeze
 
-  def self.call(commodity_code:, from_date:, to_date:, from_measures:, to_measures:)
+  # Fields that tell one measure apart from another across snapshots. A reissue has new
+  # dates, so it is a different measure here even when its terms are the same.
+  # Footnote wording can differ between dates, so the treatment is not part of this.
+  SAME_MEASURE_FIELDS = (KEY_FIELDS + %i[effective_start_date effective_end_date]).freeze
+
+  COVERAGE_NOTE = "The tool checked the tariff on each date in dates_checked. " \
+                  "It adds the day before each measure start and the day after each measure end in the period. " \
+                  "A measure that starts and ends between two checked dates, with no other measure change next to it, can be missing. " \
+                  "To check one date, use lookup_commodity with validity_date."
+
+  DATE_LIMIT_NOTE = " The tool stopped at its date limit. More changes can be missing. Use a shorter period."
+
+  def self.call(commodity_code:, from_date:, to_date:, from_measures:, to_measures:,
+                measures_between_dates: [], dates_checked: nil, date_limit_reached: false)
     new(commodity_code: commodity_code, from_date: from_date, to_date: to_date,
-        from_measures: from_measures, to_measures: to_measures).call
+        from_measures: from_measures, to_measures: to_measures,
+        measures_between_dates: measures_between_dates,
+        dates_checked: dates_checked || [ from_date, to_date ].uniq,
+        date_limit_reached: date_limit_reached).call
   end
 
-  def initialize(commodity_code:, from_date:, to_date:, from_measures:, to_measures:)
-    @commodity_code = commodity_code
-    @from_date      = from_date
-    @to_date        = to_date
-    @from_measures  = from_measures
-    @to_measures    = to_measures
+  def initialize(commodity_code:, from_date:, to_date:, from_measures:, to_measures:,
+                 measures_between_dates:, dates_checked:, date_limit_reached:)
+    @commodity_code         = commodity_code
+    @from_date              = from_date
+    @to_date                = to_date
+    @from_measures          = from_measures
+    @to_measures            = to_measures
+    @measures_between_dates = measures_between_dates
+    @dates_checked          = dates_checked
+    @date_limit_reached     = date_limit_reached
   end
 
   def call
@@ -61,7 +81,9 @@ class CommodityHistoryDiffShaper
       end
     end
 
-    identical = added.empty? && removed.empty? && changed.empty?
+    only_between_dates = measures_only_between_dates
+
+    identical = added.empty? && removed.empty? && changed.empty? && only_between_dates.empty?
 
     result = {
       commodity_code: @commodity_code,
@@ -70,21 +92,57 @@ class CommodityHistoryDiffShaper
       changes: {
         measures_added: added,
         measures_removed: removed,
-        measures_changed: changed
+        measures_changed: changed,
+        measures_in_force_only_between_dates: only_between_dates
       },
-      unchanged_measure_count: unchanged_count
+      unchanged_measure_count: unchanged_count,
+      dates_checked: @dates_checked,
+      coverage_note: @date_limit_reached ? COVERAGE_NOTE + DATE_LIMIT_NOTE : COVERAGE_NOTE
     }
+    result[:date_limit_reached] = true if @date_limit_reached
     result[:identical] = true if identical
     result
   end
 
   private
 
+  # Measures seen on a date between the ends that neither end snapshot holds. Each one
+  # started and ended inside the period, so a diff of the two ends cannot show it.
+  def measures_only_between_dates
+    seen = (@from_measures + @to_measures).map { |m| same_measure(m) }.to_set
+    found = []
+
+    @measures_between_dates.each do |m|
+      identity = same_measure(m)
+      next if seen.include?(identity)
+
+      seen << identity
+      found << m
+    end
+
+    found
+  end
+
+  def same_measure(measure)
+    SAME_MEASURE_FIELDS.map { |f| identity_value(measure, f) }
+  end
+
   def group_by_key(measures)
     measures.each_with_object({}) do |m, h|
-      key = KEY_FIELDS.map { |f| m[f] }
+      key = KEY_FIELDS.map { |f| identity_value(m, f) }
       (h[key] ||= []) << m
     end
+  end
+
+  # ApplicationShaper#format_geo writes an area as "Description (ID)", or as the ID alone
+  # when there is no other description. The backend gives the same area a different
+  # description on different dates (area PS was "Occupied Palestinian Territories", then
+  # "Palestine"). Only the ID tells which area it is.
+  def identity_value(measure, field)
+    value = measure[field]
+    return value unless field == :geographical_area && value
+
+    value[/\(([^()]+)\)\z/, 1] || value
   end
 
   # Two measures describe the same treatment when every compared field matches.
