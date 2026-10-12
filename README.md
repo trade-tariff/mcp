@@ -164,7 +164,7 @@ retain their own terms.
 | `TARIFF_API_URL` | Base URL for the tariff backend | `https://www.trade-tariff.service.gov.uk` |
 | `COGNITO_USER_POOL_ID` | Cognito user pool that issues bearer tokens. Tokens are verified against its signing keys. In deployed environments, Terraform sets it from `cognito_user_pool_id` in `terraform/config_<environment>.tfvars`. | `eu-west-2_AbCdEfGhI` |
 | `COGNITO_REGION` | Region of the Cognito user pool (optional) | `eu-west-2` (default) |
-| `SECRET_KEY_BASE` | Rails secret. OAuth refresh tokens are encrypted with a key derived from it, so it must be the same on every task and stay the same across deploys. Changing it makes all refresh tokens invalid. In deployed environments, Terraform generates it (`random_password.secret_key_base`) and keeps it in state. | output of `bin/rails secret` |
+| `SECRET_KEY_BASE` | Rails secret. OAuth refresh tokens are encrypted with a key derived from it, so it must be the same on every task and stay the same across deploys. Changing it makes all refresh tokens invalid. In deployed environments, it is the `SECRET_KEY_BASE` key of the `mcp-configuration` secret. ECS reads it from Secrets Manager when a task starts, so the value does not show on the task definition. | output of `bin/rails secret` |
 
 `TARIFF_API_URL` is required at startup in non-test environments. `COGNITO_USER_POOL_ID` and `SECRET_KEY_BASE` are required at startup outside development and test.
 

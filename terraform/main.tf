@@ -38,6 +38,7 @@ module "service" {
   max_capacity   = var.max_capacity
 
   service_environment_config = local.service_env_vars
+  service_secrets_config     = local.service_secrets
 
   enable_alarms  = var.enable_alarms
   sns_topic_arns = [data.aws_sns_topic.slack_topic.arn]
