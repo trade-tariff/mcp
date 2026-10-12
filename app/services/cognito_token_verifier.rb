@@ -96,7 +96,16 @@ class CognitoTokenVerifier
       return nil
     end
 
-    JSON.parse(response.body)
+    jwks = JSON.parse(response.body)
+
+    # A 200 that is not a JWKS must not be cached for the full TTL. Treat it
+    # as a failed fetch, so that the short retry interval applies.
+    unless jwks.is_a?(Hash) && jwks["keys"].is_a?(Array) && jwks["keys"].any?
+      Rails.logger.warn("Cognito JWKS response has no keys")
+      return nil
+    end
+
+    jwks
   rescue Faraday::Error => e
     Rails.logger.warn("Cognito JWKS fetch error: #{e.class} #{e.message}")
     nil

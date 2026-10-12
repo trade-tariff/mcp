@@ -87,6 +87,28 @@ RSpec.describe CognitoTokenVerifier do
       expect(verifier.verify(signed_cognito_token).status).to eq(:unavailable)
     end
 
+    it "reports unavailable when the JWKS endpoint returns a 200 that is not a JWKS" do
+      stub_request(:get, CognitoTokenHelper::TEST_JWKS_URL).to_return(status: 200, body: { "message" => "oops" }.to_json)
+
+      expect(verifier.verify(signed_cognito_token).status).to eq(:unavailable)
+    end
+
+    it "reports unavailable when the JWKS endpoint returns a 200 with an empty keys array" do
+      stub_request(:get, CognitoTokenHelper::TEST_JWKS_URL).to_return(status: 200, body: { "keys" => [] }.to_json)
+
+      expect(verifier.verify(signed_cognito_token).status).to eq(:unavailable)
+    end
+
+    it "does not cache a 200 that is not a JWKS, and retries after the retry interval" do
+      stub_request(:get, CognitoTokenHelper::TEST_JWKS_URL).to_return(status: 200, body: "[]")
+      verifier.verify(signed_cognito_token)
+      stub_cognito_jwks
+
+      travel_to(1.minute.from_now) do
+        expect(verifier.verify(signed_cognito_token(exp: 2.hours.from_now.to_i)).status).to eq(:valid)
+      end
+    end
+
     it "fetches the JWKS once and reuses it for later tokens" do
       verifier.verify(signed_cognito_token)
       verifier.verify(signed_cognito_token)
