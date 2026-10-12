@@ -1,21 +1,23 @@
 # frozen_string_literal: true
 
 class BearerTokenMiddleware
-  UNAUTHENTICATED_PATHS = [
-    "/healthcheckz",
-    "/.well-known/oauth-protected-resource",
-    "/.well-known/oauth-authorization-server",
-    "/authorize",
-    "/token",
-    "/oauth/register"
-  ].freeze
+  # Each public route is exempt only for the verb the router serves. Any other
+  # verb on the same path falls through to the MCP transport, so it needs a token.
+  UNAUTHENTICATED_ROUTES = {
+    "/healthcheckz" => "GET",
+    "/.well-known/oauth-protected-resource" => "GET",
+    "/.well-known/oauth-authorization-server" => "GET",
+    "/authorize" => "GET",
+    "/token" => "POST",
+    "/oauth/register" => "POST"
+  }.freeze
 
   def initialize(app)
     @app = app
   end
 
   def call(env)
-    if UNAUTHENTICATED_PATHS.exclude?(env["PATH_INFO"])
+    if UNAUTHENTICATED_ROUTES[env["PATH_INFO"]] != served_verb(env)
       token = extract_token(env["HTTP_AUTHORIZATION"])
 
       if Rails.env.development?
@@ -42,6 +44,11 @@ class BearerTokenMiddleware
   end
 
   private
+
+  # Rails answers HEAD on every GET route, so HEAD counts as GET here.
+  def served_verb(env)
+    env["REQUEST_METHOD"] == "HEAD" ? "GET" : env["REQUEST_METHOD"]
+  end
 
   def verifier
     CognitoTokenVerifier.new(

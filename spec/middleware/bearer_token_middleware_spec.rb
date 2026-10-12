@@ -126,18 +126,41 @@ RSpec.describe BearerTokenMiddleware do
     expect(status).to eq(200)
   end
 
-  [
-    "/healthcheckz",
-    "/.well-known/oauth-protected-resource",
-    "/.well-known/oauth-authorization-server",
-    "/authorize",
-    "/token",
-    "/oauth/register"
-  ].each do |path|
-    it "passes #{path} through without a token" do
-      status, = middleware.call(env_for(path: path))
+  {
+    "/healthcheckz" => "GET",
+    "/.well-known/oauth-protected-resource" => "GET",
+    "/.well-known/oauth-authorization-server" => "GET",
+    "/authorize" => "GET",
+    "/token" => "POST",
+    "/oauth/register" => "POST"
+  }.each do |path, served_verb|
+    it "passes #{served_verb} #{path} through without a token" do
+      env = env_for(path: path)
+      env["REQUEST_METHOD"] = served_verb
+
+      status, = middleware.call(env)
 
       expect(status).to eq(200)
     end
+
+    wrong_verb = served_verb == "GET" ? "POST" : "GET"
+
+    it "requires a token for #{wrong_verb} #{path}, which the router sends to the MCP app" do
+      env = env_for(path: path)
+      env["REQUEST_METHOD"] = wrong_verb
+
+      status, = middleware.call(env)
+
+      expect(status).to eq(401)
+    end
+  end
+
+  it "passes HEAD /healthcheckz through without a token" do
+    env = env_for(path: "/healthcheckz")
+    env["REQUEST_METHOD"] = "HEAD"
+
+    status, = middleware.call(env)
+
+    expect(status).to eq(200)
   end
 end
