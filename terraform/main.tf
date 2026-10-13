@@ -1,5 +1,5 @@
 module "service" {
-  source = "git::https://github.com/trade-tariff/trade-tariff-platform-terraform-modules.git//aws/ecs-service?ref=aws/ecs-service-v3.3.1"
+  source = "git::https://github.com/trade-tariff/trade-tariff-platform-terraform-modules.git//aws/ecs-service?ref=aws/ecs-service-v3.6.0"
 
   region = var.region
 
@@ -41,4 +41,6 @@ module "service" {
 
   enable_alarms  = var.enable_alarms
   sns_topic_arns = [data.aws_sns_topic.slack_topic.arn]
+
+  tags = local.cost_allocation_tags
 }
