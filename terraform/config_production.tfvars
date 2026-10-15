@@ -7,3 +7,4 @@ min_capacity                = 2
 max_capacity                = 5
 enable_alarms               = true
 enable_observability_alerts = true
+cognito_user_pool_id        = "eu-west-2_dtYQGsKs4"

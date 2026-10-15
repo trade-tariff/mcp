@@ -8,6 +8,11 @@ variable "region" {
   type        = string
 }
 
+variable "cognito_user_pool_id" {
+  description = "ID of the identity Cognito user pool (trade-tariff-identity-user-pool) that issues the bearer tokens."
+  type        = string
+}
+
 variable "docker_tag" {
   description = "Image tag to use."
   type        = string

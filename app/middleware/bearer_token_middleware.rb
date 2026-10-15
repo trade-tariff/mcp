@@ -1,26 +1,38 @@
 # frozen_string_literal: true
 
 class BearerTokenMiddleware
-  UNAUTHENTICATED_PATHS = [
-    "/healthcheckz",
-    "/.well-known/oauth-protected-resource",
-    "/.well-known/oauth-authorization-server",
-    "/authorize",
-    "/token",
-    "/oauth/register"
-  ].freeze
+  # Each public route is exempt only for the verb the router serves. Any other
+  # verb on the same path falls through to the MCP transport, so it needs a token.
+  UNAUTHENTICATED_ROUTES = {
+    "/healthcheckz" => "GET",
+    "/.well-known/oauth-protected-resource" => "GET",
+    "/.well-known/oauth-authorization-server" => "GET",
+    "/authorize" => "GET",
+    "/token" => "POST",
+    "/oauth/register" => "POST"
+  }.freeze
 
   def initialize(app)
     @app = app
   end
 
   def call(env)
-    if UNAUTHENTICATED_PATHS.exclude?(env["PATH_INFO"])
+    if UNAUTHENTICATED_ROUTES[env["PATH_INFO"]] != served_verb(env)
       token = extract_token(env["HTTP_AUTHORIZATION"])
-      return unauthorized(env) unless token || Rails.env.development?
 
-      CurrentRequest.bearer_token = token
-      CurrentRequest.client_id = extract_client_id(token)
+      if Rails.env.development?
+        # Local development runs without Cognito, so tokens are not checked.
+        CurrentRequest.bearer_token = token
+      else
+        return unauthorized(env) unless token
+
+        result = verifier.verify(token)
+        return unauthorized(env, error: "invalid_token") if result.status == :invalid
+        return service_unavailable if result.status == :unavailable
+
+        CurrentRequest.bearer_token = token
+        CurrentRequest.client_id = result.client_id
+      end
     end
 
     client_id = CurrentRequest.client_id || "anonymous"
@@ -33,17 +45,16 @@ class BearerTokenMiddleware
 
   private
 
-  def extract_client_id(token)
-    return nil unless token
+  # Rails answers HEAD on every GET route, so HEAD counts as GET here.
+  def served_verb(env)
+    env["REQUEST_METHOD"] == "HEAD" ? "GET" : env["REQUEST_METHOD"]
+  end
 
-    segments = token.split(".")
-    return nil unless segments.length == 3
-
-    padded = segments[1].ljust((segments[1].length + 3) & ~3, "=")
-    payload = JSON.parse(Base64.urlsafe_decode64(padded))
-    payload["client_id"] || payload["sub"]
-  rescue ArgumentError, JSON::ParserError
-    nil
+  def verifier
+    CognitoTokenVerifier.new(
+      user_pool_id: ENV.fetch("COGNITO_USER_POOL_ID"),
+      region: ENV.fetch("COGNITO_REGION", "eu-west-2")
+    )
   end
 
   def extract_token(header)
@@ -56,14 +67,25 @@ class BearerTokenMiddleware
     end
   end
 
-  def unauthorized(env)
+  # Without an error, the challenge asks the client to start the OAuth flow.
+  # With error="invalid_token" (RFC 6750), it tells the client to discard its
+  # token and get a new one.
+  def unauthorized(env, error: nil)
     host = "#{env["rack.url_scheme"]}://#{env["HTTP_HOST"]}"
     metadata_url = "#{host}/.well-known/oauth-authorization-server"
-    body = { error: "Unauthorized", message: "A Bearer token is required." }.to_json
+    challenge = %(Bearer resource_metadata="#{metadata_url}")
+    challenge += %(, error="#{error}") if error
+    message = error ? "The Bearer token is not valid." : "A Bearer token is required."
+    body = { error: "Unauthorized", message: message }.to_json
     headers = {
       "Content-Type" => "application/json",
-      "WWW-Authenticate" => %(Bearer resource_metadata="#{metadata_url}")
+      "WWW-Authenticate" => challenge
     }
     [ 401, headers, [ body ] ]
+  end
+
+  def service_unavailable
+    body = { error: "Service Unavailable", message: "Bearer tokens cannot be verified right now. Try again later." }.to_json
+    [ 503, { "Content-Type" => "application/json", "Retry-After" => "5" }, [ body ] ]
   end
 end
